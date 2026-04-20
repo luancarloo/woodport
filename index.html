@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4SIDES · WOODPORT</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --w50:#fdf6ee;--w100:#f5e6cc;--w200:#e8c99a;--w300:#d4a96a;--w400:#b8823a;
+  --w500:#8b5e25;--w600:#6b4519;--w700:#4e3010;--w800:#33200a;
+  --f50:#edf4ed;--f100:#c5ddc5;--f400:#357535;--f500:#1e551e;--f600:#123d12;
+  --cream:#faf7f2;--ink:#1a1a16;--ink2:#3d3a30;--ink3:#6b6657;--ink4:#9e9885;
+  --bdr:#e0d8c8;--bds:#ede8dc;--s:#fff;--s2:#faf7f2;--s3:#f5f0e8;
+  --shsm:0 1px 3px rgba(26,16,5,.08);--shlg:0 8px 28px rgba(26,16,5,.13);
+  --rsm:6px;--rmd:10px;--rlg:16px;--rxl:24px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;display:flex;}
+/* SIDEBAR */
+#sb{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--w700);display:flex;flex-direction:column;z-index:200;transition:width .22s ease,transform .22s ease;}
+#sb.collapsed{width:56px;}
+#sb.collapsed .sb-brand,#sb.collapsed .sb-name span,#sb.collapsed .nav-sec,#sb.collapsed .nv-label,#sb.collapsed .sb-foot-text{display:none;}
+#sb.collapsed .sb-name{font-size:0;}
+#sb.collapsed .sb-logo{padding:16px 10px;}
+#sb.collapsed .nv{justify-content:center;padding:10px;margin:1px 4px;width:calc(100% - 8px);}
+#sb.collapsed .sb-foot{padding:10px 6px;}
+#sb.collapsed .sb-foot button{font-size:0;padding:6px;width:36px;}
+.sb-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;}
+.sb-brand{font-family:'DM Serif Display',serif;font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.38);text-transform:uppercase;}
+.sb-name{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;line-height:1.1;margin-top:2px;}
+.sb-name span{color:var(--w300);}
+#sb-toggle{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.6);padding:4px;border-radius:4px;display:flex;align-items:center;flex-shrink:0;}
+#sb-toggle:hover{color:#fff;background:rgba(255,255,255,.1);}
+.sb-nav{flex:1;padding:10px 0;overflow-y:auto;overflow-x:hidden;}
+.nav-sec{padding:8px 16px 3px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.28);font-weight:500;white-space:nowrap;}
+.nv{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;color:rgba(255,255,255,.62);font-size:13px;transition:all .13s;margin:1px 8px;border-radius:var(--rsm);border:none;background:none;width:calc(100% - 16px);text-align:left;font-family:'Inter',sans-serif;white-space:nowrap;}
+.nv:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);}
+.nv.on{background:rgba(255,255,255,.13);color:#fff;font-weight:500;}
+.nv svg{flex-shrink:0;opacity:.75;}.nv.on svg{opacity:1;}
+.sb-foot{padding:14px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.32);}
+/* MAIN */
+#main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .22s ease;}
+#main.expanded{margin-left:56px;}
+.topbar{background:var(--s);border-bottom:1px solid var(--bds);padding:0 26px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.tb-title{font-size:15px;font-weight:500;}
+.content{padding:26px;flex:1;}
+/* MOBILE OVERLAY */
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150;}
+/* RESPONSIVE */
+@media(max-width:768px){
+  #sb{transform:translateX(-100%);width:240px !important;}
+  #sb.mob-open{transform:translateX(0);}
+  #sb-overlay.mob-open{display:block;}
+  #main{margin-left:0 !important;}
+  .topbar{padding:0 14px;gap:10px;}
+  #mob-menu-btn{display:flex !important;}
+  .content{padding:14px;}
+  .spl.sp2{grid-template-columns:1fr;}
+  .sr.s4{grid-template-columns:1fr 1fr;}
+  select#navio-sel{width:160px;}
+  #today-lbl{display:none;}
+  .card{padding:14px;}
+}
+/* CARDS */
+.card{background:var(--s);border:1px solid var(--bds);border-radius:var(--rlg);padding:22px;box-shadow:var(--shsm);}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bds);}
+.ct{font-size:14px;font-weight:600;}.cs{font-size:12px;color:var(--ink4);margin-top:2px;}
+/* STATS */
+.sr{display:grid;gap:12px;margin-bottom:22px;}
+.s4{grid-template-columns:repeat(4,1fr);}.s3{grid-template-columns:repeat(3,1fr);}.s2{grid-template-columns:repeat(2,1fr);}
+.sc{background:var(--s);border:1px solid var(--bds);border-radius:var(--rmd);padding:16px 18px;}
+.sl{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:.6px;font-weight:500;}
+.sv{font-size:24px;font-weight:300;color:var(--ink);margin-top:4px;line-height:1;font-family:'DM Serif Display',serif;}
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:5px;position:relative;}
+.fl{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.3px;}
+.req{color:#c0392b;}
+.gr{display:grid;gap:12px;}.g2{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr 1fr 1fr;}.g4{grid-template-columns:repeat(4,1fr);}
+input,select,textarea{width:100%;padding:7px 11px;font-size:13px;font-family:'Inter',sans-serif;color:var(--ink);background:var(--s);border:1px solid var(--bdr);border-radius:var(--rsm);outline:none;transition:border-color .13s,box-shadow .13s;}
+input:focus,select:focus,textarea:focus{border-color:var(--w400);box-shadow:0 0 0 3px rgba(184,130,58,.12);}
+input::placeholder,textarea::placeholder{color:var(--ink4);}
+input.readonly-info{background:var(--s2);color:var(--ink3);cursor:default;}
+select{cursor:pointer;}textarea{resize:vertical;min-height:60px;}
+input.invalid{border-color:#e74c3c;background:#fff8f8;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rsm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .13s;white-space:nowrap;font-family:'Inter',sans-serif;}
+.bp{background:var(--w600);color:#fff;border-color:var(--w700);}.bp:hover{background:var(--w700);}
+.bs{background:var(--s);color:var(--ink2);border-color:var(--bdr);}.bs:hover{background:var(--s3);}
+.bd{background:#fee2e2;color:#b91c1c;border-color:#fecaca;}.bd:hover{background:#fecaca;}
+.bf{background:var(--f500);color:#fff;border-color:var(--f600);}.bf:hover{background:var(--f600);}
+.bsm{padding:4px 10px;font-size:12px;}
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{text-align:left;padding:9px 12px;font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--ink4);text-transform:uppercase;background:var(--s2);border-bottom:1px solid var(--bds);}
+tbody tr{border-bottom:1px solid var(--bds);transition:background .1s;}
+tbody tr:hover{background:var(--s2);}
+tbody td{padding:10px 12px;color:var(--ink2);}
+tbody tr:last-child{border-bottom:none;}
+/* BADGES */
+.bge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.ok{background:var(--f50);color:var(--f500);border:1px solid var(--f100);}
+.warn{background:#fef9ec;color:#92620a;border:1px solid #fde9a0;}
+.ntrl{background:var(--s3);color:var(--ink3);border:1px solid var(--bdr);}
+.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+.dng{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;}
+/* PROGRESS */
+.pw{background:var(--s3);border-radius:4px;height:6px;overflow:hidden;margin-top:4px;}
+.pb{height:100%;border-radius:4px;transition:width .3s;}
+.pg{background:var(--f400);}.py{background:#f59e0b;}.pr{background:#e74c3c;}
+/* LOTE BLOCK (multi-lote no ticket) */
+.lote-blk{background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:14px;margin-bottom:10px;}
+.lote-blk-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.lote-blk-n{font-size:11px;font-weight:600;color:var(--w600);text-transform:uppercase;letter-spacing:.5px;}
+/* SUGGEST */
+.suggest-box{position:fixed;z-index:9999;background:var(--s);border:1px solid var(--bdr);border-radius:var(--rmd);box-shadow:var(--shlg);max-height:220px;overflow-y:auto;display:none;min-width:280px;}
+.suggest-item{padding:9px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bds);}
+.suggest-item:hover{background:var(--s2);}
+.suggest-item:last-child{border-bottom:none;}
+/* TOAST */
+#tw{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;}
+.toast{display:flex;align-items:flex-start;gap:9px;padding:12px 15px;border-radius:var(--rmd);background:var(--s);box-shadow:var(--shlg);border:1px solid var(--bds);font-size:13px;max-width:340px;animation:sli .23s ease;pointer-events:all;border-left:3px solid var(--w400);}
+.toast.error{border-left-color:#e74c3c;}.toast.success{border-left-color:var(--f400);}
+@keyframes sli{from{transform:translateX(100%);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes slo{to{transform:translateX(120%);opacity:0;}}
+.tm strong{font-weight:600;display:block;margin-bottom:1px;}
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(26,16,5,.45);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px);}
+.modal{background:var(--s);border-radius:var(--rxl);box-shadow:var(--shlg);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;padding:26px;}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.mt{font-size:16px;font-weight:600;}
+.mx{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink4);padding:4px 8px;border-radius:var(--rsm);}
+.mx:hover{background:var(--s3);}
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--w700);display:flex;align-items:center;justify-content:center;z-index:9000;}
+.login-box{background:var(--s);border-radius:var(--rxl);padding:36px;width:360px;box-shadow:var(--shlg);}
+.login-logo{font-family:'DM Serif Display',serif;font-size:28px;color:var(--w700);text-align:center;margin-bottom:4px;}
+.login-logo span{color:var(--w400);}
+.login-sub{font-size:12px;color:var(--ink4);text-align:center;margin-bottom:24px;}
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 22px;text-align:center;gap:10px;}
+.empty .ei{font-size:38px;opacity:.28;}
+.empty h3{font-size:15px;font-weight:500;}
+.empty p{font-size:13px;color:var(--ink4);max-width:280px;line-height:1.6;}
+/* CONFIG */
+.cfgb{background:linear-gradient(135deg,var(--w700),var(--w500));border-radius:var(--rlg) var(--rlg) 0 0;padding:28px;color:#fff;}
+.cfgb h2{font-family:'DM Serif Display',serif;font-size:22px;}
+.cfgb p{font-size:13px;opacity:.7;margin-top:5px;}
+/* MISC */
+hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.sh h2{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;}
+.sw{display:flex;align-items:center;gap:7px;padding:6px 11px;background:var(--s);border:1px solid var(--bdr);border-radius:var(--rsm);}
+.sw input{border:none;outline:none;box-shadow:none;font-size:13px;padding:0;width:180px;}
+.spl{display:grid;gap:18px;align-items:start;}
+.sp2{grid-template-columns:400px 1fr;}
+/* LOADING */
+#ld{position:fixed;inset:0;background:rgba(255,255,255,.8);display:none;align-items:center;justify-content:center;z-index:9998;}
+.spin{width:32px;height:32px;border:3px solid var(--bdr);border-top-color:var(--w500);border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+/* PAGE */
+.page{display:none;}.page.on{display:block;}
+/* QR CAMERA */
+#qr-video-wrap{position:relative;width:100%;border-radius:var(--rmd);overflow:hidden;background:#000;aspect-ratio:1;}
+#qr-video{width:100%;height:100%;object-fit:cover;}
+#qr-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+#qr-overlay div{width:60%;height:60%;border:3px solid rgba(255,255,255,.8);border-radius:8px;box-shadow:0 0 0 1000px rgba(0,0,0,.4);}
+/* TICKET PRINT 80mm — font size +4pt vs previous 11px → 15px */
+@media print{
+  body>*{display:none!important;}
+  #ticket-print-wrap,#ticket-print-wrap *{display:block;visibility:visible;}
+  #ticket-print-wrap{position:fixed;left:0;top:0;width:80mm;background:#fff;padding:0;}
+}
+.tkt{width:72mm;font-family:'Courier New',monospace;font-size:14px;background:#fff;color:#000;padding:3.5mm;line-height:1.4;}
+.tkt .tl{font-size:18px;font-weight:bold;text-align:center;border-bottom:2px solid #000;padding-bottom:2.5mm;margin-bottom:2.5mm;letter-spacing:2px;}
+.tkt .tt{font-size:12px;text-align:center;margin-bottom:2.5mm;font-weight:bold;text-transform:uppercase;}
+.tkt .tn{font-size:21px;font-weight:bold;text-align:center;margin:2.5mm 0;border:2px solid #000;padding:1.5mm;}
+/* linha simples: label à esq, valor à dir */
+.tkt .tr{display:flex;justify-content:space-between;margin-bottom:0.8mm;font-size:13px;}
+.tkt .tr .lb{font-weight:bold;min-width:22mm;flex-shrink:0;}
+.tkt .tr .vl{text-align:right;word-break:break-all;flex:1;}
+/* linha dupla: dois pares lado a lado */
+.tkt .t2{display:flex;gap:1mm;margin-bottom:0.8mm;}
+.tkt .t2 .p{flex:1;font-size:12px;border-left:2px solid #000;padding-left:1.5mm;}
+.tkt .t2 .p:first-child{border-left:none;padding-left:0;}
+.tkt .t2 .p .lb{font-weight:bold;font-size:10px;display:block;text-transform:uppercase;}
+.tkt .t2 .p .vl{font-size:13px;display:block;word-break:break-all;}
+/* separador */
+.tkt .ts{border-top:1px dashed #000;margin:2mm 0;}
+.tkt .tq{text-align:center;margin-top:2.5mm;}
+.tkt .tf{font-size:10px;text-align:center;margin-top:2.5mm;border-top:1px solid #000;padding-top:1.5mm;opacity:.7;}
+.tkt .tsec{font-size:11px;font-weight:bold;text-align:center;background:#000;color:#fff;padding:1mm 0;margin:2mm 0 1mm;}
+@media(max-width:1100px){.sp2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Wood<span>Port</span></div>
+    <div class="login-sub">4SIDES · SISTEMA DE EMBARQUE</div>
+
+    <!-- formulário de login -->
+    <div class="gr" style="gap:13px;">
+      <div class="fg"><label class="fl">Usuário</label><input type="text" id="li-user" placeholder="seu.usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fg"><label class="fl">Senha</label><input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn bp" onclick="doLogin()" style="width:100%;justify-content:center;padding:10px;">Entrar</button>
+      <div id="li-err" style="font-size:12px;color:#b91c1c;text-align:center;display:none;"></div>
+    </div>
+
+  </div>
+</div>
+
+<aside id="sb">
+  <div class="sb-logo">
+    <div>
+      <div class="sb-brand">4Sides Sistemas</div>
+      <div class="sb-name">Wood<span>Port</span></div>
+    </div>
+    <button id="sb-toggle" onclick="toggleSidebar()" title="Minimizar menu">
+      <svg id="sb-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-sec">Operações</div>
+    <button class="nv on" onclick="go('dashboard')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nv-label">Dashboard</span></button>
+    <button class="nv" onclick="go('lista')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nv-label">Lista de Carga</span></button>
+    <button class="nv" onclick="go('tickets')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg><span class="nv-label">Emissão de Tickets</span></button>
+    <button class="nv" onclick="go('validar')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span class="nv-label">Validar Embarque</span></button>
+    <div class="nav-sec">Administração</div>
+    <button class="nv" onclick="go('usuarios')" id="nav-usuarios"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nv-label">Usuários</span></button>
+    <button class="nv" onclick="go('navio')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2"/><path d="M12 2 4 12h16L12 2z"/><path d="M12 12v8"/></svg><span class="nv-label">Navios</span></button>
+    <button class="nv" onclick="go('cfg')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span class="nv-label">Configurar Supabase</span></button>
+  </nav>
+  <div class="sb-foot">
+    <div id="conn-lbl" class="sb-foot-text">⬤ Não conectado</div>
+    <div id="sb-user" class="sb-foot-text" style="margin-top:3px;font-size:10px;color:rgba(255,255,255,.5);"></div>
+    <div id="sb-ship" class="sb-foot-text" style="margin-top:2px;font-size:10px;color:rgba(255,255,255,.35);"></div>
+    <button onclick="doLogout()" style="margin-top:8px;background:none;border:1px solid rgba(255,255,255,.2);border-radius:var(--rsm);padding:4px 10px;font-size:11px;color:rgba(255,255,255,.5);cursor:pointer;width:100%;">↩ <span class="nv-label">Sair</span></button>
+  </div>
+</aside>
+<div id="sb-overlay" onclick="closeMobileMenu()"></div>
+
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="mob-menu-btn" onclick="openMobileMenu()" style="display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--ink3);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="tb-title" id="pg-title">Dashboard</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <select id="navio-sel" onchange="onNavioChange()" style="width:230px;font-size:12px;padding:5px 8px;"><option value="">— Selecione o Navio —</option></select>
+      <span style="font-size:12px;color:var(--ink4);" id="today-lbl"></span>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- CFG -->
+    <div class="page" id="page-cfg">
+      <div class="card" style="max-width:560px;margin:0 auto;padding:0;overflow:hidden;">
+        <div class="cfgb"><h2>Configurar Supabase</h2><p>Conecte o WoodPort ao banco de dados dedicado</p></div>
+        <div style="padding:26px;">
+          <div class="gr" style="gap:14px;">
+            <div class="fg"><label class="fl">URL do Projeto <span class="req">*</span></label><input type="url" id="cfg-url" placeholder="https://xxxxxxxx.supabase.co"></div>
+            <div class="fg"><label class="fl">Anon Key <span class="req">*</span></label><input type="text" id="cfg-key" placeholder="eyJhbGci..."></div>
+          </div>
+          <hr>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn bp" onclick="saveCfg()">💾 Salvar e Conectar</button>
+            <button class="btn bs" onclick="testConn()">Testar Conexão</button>
+          </div>
+          <hr>
+          <p style="font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:8px;">📋 SQL — cole no SQL Editor do Supabase</p>
+          <div style="background:var(--s3);border-radius:var(--rmd);padding:12px;max-height:280px;overflow-y:auto;">
+            <pre id="sql-pre" style="font-size:10.5px;color:var(--ink3);line-height:1.7;white-space:pre-wrap;word-break:break-all;"></pre>
+          </div>
+          <button class="btn bs bsm" style="margin-top:8px;" onclick="copySQL()">Copiar SQL</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAVIOS -->
+    <div class="page" id="page-navio">
+      <div class="sh"><h2>Navios</h2></div>
+      <div class="spl sp2">
+        <div class="card" style="position:sticky;top:66px;">
+          <div class="ch"><div class="ct">Cadastrar Navio</div></div>
+          <div class="gr" style="gap:12px;">
+            <div class="fg"><label class="fl">Nome do Navio <span class="req">*</span></label><input type="text" id="nv-nome" placeholder="Ex: CEDAR ARROW (CEA) 2602"></div>
+            <div class="gr g2">
+              <div class="fg"><label class="fl">Código</label><input type="text" id="nv-cod" placeholder="CEA"></div>
+              <div class="fg"><label class="fl">Viagem Nº</label><input type="text" id="nv-viagem" placeholder="2602"></div>
+            </div>
+            <div class="gr g2">
+              <div class="fg"><label class="fl">Porto de Origem</label><input type="text" id="nv-origem" placeholder="Santos, SP"></div>
+              <div class="fg"><label class="fl">Nº Total de Porões</label>
+                <select id="nv-porao" onchange="updatePoroesCheck()">
+                  <option value="0">Sem porões</option>
+                  <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                  <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                  <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg" id="nv-poroes-check-wrap" style="display:none;">
+              <label class="fl">Porões que serão trabalhados <span class="req">*</span></label>
+              <div id="nv-poroes-check" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rsm);"></div>
+              <span style="font-size:11px;color:var(--ink4);">Marque apenas os porões que serão utilizados neste navio</span>
+            </div>
+            <div class="fg"><label class="fl">ETA</label><input type="date" id="nv-eta"></div>
+            <button class="btn bp" onclick="salvarNavio()">💾 Cadastrar</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Navios Cadastrados</div></div>
+          <div class="tw"><table><thead><tr><th>Nome</th><th>Código</th><th>Viagem</th><th>Porões</th><th>ETA</th><th></th></tr></thead><tbody id="nv-tb"></tbody></table></div>
+          <div id="nv-empty" class="empty" style="display:none;"><div class="ei">⚓</div><h3>Nenhum navio</h3></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="page" id="page-usuarios">
+      <div class="sh"><h2>Usuários / Conferentes</h2></div>
+      <div class="spl sp2">
+        <div class="card" style="position:sticky;top:66px;">
+          <div class="ch"><div class="ct">Cadastrar Usuário</div></div>
+          <div class="gr" style="gap:12px;">
+            <div class="fg"><label class="fl">Nome completo <span class="req">*</span></label><input type="text" id="u-nome" placeholder="Nome do conferente"></div>
+            <div class="fg"><label class="fl">Login (usuário) <span class="req">*</span></label><input type="text" id="u-login" placeholder="joao.silva" autocomplete="off"></div>
+            <div class="fg"><label class="fl">Senha <span class="req">*</span></label><input type="password" id="u-pass" placeholder="mínimo 6 caracteres" autocomplete="off"></div>
+            <div class="gr g2">
+              <div class="fg"><label class="fl">Perfil</label>
+                <select id="u-perfil">
+                  <option value="conferente">Conferente</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">Armazém <span class="req">*</span></label>
+                <select id="u-armazem">
+                  <option value="WRC">WRC</option>
+                  <option value="Pratico">Pratico</option>
+                  <option value="Global">Global</option>
+                  <option value="*">Todos (Admin)</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn bp" onclick="salvarUser()">💾 Cadastrar</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Usuários Cadastrados</div></div>
+          <div class="tw"><table><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Armazém</th><th></th></tr></thead><tbody id="u-tb"></tbody></table></div>
+          <div id="u-empty" class="empty" style="display:none;"><div class="ei">👤</div><h3>Nenhum usuário</h3><p>Cadastre usuários para liberar o acesso ao sistema.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTA DE CARGA -->
+    <div class="page" id="page-lista">
+      <div class="sh"><h2>Lista de Carga</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn bs bsm" onclick="document.getElementById('xlsx-in').click()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Importar Excel
+          </button>
+          <input type="file" id="xlsx-in" accept=".xlsx,.xls" style="display:none;" onchange="importXLSX(this)">
+          <button class="btn bs bsm" onclick="loadLista()">↻ Atualizar</button>
+        </div>
+      </div>
+      <div id="no-navio-warn" class="card" style="background:#fef9ec;border-color:#fde9a0;margin-bottom:16px;display:none;"><p style="font-size:13px;color:#92620a;">⚠️ Selecione um navio no topo antes de importar ou visualizar.</p></div>
+      <div class="sr s4">
+        <div class="sc"><div class="sl">Total Lotes</div><div class="sv" id="ls-lotes">—</div></div>
+        <div class="sc"><div class="sl">CBM Total</div><div class="sv" id="ls-cbm">—</div></div>
+        <div class="sc"><div class="sl">Qtde Total</div><div class="sv" id="ls-qtd">—</div></div>
+        <div class="sc"><div class="sl">Peso Bruto Total</div><div class="sv" id="ls-peso">—</div></div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div><div class="ct">Lotes</div><div class="cs" id="lista-navio-lbl">—</div></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="sw"><span style="color:var(--ink4);">🔍</span><input type="text" placeholder="Buscar..." oninput="filterLista(this.value)"></div>
+            <select id="lista-porto-sel" onchange="filterLista()" style="width:150px;font-size:12px;padding:5px 8px;"><option value="">Todos portos</option></select>
+          </div>
+        </div>
+        <!-- barra de ações em lote -->
+        <div id="lista-batch-bar" style="display:none;background:var(--w50);border:1px solid var(--w200);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;display:none;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span id="lista-sel-count" style="font-size:13px;font-weight:600;color:var(--w700);">0 selecionados</span>
+          <button class="btn bd bsm" onclick="deleteSelectedLista()">🗑 Excluir selecionados</button>
+          <button class="btn bs bsm" onclick="deleteAllNavio()" title="Apaga toda a lista de carga do navio ativo">🗑 Excluir lista do navio inteiro</button>
+          <button class="btn bs bsm" onclick="clearListaSelection()">✕ Cancelar seleção</button>
+        </div>
+        <div class="tw"><table><thead><tr>
+          <th style="width:30px;"><input type="checkbox" id="lista-chk-all" onchange="toggleAllLista(this)" style="width:auto;cursor:pointer;" title="Selecionar todos"></th>
+          <th>Ref</th><th>Lote</th><th>Shipper</th><th>Porto</th><th>Invoice/PL</th><th>B/L</th><th>Receiver</th><th>Oceandoc/Booking</th><th>Commodity</th><th>CBM</th><th>Qtde</th><th>Peso</th><th>Peso Médio</th><th>Armazém</th><th>DUE</th><th>Marca</th><th>Usado</th><th>Saldo</th><th></th>
+        </tr></thead><tbody id="lista-tb"></tbody></table></div>
+        <div id="lista-empty" class="empty" style="display:none;"><div class="ei">📋</div><h3>Sem lista de carga</h3><p>Selecione um navio e importe o Excel.</p></div>
+      </div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="page" id="page-tickets">
+      <div class="sh"><h2>Emissão de Tickets</h2><button class="btn bs bsm" onclick="loadTickets()">↻ Atualizar</button></div>
+      <div class="spl sp2">
+        <div class="card" style="position:sticky;top:66px;max-height:calc(100vh - 90px);overflow-y:auto;">
+          <div class="ch"><div class="ct">Novo Ticket</div></div>
+          <div class="gr" style="gap:12px;">
+            <!-- Dados gerais -->
+            <div class="gr g2">
+              <div class="fg"><label class="fl">Placa <span class="req">*</span></label>
+                <input type="text" id="tk-placa" placeholder="ABC1D23 ou ABC-1234" maxlength="8" oninput="fmtPlaca(this)" style="text-transform:uppercase;letter-spacing:1px;">
+                <span id="placa-hint" style="font-size:11px;color:var(--ink4);"></span>
+              </div>
+              <div class="fg"><label class="fl">Motorista <span class="req">*</span></label><input type="text" id="tk-motorista" placeholder="Nome completo"></div>
+            </div>
+            <div class="fg"><label class="fl">Conferente</label>
+              <input type="text" id="tk-conf-nome" class="readonly-info" readonly value="" placeholder="— faça login para identificar —">
+            </div>
+            <div class="gr g3">
+              <div class="fg"><label class="fl">Porão <span class="req">*</span></label>
+                <select id="tk-porao"><option value="">— selecione —</option></select>
+              </div>
+              <div class="fg"><label class="fl">Tier <span class="req">*</span></label>
+                <select id="tk-tier">
+                  <option value="">— selecione —</option>
+                  <option value="1">Tier 1</option><option value="2">Tier 2</option>
+                  <option value="3">Tier 3</option><option value="4">Tier 4</option>
+                  <option value="5">Tier 5</option><option value="6">Tier 6</option>
+                  <option value="7">Tier 7</option><option value="8">Tier 8</option>
+                  <option value="9">Tier 9</option><option value="10">Tier 10</option>
+                  <option value="11">Tier 11</option><option value="12">Tier 12</option>
+                </select>
+              </div>
+              <div class="fg"><label class="fl">Viagem do Tier <span style="color:var(--ink4);font-weight:400;font-size:10px;">(sequência do embarque)</span></label>
+                <input type="text" id="tk-viagem" placeholder="Ex: V01, V02...">
+              </div>
+            </div>
+            <hr style="margin:4px 0;">
+            <!-- Lotes dinâmicos -->
+            <div id="lotes-tk"></div>
+            <button class="btn bs bsm" onclick="addLoteTk()">+ Adicionar Lote</button>
+            <hr style="margin:4px 0;">
+            <!-- Totais calculados -->
+            <div id="tk-totais" style="display:none;background:var(--w50);border:1px solid var(--w100);border-radius:var(--rmd);padding:12px;">
+              <div style="font-size:11px;font-weight:600;color:var(--w600);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Totais do Ticket</div>
+              <div class="gr g2" style="gap:6px;font-size:13px;">
+                <div><span style="color:var(--ink4);">CBM total:</span><br><strong id="tk-tot-cbm" style="color:var(--w600);">0.000</strong></div>
+                <div><span style="color:var(--ink4);">Peso total:</span><br><strong id="tk-tot-peso" style="color:var(--w600);">0 kg</strong></div>
+              </div>
+            </div>
+            <div class="fg"><label class="fl">Observações</label><textarea id="tk-obs" placeholder="..."></textarea></div>
+            <button class="btn bp" onclick="emitirTicket()" style="width:100%;justify-content:center;padding:10px;">🎟 Emitir Ticket</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Tickets Emitidos</div>
+            <div class="sw"><span style="color:var(--ink4);">🔍</span><input type="text" placeholder="Buscar..." oninput="filterTickets(this.value)"></div>
+          </div>
+          <!-- barra de ações em lote -->
+          <div id="tk-batch-bar" style="display:none;background:var(--w50);border:1px solid var(--w200);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span id="tk-sel-count" style="font-size:13px;font-weight:600;color:var(--w700);">0 selecionados</span>
+            <button class="btn bd bsm" onclick="deleteSelectedTickets()">🗑 Excluir selecionados</button>
+            <button class="btn bs bsm" onclick="clearTicketSelection()">✕ Cancelar</button>
+          </div>
+          <div class="tw"><table><thead><tr>
+            <th style="width:30px;"><input type="checkbox" id="tk-chk-all" onchange="toggleAllTickets(this)" style="width:auto;cursor:pointer;"></th>
+            <th>Nº</th><th>Lotes</th><th>Porto(s)</th><th>Qtde</th><th>CBM</th><th>Peso</th><th>Placa</th><th>Conferente</th><th>Status</th><th></th>
+          </tr></thead><tbody id="tk-tb"></tbody></table></div>
+          <div id="tk-empty" class="empty" style="display:none;"><div class="ei">🎟</div><h3>Nenhum ticket</h3></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALIDAR -->
+    <div class="page" id="page-validar">
+      <div class="sh"><h2>Validar Embarque</h2></div>
+      <div class="spl sp2">
+        <div class="card" style="position:sticky;top:66px;">
+          <div class="ch"><div class="ct">Leitura do Ticket</div></div>
+          <div class="gr" style="gap:12px;">
+            <!-- Camera QR -->
+            <div>
+              <div id="qr-video-wrap" style="display:none;">
+                <video id="qr-video" autoplay playsinline muted></video>
+                <div id="qr-overlay"><div></div></div>
+              </div>
+              <div id="qr-btns" style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn bs" id="cam-btn" onclick="toggleCamera()" style="flex:1;justify-content:center;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir Câmera QR
+                </button>
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Ou digite o número do ticket</label>
+              <input type="text" id="val-code" placeholder="TK-CEA-xxxxxx ou número..." oninput="onValInput(this.value)" style="font-size:15px;padding:10px 12px;">
+            </div>
+            <button class="btn bp" onclick="buscarTicketVal()" style="width:100%;justify-content:center;">🔍 Buscar e Validar</button>
+          </div>
+          <div id="val-result" style="display:none;margin-top:18px;">
+            <hr style="margin-bottom:14px;">
+            <div id="val-card"></div>
+            <!-- Seletor de período -->
+            <div class="fg" id="val-periodo-wrap" style="margin-top:12px;">
+              <label class="fl">Período de Embarque <span class="req">*</span></label>
+              <select id="val-periodo" style="font-size:14px;padding:8px 11px;">
+                <option value="07x13">07x13 &nbsp;(07:00 – 12:59)</option>
+                <option value="13x19">13x19 &nbsp;(13:00 – 18:59)</option>
+                <option value="19x01">19x01 &nbsp;(19:00 – 00:59)</option>
+                <option value="01x07">01x07 &nbsp;(01:00 – 06:59)</option>
+              </select>
+              <span style="font-size:11px;color:var(--ink4);">Pré-selecionado pelo horário de emissão — altere se necessário</span>
+            </div>
+            <div id="val-actions" style="margin-top:14px;display:flex;gap:10px;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Embarques Validados</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn bs bsm" onclick="exportValidados()">⬇ Exportar Excel</button>
+            </div>
+          </div>
+          <!-- barra de ações em lote -->
+          <div id="val-batch-bar" style="display:none;background:var(--w50);border:1px solid var(--w200);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span id="val-sel-count" style="font-size:13px;font-weight:600;color:var(--w700);">0 selecionados</span>
+            <button class="btn bd bsm" onclick="deleteSelectedValidados()">🗑 Excluir selecionados</button>
+            <button class="btn bs bsm" onclick="clearValSelection()">✕ Cancelar</button>
+          </div>
+          <div class="tw"><table id="val-report-table"><thead><tr>
+            <th style="width:30px;"><input type="checkbox" id="val-chk-all" onchange="toggleAllValidados(this)" style="width:auto;cursor:pointer;"></th>
+            <th>Ticket</th><th>Navio</th><th>Viagem</th><th>Porão</th><th>Tier</th>
+            <th>Ref</th><th>Lote</th><th>Marca</th><th>Shipper</th><th>Porto Descarga</th>
+            <th>Commodity</th><th>Armazém</th><th>DUE</th><th>NF</th>
+            <th>Qtde</th><th>CBM</th><th>Peso (kg)</th>
+            <th>Placa</th><th>Motorista</th><th>Conferente</th><th>Período</th><th>Validado em</th><th></th>
+          </tr></thead><tbody id="val-tb"></tbody></table></div>
+          <div id="val-empty" class="empty" style="display:none;"><div class="ei">✅</div><h3>Nenhum embarque validado</h3></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page on" id="page-dashboard">
+      <div class="sh"><h2>Dashboard</h2><button class="btn bs bsm" onclick="loadDash()">↻ Atualizar</button></div>
+      <!-- Cards de totais -->
+      <div class="sr s4" style="margin-bottom:16px;">
+        <div class="sc"><div class="sl">Lotes na Lista</div><div class="sv" id="d-lotes">—</div></div>
+        <div class="sc"><div class="sl">Tickets Emitidos</div><div class="sv" id="d-tks">—</div></div>
+        <div class="sc"><div class="sl">Validados</div><div class="sv" id="d-val">—</div></div>
+        <div class="sc"><div class="sl">CBM Total Embarcado</div><div class="sv" id="d-cbm">—</div></div>
+      </div>
+      <!-- Cards 24h e saldo -->
+      <div class="sr s4" style="margin-bottom:16px;">
+        <div class="sc" style="border-left:3px solid var(--w500);"><div class="sl">Embarcado 24h (pçs)</div><div class="sv" id="d-24h-qtd">—</div></div>
+        <div class="sc" style="border-left:3px solid var(--w500);"><div class="sl">Embarcado 24h (CBM)</div><div class="sv" id="d-24h-cbm">—</div></div>
+        <div class="sc" style="border-left:3px solid #e67e22;"><div class="sl">Saldo a Embarcar (pçs)</div><div class="sv" id="d-saldo-qtd">—</div></div>
+        <div class="sc" style="border-left:3px solid #e67e22;"><div class="sl">Saldo a Embarcar (CBM)</div><div class="sv" id="d-saldo-cbm">—</div></div>
+      </div>
+      <!-- Períodos e progresso -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="card">
+          <div class="ch"><div class="ct">Embarcado por Período</div></div>
+          <div id="d-periodos"><p style="font-size:13px;color:var(--ink4);">Selecione um navio.</p></div>
+        </div>
+        <div class="card"><div class="ch"><div class="ct">Progresso por Porto</div></div><div id="d-porto-prog"><p style="font-size:13px;color:var(--ink4);">Selecione um navio.</p></div></div>
+      </div>
+      <!-- Últimos tickets -->
+      <div class="card">
+        <div class="ch"><div class="ct">Últimos Tickets</div></div>
+        <div class="tw"><table><thead><tr><th>Nº Ticket</th><th>Porão</th><th>Tier</th><th>Período</th><th>Qtde</th><th>CBM</th><th>Placa</th><th>Status</th></tr></thead><tbody id="d-tk-tb"></tbody></table></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TICKET MODAL -->
+<div id="ticket-modal" style="display:none;" class="ov" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:380px;">
+    <div class="mh"><span class="mt">Ticket Emitido</span><button class="mx" onclick="document.getElementById('ticket-modal').style.display='none'">×</button></div>
+    <div id="ticket-print-wrap"><div class="tkt" id="ticket-content"></div></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn bp" onclick="window.print()" style="flex:1;justify-content:center;">🖨 Imprimir</button>
+      <button class="btn bs" onclick="document.getElementById('ticket-modal').style.display='none'">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEL MODAL -->
+<div id="del-modal" style="display:none;" class="ov" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:380px;">
+    <div class="mh"><span class="mt">Confirmar exclusão</span><button class="mx" onclick="document.getElementById('del-modal').style.display='none'">×</button></div>
+    <p style="font-size:13px;color:var(--ink3);margin-bottom:18px;">Tem certeza? Esta ação não pode ser desfeita.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn bs" onclick="document.getElementById('del-modal').style.display='none'">Cancelar</button>
+      <button class="btn bd" id="del-ok">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" style="display:none;" class="ov" onclick="if(event.target===this)closeEdit()">
+  <div class="modal" style="max-width:600px;">
+    <div class="mh">
+      <span class="mt" id="edit-title">Editar</span>
+      <button class="mx" onclick="closeEdit()">×</button>
+    </div>
+    <div id="edit-body" class="gr" style="gap:13px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn bs" onclick="closeEdit()">Cancelar</button>
+      <button class="btn bp" id="edit-save-btn" onclick="saveEdit()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="tw"></div>
+<div id="ld"><div class="spin"></div></div>
+<!-- dropdown global de autocomplete -->
+<div id="ref-suggest" class="suggest-box"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// SQL
+// ══════════════════════════════════════════════════
+var SQL=`-- WoodPort v4 — Execute no SQL Editor do Supabase
+-- Se as tabelas já existem, rode apenas os ALTER TABLE no final
+
+CREATE TABLE IF NOT EXISTS wp_navios (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome text NOT NULL, codigo text, viagem text, porto_origem text, eta date,
+  porao_qtd integer DEFAULT 0,
+  poroes_ativos text DEFAULT '',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS wp_usuarios (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome text NOT NULL,
+  login text UNIQUE NOT NULL,
+  senha_hash text NOT NULL,
+  perfil text DEFAULT 'conferente',
+  armazem text DEFAULT 'WRC',
+  ativo boolean DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS wp_lista_carga (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  navio_id uuid REFERENCES wp_navios(id) ON DELETE CASCADE,
+  ref integer, lote text NOT NULL, shipper text, porto_descarga text,
+  invoice_pl text,
+  bl text,
+  receiver text,
+  oceandoc_booking text,
+  commodity text,
+  cbm_total numeric(12,4) DEFAULT 0, quantidade integer DEFAULT 0,
+  peso_bruto numeric(12,3) DEFAULT 0, peso_medio numeric(12,3) DEFAULT 0,
+  armazem text, due text, marca text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS wp_tickets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  numero text UNIQUE NOT NULL,
+  navio_id uuid REFERENCES wp_navios(id),
+  placa text NOT NULL, motorista text NOT NULL,
+  conferente_id uuid REFERENCES wp_usuarios(id),
+  conferente_nome text,
+  armazem text,
+  porao text,
+  tier integer,
+  viagem text,
+  observacoes text,
+  status text DEFAULT 'emitido',
+  validado_em timestamptz,
+  periodo text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS wp_ticket_itens (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id uuid REFERENCES wp_tickets(id) ON DELETE CASCADE,
+  lista_id uuid REFERENCES wp_lista_carga(id),
+  ref integer, lote text NOT NULL, marca text,
+  shipper text, porto_descarga text, commodity text, armazem text,
+  due text, nf text,
+  quantidade integer DEFAULT 0,
+  cbm_calculado numeric(12,4) DEFAULT 0,
+  peso_calculado numeric(12,3) DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE wp_navios       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wp_usuarios     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wp_lista_carga  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wp_tickets      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wp_ticket_itens ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "wp_nav" ON wp_navios       FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "wp_usr" ON wp_usuarios     FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "wp_lc"  ON wp_lista_carga  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "wp_tk"  ON wp_tickets      FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "wp_ti"  ON wp_ticket_itens FOR ALL USING (true) WITH CHECK (true);
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_lc_navio  ON wp_lista_carga (navio_id);
+CREATE INDEX IF NOT EXISTS idx_lc_ref    ON wp_lista_carga (ref);
+CREATE INDEX IF NOT EXISTS idx_lc_lote   ON wp_lista_carga (lote);
+CREATE INDEX IF NOT EXISTS idx_tk_navio  ON wp_tickets (navio_id);
+CREATE INDEX IF NOT EXISTS idx_ti_ticket ON wp_ticket_itens (ticket_id);
+CREATE INDEX IF NOT EXISTS idx_ti_lista  ON wp_ticket_itens (lista_id);
+
+-- Admin inicial (login: admin | senha: admin123)
+INSERT INTO wp_usuarios (nome, login, senha_hash, perfil, ativo)
+VALUES ('Administrador', 'admin', 'admin123', 'admin', true)
+ON CONFLICT (login) DO NOTHING;
+
+-- ════ SE AS TABELAS JÁ EXISTEM, RODE ESTES ALTER: ════
+ALTER TABLE wp_navios       ADD COLUMN IF NOT EXISTS porao_qtd integer DEFAULT 0;
+ALTER TABLE wp_navios       ADD COLUMN IF NOT EXISTS poroes_ativos text DEFAULT '';
+ALTER TABLE wp_lista_carga  ADD COLUMN IF NOT EXISTS bl text;
+ALTER TABLE wp_lista_carga  ADD COLUMN IF NOT EXISTS receiver text;
+ALTER TABLE wp_lista_carga  ADD COLUMN IF NOT EXISTS oceandoc_booking text;
+ALTER TABLE wp_lista_carga  ADD COLUMN IF NOT EXISTS due text;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS conferente_id uuid;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS conferente_nome text;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS armazem text;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS porao text;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS tier integer;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS viagem text;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS periodo text;
+ALTER TABLE wp_ticket_itens ADD COLUMN IF NOT EXISTS due text;
+ALTER TABLE wp_ticket_itens ADD COLUMN IF NOT EXISTS nf text;
+ALTER TABLE wp_usuarios     ADD COLUMN IF NOT EXISTS armazem text DEFAULT 'WRC';`;
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+var sb=null, navioAtivo=null, naviosAll=[], usersAll=[], listaAll=[], ticketsAll=[];
+var currentUser=null;  // logged-in user object
+var loteTkCount=0;     // lote blocks in ticket form
+var camStream=null;    // camera stream
+var qrScanInterval=null;
+
+// helper: retorna o armazém do usuário logado (null = admin/todos)
+function userArmazem(){
+  if(!currentUser)return null;
+  var az=currentUser.armazem||'WRC';
+  return az==='*'?null:az;
+}
+// aplica filtro de armazém numa query Supabase
+function qAz(query, col){
+  var az=userArmazem();
+  return az?query.eq(col,az):query;
+}
+
+// ══════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════
+window.addEventListener('load',function(){
+  document.getElementById('sql-pre').textContent=SQL;
+  document.getElementById('today-lbl').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  // restore sidebar collapsed state
+  if(localStorage.getItem('wp_sb_collapsed')==='1'){toggleSidebar();}
+  var cfg=getCfg();
+  document.getElementById('cfg-url').value=cfg.url;
+  document.getElementById('cfg-key').value=cfg.key;
+  initSB(cfg.url,cfg.key);
+  var sess=getSession();
+  if(sess){currentUser=sess;showApp();return;}
+  document.getElementById('login-screen').style.display='';
+});
+
+
+
+function getSession(){try{return JSON.parse(sessionStorage.getItem('wp_sess')||'null');}catch{return null;}}
+function setSession(u){sessionStorage.setItem('wp_sess',JSON.stringify(u));}
+function clearSession(){sessionStorage.removeItem('wp_sess');}
+
+function doLogin(){
+  if(!sb){toast('Erro de conexão com o banco','error');return;}
+  var login=document.getElementById('li-user').value.trim().toLowerCase();
+  var pass=document.getElementById('li-pass').value;
+  if(!login||!pass){document.getElementById('li-err').style.display='';document.getElementById('li-err').textContent='Preencha login e senha.';return;}
+  showLd(true);
+  sb.from('wp_usuarios').select('*').eq('login',login).limit(1).then(function(r){
+    showLd(false);
+    if(r.error){showLoginErr('Erro ao consultar banco: '+r.error.message);return;}
+    if(!r.data||!r.data.length){showLoginErr('Usuário não encontrado.');return;}
+    var u=r.data[0];
+    if(pass!==u.senha_hash){showLoginErr('Senha incorreta.');return;}
+    currentUser=u;setSession(u);showApp();
+  });
+}
+
+function showLoginErr(msg){document.getElementById('li-err').textContent=msg;document.getElementById('li-err').style.display='';}
+
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  var perfil=currentUser.perfil||'conferente';
+  var perfilLabel={admin:'Admin',supervisor:'Supervisor',conferente:'Conferente'}[perfil]||perfil;
+  var armLabel=currentUser.armazem&&currentUser.armazem!=='*'?currentUser.armazem:'Todos';
+  document.getElementById('sb-user').textContent='👤 '+currentUser.nome+' ('+perfilLabel+')';
+  document.getElementById('sb-ship').textContent='🏭 '+armLabel;
+  // admin e supervisor veem menu de usuários
+  if(perfil==='admin'||perfil==='supervisor'){
+    document.getElementById('nav-usuarios').style.display='';
+  }
+  loadNaviosSel();
+  go('dashboard');
+}
+
+function doLogout(){clearSession();currentUser=null;location.reload();}
+
+// simple repeatable hash (not cryptographic — for production use Supabase Auth or Edge Function)
+function hashPass(p){
+  var h=0;for(var i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0;}
+  return btoa(String(h+p.split('').reverse().join(''))).replace(/=/g,'');
+}
+
+// ══════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════
+var titles={cfg:'Configurar Supabase',dashboard:'Dashboard',lista:'Lista de Carga',tickets:'Emissão de Tickets',validar:'Validar Embarque',usuarios:'Usuários',navio:'Navios'};
+function go(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.nv').forEach(function(n){n.classList.remove('on');});
+  var el=document.getElementById('page-'+page);if(el)el.classList.add('on');
+  document.querySelectorAll('.nv').forEach(function(n){if((n.getAttribute('onclick')||'').includes("'"+page+"'"))n.classList.add('on');});
+  document.getElementById('pg-title').textContent=titles[page]||page;
+  closeMobileMenu();
+  stopCamera();
+  if(page==='dashboard')loadDash();
+  if(page==='lista')loadLista();
+  if(page==='tickets'){
+    initTicketForm();loadTickets();
+    // Garante lista de carga carregada para autocomplete funcionar
+    if(navioAtivo&&!listaAll.length){
+      sb&&qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem').order('ref').then(function(r){listaAll=r.data||[];});
+    }
+  }
+  if(page==='validar')loadValidados();
+  if(page==='usuarios')loadUsers();
+  if(page==='navio')loadNavios();
+}
+
+// ══════════════════════════════════════════════════
+// SUPABASE — credenciais fixas
+// ══════════════════════════════════════════════════
+var WP_SB_URL='https://jtmmgisxeqcaqayhbxob.supabase.co';
+var WP_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0bW1naXN4ZXFjYXFheWhieG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTY2NDksImV4cCI6MjA5MDUzMjY0OX0.9O-OWxCP2cj9nTbA-CXyfokfJq5js_sCneKsxulgSSo';
+function getCfg(){return{url:WP_SB_URL,key:WP_SB_KEY};}
+function setCfg(u,k){if(u)WP_SB_URL=u;if(k)WP_SB_KEY=k;}
+function initSB(url,key){
+  if(sb)return true; // já inicializado, não cria outro
+  try{
+    sb=window.supabase.createClient(url,key,{auth:{storageKey:'wp_auth_'+url.split('.')[0].split('//')[1]}});
+    document.getElementById('conn-lbl').textContent='⬤ Conectado';
+    document.getElementById('conn-lbl').style.color='#5a9a5a';
+    return true;
+  }catch(e){sb=null;return false;}
+}
+function saveCfg(){
+  var u=document.getElementById('cfg-url').value.trim(),k=document.getElementById('cfg-key').value.trim();
+  if(!u||!k){toast('Preencha URL e Key','error');return;}
+  if(!initSB(u,k)){toast('Erro ao conectar','error');return;}
+  setCfg(u,k);toast('Conectado! Faça login para continuar.','success');
+}
+function testConn(){
+  if(!sb){toast('Conecte primeiro salvando as credenciais','error');return;}
+  showLd(true);
+  sb.from('wp_usuarios').select('id').limit(1).then(function(r){
+    showLd(false);
+    if(r.error&&!r.error.message.includes('schema cache'))toast('Erro: '+r.error.message,'error');
+    else toast('Conexão OK!','success');
+  });
+}
+function copySQL(){navigator.clipboard.writeText(SQL).then(function(){toast('SQL copiado!','success');});}
+
+// ══════════════════════════════════════════════════
+// NAVIO SELECTOR
+// ══════════════════════════════════════════════════
+function loadNaviosSel(){
+  if(!sb)return;
+  sb.from('wp_navios').select('*').order('created_at',{ascending:false}).then(function(r){
+    naviosAll=r.data||[];
+    var sel=document.getElementById('navio-sel');
+    sel.innerHTML='<option value="">— Selecione o Navio —</option>';
+    naviosAll.forEach(function(n){
+      var o=document.createElement('option');o.value=n.id;
+      o.textContent=n.nome+(n.viagem?' | Vgm '+n.viagem:'');sel.appendChild(o);
+    });
+    var saved=localStorage.getItem('wp_navio');
+    if(saved){sel.value=saved;onNavioChange();}
+  });
+}
+function onNavioChange(){
+  var id=document.getElementById('navio-sel').value;
+  navioAtivo=naviosAll.find(function(n){return n.id===id;})||null;
+  localStorage.setItem('wp_navio',id||'');
+  document.getElementById('sb-ship').textContent=navioAtivo?'⚓ '+navioAtivo.nome:'';
+  // atualiza select de porões no ticket
+  populatePoraoBySel();
+}
+
+function populatePoraoBySel(){
+  var sel=document.getElementById('tk-porao');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— selecione —</option>';
+  if(!navioAtivo){
+    sel.innerHTML+='<option value="" disabled>Nenhum navio selecionado</option>';
+    return;
+  }
+  // usa poroes_ativos se disponível, senão gera da quantidade total
+  var lista=[];
+  if(navioAtivo.poroes_ativos){
+    lista=navioAtivo.poroes_ativos.split(',').map(function(x){return x.trim();}).filter(Boolean);
+  } else if(navioAtivo.porao_qtd){
+    for(var i=1;i<=navioAtivo.porao_qtd;i++)lista.push('#'+String(i).padStart(2,'0'));
+  }
+  if(!lista.length){
+    sel.innerHTML+='<option value="" disabled>Nenhum porão cadastrado</option>';
+    return;
+  }
+  lista.forEach(function(lbl){
+    sel.innerHTML+='<option value="'+lbl+'">Porão '+lbl+'</option>';
+  });
+}
+
+// ══════════════════════════════════════════════════
+// NAVIOS CRUD
+// ══════════════════════════════════════════════════
+function updatePoroesCheck(preSelected){
+  var qty=parseInt(document.getElementById('nv-porao').value)||0;
+  var wrap=document.getElementById('nv-poroes-check-wrap');
+  var cont=document.getElementById('nv-poroes-check');
+  if(!qty){wrap.style.display='none';cont.innerHTML='';return;}
+  wrap.style.display='';
+  cont.innerHTML='';
+  for(var i=1;i<=qty;i++){
+    var lbl='#'+String(i).padStart(2,'0');
+    var checked=(preSelected&&preSelected.indexOf(lbl)>=0)||(!preSelected);
+    var cb=document.createElement('label');
+    cb.style.cssText='display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:var(--s);border:1px solid var(--bdr);border-radius:var(--rsm);padding:5px 10px;';
+    cb.innerHTML='<input type="checkbox" class="nv-porao-cb" value="'+lbl+'"'+(checked?' checked':'')+' style="width:auto;margin:0;">Porão '+lbl;
+    cont.appendChild(cb);
+  }
+}
+function salvarNavio(){
+  if(!sb){toast('Configure o Supabase','error');return;}
+  var nome=document.getElementById('nv-nome').value.trim();
+  if(!nome){toast('Informe o nome','error');return;}
+  var porao_qtd=parseInt(document.getElementById('nv-porao').value)||0;
+  var ativos=[];
+  document.querySelectorAll('.nv-porao-cb:checked').forEach(function(cb){ativos.push(cb.value);});
+  var poroes_ativos=ativos.join(',');
+  showLd(true);
+  sb.from('wp_navios').insert({nome,codigo:v('nv-cod'),viagem:v('nv-viagem'),porto_origem:v('nv-origem'),eta:v('nv-eta')||null,porao_qtd,poroes_ativos}).then(function(r){
+    showLd(false);if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Navio cadastrado!','success');
+    ['nv-nome','nv-cod','nv-viagem','nv-origem','nv-eta'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('nv-porao').value='0';
+    updatePoroesCheck([]);
+    loadNavios();loadNaviosSel();
+  });
+}
+function loadNavios(){
+  if(!sb)return;
+  sb.from('wp_navios').select('*').order('created_at',{ascending:false}).then(function(r){
+    naviosAll=r.data||[];
+    var tb=document.getElementById('nv-tb'),emp=document.getElementById('nv-empty');
+    if(!naviosAll.length){tb.innerHTML='';emp.style.display='';return;}emp.style.display='none';
+    tb.innerHTML=naviosAll.map(function(n){
+      var poroesLabel=n.poroes_ativos
+        ?n.poroes_ativos.split(',').filter(Boolean).join(', ')
+        :(n.porao_qtd?n.porao_qtd+' porão(ões)':'—');
+      return '<tr><td><strong>'+n.nome+'</strong></td><td>'+(n.codigo||'—')+'</td><td>'+(n.viagem||'—')+'</td>'
+        +'<td>'+poroesLabel+'</td>'
+        +'<td>'+(n.eta?fmtD(n.eta):'—')+'</td>'
+        +'<td style="display:flex;gap:4px;">'
+        +'<button class="btn bs bsm" onclick="editNavio(\''+n.id+'\')">✏</button>'
+        +(canDelete('wp_navios',{})
+          ?'<button class="btn bd bsm" onclick="confirmDel(\'wp_navios\',\''+n.id+'\',loadNavios)">✕</button>':'')
+        +'</td></tr>';
+    }).join('');
+  });
+}
+
+// ══════════════════════════════════════════════════
+// USUÁRIOS
+// ══════════════════════════════════════════════════
+function salvarUser(){
+  if(!sb){toast('Configure o Supabase','error');return;}
+  if(currentUser&&currentUser.perfil!=='admin'){toast('Apenas administradores podem cadastrar usuários','error');return;}
+  var nome=v('u-nome'),login=v('u-login'),pass=v('u-pass'),perfil=v('u-perfil');
+  var armazem=document.getElementById('u-armazem').value;
+  if(!nome||!login||!pass){toast('Preencha nome, login e senha','error');return;}
+  if(pass.length<6){toast('Senha mínima de 6 caracteres','error');return;}
+  showLd(true);
+  sb.from('wp_usuarios').insert({nome,login,senha_hash:hashPass(pass),perfil,armazem}).then(function(r){
+    showLd(false);if(r.error){toast('Erro: '+(r.error.message.includes('unique')?'Login já existe':r.error.message),'error');return;}
+    toast('Usuário cadastrado!','success');['u-nome','u-login','u-pass'].forEach(function(id){document.getElementById(id).value='';});
+    loadUsers();
+  });
+}
+function loadUsers(){
+  if(!sb)return;
+  sb.from('wp_usuarios').select('*').order('nome').then(function(r){
+    usersAll=r.data||[];
+    var tb=document.getElementById('u-tb'),emp=document.getElementById('u-empty');
+    if(!usersAll.length){tb.innerHTML='';emp.style.display='';return;}emp.style.display='none';
+    tb.innerHTML=usersAll.map(function(u){
+      var perfBadge=u.perfil==='admin'
+        ?'<span class="bge info">Admin</span>'
+        :u.perfil==='supervisor'
+          ?'<span class="bge warn">Supervisor</span>'
+          :'<span class="bge ntrl">Conferente</span>';
+      var armBadge=u.armazem&&u.armazem!=='*'
+        ?'<span class="bge" style="background:var(--w100);color:var(--w700);">'+u.armazem+'</span>'
+        :'<span class="bge ntrl">Todos</span>';
+      return '<tr><td><strong>'+u.nome+'</strong></td><td><code style="font-size:12px;">'+u.login+'</code></td><td>'+perfBadge+'</td><td>'+armBadge+'</td>'
+        +'<td style="display:flex;gap:4px;">'
+        +'<button class="btn bs bsm" onclick="editUser(\''+u.id+'\')">✏</button>'
+        +(canDelete('wp_usuarios',u)
+          ?'<button class="btn bd bsm" onclick="confirmDel(\'wp_usuarios\',\''+u.id+'\',loadUsers)">✕</button>':'')
+        +'</td></tr>';
+    }).join('');
+  });
+}
+
+// ══════════════════════════════════════════════════
+// LISTA DE CARGA — IMPORT
+// ══════════════════════════════════════════════════
+function importXLSX(input){
+  if(!sb||!navioAtivo){toast('Selecione um navio antes de importar','error');return;}
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var wb=XLSX.read(e.target.result,{type:'array'});
+    var rows=[];
+    wb.SheetNames.forEach(function(sn){
+      var ws=wb.Sheets[sn];
+      var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      var hRow=-1;
+      for(var i=0;i<raw.length;i++){
+        var r=raw[i].map(function(c){return String(c||'').toUpperCase();});
+        if(r.some(function(c){return c==='LOT'||c==='LOTE'||c.includes('LOT')&&c.length<6;})){hRow=i;break;}
+      }
+      if(hRow<0)return;
+      var headers=raw[hRow].map(function(c){return String(c||'').trim();});
+      function ci(keys){for(var i=0;i<headers.length;i++){var h=headers[i].toUpperCase().replace(/\n/g,' ');for(var k=0;k<keys.length;k++){if(h.includes(keys[k]))return i;}}return -1;}
+      var iRef=ci(['REF']),iLot=ci(['LOT','LOTE']),iShip=ci(['SHIPPER']),iDisch=ci(['DISCH','PORTO','PORT']),
+          iInv=ci(['INVOICE','PACKING','INV']),iBL=ci(['B/L','BL ',' BL','B.L']),
+          iReceiver=ci(['RECEIVER']),iOcean=ci(['OCEANDOC','BOOKING','OCEAN']),
+          iComm=ci(['COMM','COMMOD']),iCBM=ci(['CBM']),
+          iQtd=ci(['QTDE','QTD','QUANT']),iPeso=ci(['PESO BRU','PESO_BRU','WEIGHT','GROSS','PESO']),
+          iAz=ci(['AZ','ARMAZEM','ARMAZÉM','WAREHOUSE']),iDue=ci(['DUE','RUC']),iMark=ci(['MARK','MARCA']);
+      if(iLot<0)return;
+      for(var r2=hRow+1;r2<raw.length;r2++){
+        var row=raw[r2];
+        var lot=String(row[iLot]||'').trim();
+        if(!lot||lot==='0'||lot.toUpperCase()==='LOT'||lot.toUpperCase()==='LOTE')continue;
+        var peso=parseFloat(row[iPeso]||0)||0;
+        var qtd=parseInt(row[iQtd]||0)||0;
+        var cbm=parseFloat(row[iCBM]||0)||0;
+        rows.push({
+          navio_id:navioAtivo.id,
+          ref:iRef>=0?(parseInt(row[iRef])||null):null,
+          lote:lot,
+          shipper:iShip>=0?String(row[iShip]||'').trim()||null:null,
+          porto_descarga:iDisch>=0?String(row[iDisch]||'').trim()||null:null,
+          invoice_pl:iInv>=0?String(row[iInv]||'').trim()||null:null,
+          bl:iBL>=0?String(row[iBL]||'').trim()||null:null,
+          receiver:iReceiver>=0?String(row[iReceiver]||'').trim()||null:null,
+          oceandoc_booking:iOcean>=0?String(row[iOcean]||'').trim()||null:null,
+          commodity:iComm>=0?String(row[iComm]||'').trim()||null:null,
+          cbm_total:cbm,quantidade:qtd,peso_bruto:peso,
+          peso_medio:qtd>0?peso/qtd:0,
+          armazem:iAz>=0?String(row[iAz]||'').trim()||null:null,
+          due:iDue>=0?String(row[iDue]||'').trim()||null:null,
+          marca:iMark>=0?String(row[iMark]||'').trim()||null:null,
+        });
+      }
+    });
+    if(!rows.length){toast('Nenhuma linha válida encontrada','error');return;}
+    showLd(true);
+    sb.from('wp_lista_carga').delete().eq('navio_id',navioAtivo.id).then(function(){
+      var bsz=100,p=Promise.resolve();
+      for(var i=0;i<rows.length;i+=bsz)(function(batch){p=p.then(function(){return sb.from('wp_lista_carga').insert(batch);});})(rows.slice(i,i+bsz));
+      p.then(function(){showLd(false);toast(rows.length+' lotes importados com sucesso!','success');loadLista();});
+    });
+  };
+  reader.readAsArrayBuffer(file);input.value='';
+}
+
+function loadLista(){
+  if(!sb){return;}
+  if(!navioAtivo){document.getElementById('no-navio-warn').style.display='';document.getElementById('lista-empty').style.display='';return;}
+  document.getElementById('no-navio-warn').style.display='none';
+  document.getElementById('lista-navio-lbl').textContent='Navio: '+navioAtivo.nome;
+  showLd(true);
+  Promise.all([
+    qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem').order('ref'),
+    sb.from('wp_ticket_itens').select('lista_id,quantidade').filter('lista_id','not.is',null),
+  ]).then(function(rs){
+    showLd(false);listaAll=rs[0].data||[];
+    var util={};(rs[1].data||[]).forEach(function(l){util[l.lista_id]=(util[l.lista_id]||0)+l.quantidade;});
+    var tC=0,tQ=0,tP=0;
+    listaAll.forEach(function(l){tC+=parseFloat(l.cbm_total||0);tQ+=parseInt(l.quantidade||0);tP+=parseFloat(l.peso_bruto||0);});
+    document.getElementById('ls-lotes').textContent=listaAll.length;
+    document.getElementById('ls-cbm').textContent=tC.toFixed(3);
+    document.getElementById('ls-qtd').textContent=tQ.toLocaleString('pt-BR');
+    document.getElementById('ls-peso').textContent=tP.toFixed(0)+' kg';
+    var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
+    var psel=document.getElementById('lista-porto-sel');
+    psel.innerHTML='<option value="">Todos portos</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+    renderLista(listaAll,util);
+  });
+}
+function renderLista(list,um){
+  var tb=document.getElementById('lista-tb'),emp=document.getElementById('lista-empty');
+  if(!list.length){tb.innerHTML='';emp.style.display='';return;}emp.style.display='none';
+  tb.innerHTML=list.map(function(l){
+    var used=um?um[l.id]||0:0;
+    var saldo=Math.max(0,(l.quantidade||0)-used);
+    var pct=l.quantidade>0?Math.round(used/l.quantidade*100):0;
+    var bc=pct>=100?'pr':pct>=80?'py':'pg';
+    var st=saldo<=0?'<span class="bge dng">Esgotado</span>':pct>=80?'<span class="bge warn">'+saldo+' restam</span>':'<span class="bge ok">'+saldo+' disp.</span>';
+    return '<tr>'
+      +'<td><input type="checkbox" class="lista-row-chk" data-id="'+l.id+'" onchange="updateListaBatchBar()" style="width:auto;cursor:pointer;"></td>'
+      +'<td>'+(l.ref||'—')+'</td><td><strong>'+l.lote+'</strong></td><td>'+(l.shipper||'—')+'</td><td>'+(l.porto_descarga||'—')+'</td>'
+      +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.invoice_pl||'—')+'</td>'
+      +'<td>'+(l.bl||'—')+'</td>'
+      +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.receiver||'—')+'</td>'
+      +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.oceandoc_booking||'—')+'</td>'
+      +'<td>'+(l.commodity||'—')+'</td>'
+      +'<td>'+parseFloat(l.cbm_total||0).toFixed(3)+'</td><td>'+(l.quantidade||0)+'</td><td>'+parseFloat(l.peso_bruto||0).toFixed(0)+'</td>'
+      +'<td>'+parseFloat(l.peso_medio||0).toFixed(3)+'</td><td>'+(l.armazem||'—')+'</td>'
+      +'<td>'+(l.due||'—')+'</td>'
+      +'<td>'+(l.marca||'—')+'</td>'
+      +'<td><div style="min-width:80px;"><div style="font-size:11px;margin-bottom:2px;">'+used+' / '+(l.quantidade||0)+'</div><div class="pw"><div class="pb '+bc+'" style="width:'+pct+'%"></div></div></div></td>'
+      +'<td>'+st+'</td>'
+      +'<td style="display:flex;gap:4px;">'
+        +'<button class="btn bs bsm" onclick="editLista(\''+l.id+'\')">✏</button>'
+        +(canDelete('wp_lista_carga',l)
+          ?'<button class="btn bd bsm" onclick="confirmDel(\'wp_lista_carga\',\''+l.id+'\',loadLista)">✕</button>':'')
+      +'</td></tr>';
+  }).join('');
+}
+function filterLista(q){
+  var s=(q||'').toLowerCase(),porto=document.getElementById('lista-porto-sel').value;
+  renderLista(listaAll.filter(function(l){
+    var mQ=!s||l.lote.toLowerCase().includes(s)||(l.shipper||'').toLowerCase().includes(s)||(l.marca||'').toLowerCase().includes(s);
+    return mQ&&(!porto||(l.porto_descarga||'')===porto);
+  }),null);
+}
+
+// ══════════════════════════════════════════════════
+// TICKETS — MULTI-LOTE
+// ══════════════════════════════════════════════════
+function initTicketForm(){
+  if(currentUser)document.getElementById('tk-conf-nome').value=currentUser.nome;
+  // Viagem do Tier é sequência de embarque — não pré-preencher com viagem do navio
+  populatePoraoBySel();
+  if(document.getElementById('lotes-tk').children.length===0)addLoteTk();
+}
+
+function addLoteTk(){
+  loteTkCount++;
+  var id='ltk-'+loteTkCount;
+  var d=document.createElement('div');
+  d.className='lote-blk';d.id=id;
+  d.innerHTML='<div class="lote-blk-h">'
+    +'<span class="lote-blk-n">Lote #'+loteTkCount+'</span>'
+    +(loteTkCount>1?'<button class="btn bd bsm" style="padding:3px 8px;" onclick="rmvLoteTk(\''+id+'\')">✕</button>':'')
+    +'</div>'
+    +'<div class="gr" style="gap:9px;">'
+    // Ref field com autocomplete
+    +'<div class="fg">'
+      +'<label class="fl">Nº da Ref. <span class="req">*</span></label>'
+      +'<div style="display:flex;gap:8px;">'
+        +'<input type="number" class="lt-ref-input" data-id="'+loteTkCount+'" placeholder="Ex: 1, 15, 151..." min="1" style="max-width:160px;" '
+          +'onkeydown="if(event.key===\'Enter\'||event.key===\'Tab\'){event.preventDefault();buscarRef(this);}" '
+          +'autocomplete="off">'
+        +'<button type="button" class="btn bs bsm" onclick="buscarRef(this.previousElementSibling)">🔍 Buscar</button>'
+      +'</div>'
+      +'<span style="font-size:11px;color:var(--ink4);">Digite o número e pressione Enter ou clique Buscar</span>'
+      +'<div class="lt-ref-info" style="display:none;margin-top:6px;"></div>'
+    +'</div>'
+    // campos preenchidos automaticamente
+    +'<div class="gr g2">'
+      +'<div class="fg"><label class="fl">Lote</label><input type="text" class="lt-lote readonly-info" readonly></div>'
+      +'<div class="fg"><label class="fl">Marca</label><input type="text" class="lt-marca readonly-info" readonly></div>'
+    +'</div>'
+    +'<div class="gr g3">'
+      +'<div class="fg"><label class="fl">Shipper</label><input type="text" class="lt-shipper readonly-info" readonly></div>'
+      +'<div class="fg"><label class="fl">Porto Descarga</label><input type="text" class="lt-porto readonly-info" readonly></div>'
+      +'<div class="fg"><label class="fl">Armazém</label><input type="text" class="lt-armz readonly-info" readonly></div>'
+    +'</div>'
+    +'<div class="gr g2">'
+      +'<div class="fg"><label class="fl">DUE / RUC</label><input type="text" class="lt-due readonly-info" readonly placeholder="—"></div>'
+      +'<div class="fg"><label class="fl">NF <span class="req">*</span></label><input type="text" class="lt-nf" placeholder="Número da NF obrigatório"></div>'
+    +'</div>'
+    +'<div class="gr g2">'
+      +'<div class="fg"><label class="fl">Quantidade <span class="req">*</span></label><input type="number" class="lt-qtd" placeholder="0" min="1" oninput="calcTotais()"></div>'
+      +'<div class="fg">'
+        +'<label class="fl">Saldo disponível</label>'
+        +'<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rsm);padding:6px 10px;font-size:13px;">'
+          +'<div class="pw"><div class="pb pg lt-prog" style="width:0%"></div></div>'
+          +'<span class="lt-saldo-lbl" style="font-size:11px;color:var(--ink4);">—</span>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="gr g2">'
+      +'<div class="fg"><label class="fl">CBM calculado</label><input type="text" class="lt-cbm readonly-info" readonly placeholder="—"></div>'
+      +'<div class="fg"><label class="fl">Peso calculado</label><input type="text" class="lt-peso readonly-info" readonly placeholder="—"></div>'
+    +'</div>'
+    // hidden data
+    +'<input type="hidden" class="lt-lista-id">'
+    +'<input type="hidden" class="lt-cbm-unit" value="0">'
+    +'<input type="hidden" class="lt-peso-med" value="0">'
+    +'<input type="hidden" class="lt-qtd-max" value="0">'
+    +'</div>';
+  document.getElementById('lotes-tk').appendChild(d);
+}
+
+function rmvLoteTk(id){var el=document.getElementById(id);if(el){el.remove();calcTotais();}}
+
+// ══════════════════════════════════════════════════
+// BUSCA POR REF — simples, sem dropdown
+// Usuário digita o número da Ref e pressiona Enter ou Tab
+// ══════════════════════════════════════════════════
+
+function buscarRef(input){
+  var blk=input.closest('.lote-blk');
+  var q=input.value.trim();
+  if(!q){return;}
+  if(!sb){toast('Supabase não conectado','error');return;}
+  if(!navioAtivo){toast('Selecione um navio no topo','error');return;}
+
+  // mostra status de busca
+  setBlkStatus(blk,'buscando');
+
+  // tenta por número exato primeiro, depois por lote
+  var refNum=parseInt(q);
+  var query=sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id);
+  if(!isNaN(refNum)){
+    query=query.eq('ref',refNum);
+  } else {
+    query=query.ilike('lote','%'+q+'%');
+  }
+  query.limit(1).single().then(function(r){
+    if(r.error||!r.data){
+      setBlkStatus(blk,'nao_encontrado',q);
+      return;
+    }
+    preencherBlk(blk,r.data);
+  });
+}
+
+function setBlkStatus(blk,status,q){
+  var info=blk.querySelector('.lt-ref-info');
+  if(!info)return;
+  if(status==='buscando'){
+    info.style.display='';
+    info.innerHTML='<span style="color:var(--ink4);">🔍 Buscando Ref '+q+'...</span>';
+  } else if(status==='nao_encontrado'){
+    info.style.display='';
+    info.innerHTML='<span style="color:#b91c1c;">❌ Ref "'+q+'" não encontrada na lista de carga</span>';
+  } else {
+    info.style.display='none';
+    info.innerHTML='';
+  }
+}
+
+function preencherBlk(blk,l){
+  // preenche todos os campos do bloco
+  var refInput=blk.querySelector('.lt-ref-input');
+  if(refInput)refInput.value=String(l.ref||'');
+
+  setField(blk,'.lt-lote',l.lote||'');
+  setField(blk,'.lt-marca',l.marca||'');
+  setField(blk,'.lt-shipper',l.shipper||'');
+  setField(blk,'.lt-porto',l.porto_descarga||'');
+  setField(blk,'.lt-armz',l.armazem||'');
+  setField(blk,'.lt-due',l.due||'');
+  setField(blk,'.lt-lista-id',l.id||'');
+
+  var cbmUnit=(l.quantidade>0)?(parseFloat(l.cbm_total||0)/parseInt(l.quantidade)):0;
+  setField(blk,'.lt-cbm-unit',cbmUnit);
+  setField(blk,'.lt-peso-med',parseFloat(l.peso_medio||0));
+
+  // mostra painel de info preenchida
+  var info=blk.querySelector('.lt-ref-info');
+  if(info){
+    info.style.display='';
+    info.innerHTML=
+      '<div style="background:var(--f50);border:1px solid var(--f100);border-radius:var(--rsm);padding:8px 10px;font-size:12px;line-height:1.8;">'
+      +'<strong style="color:var(--ink);">Ref '+l.ref+' · '+l.lote+'</strong><br>'
+      +(l.marca?'<span style="color:var(--ink3);">Marca: <strong>'+l.marca+'</strong></span><br>':'')
+      +(l.shipper?'<span style="color:var(--ink3);">Shipper: '+l.shipper+'</span><br>':'')
+      +(l.porto_descarga?'<span style="color:var(--ink3);">Porto: '+l.porto_descarga+'</span><br>':'')
+      +(l.armazem?'<span style="color:var(--ink3);">Armazém: '+l.armazem+'</span><br>':'')
+      +(l.due?'<span style="color:var(--ink3);">DUE: '+l.due+'</span><br>':'')
+      +'<span style="color:var(--ink3);">CBM unit: '+cbmUnit.toFixed(4)+' | Peso médio: '+parseFloat(l.peso_medio||0).toFixed(3)+' kg</span>'
+      +'</div>';
+  }
+
+  // busca saldo
+  setField(blk,'.lt-saldo-lbl','Consultando saldo...');
+  sb.from('wp_ticket_itens').select('quantidade').eq('lista_id',l.id).then(function(r){
+    var used=(r.data||[]).reduce(function(s,t){return s+(parseInt(t.quantidade)||0);},0);
+    var total=parseInt(l.quantidade)||0;
+    var saldo=Math.max(0,total-used);
+    var pct=total>0?Math.round(used/total*100):0;
+    setField(blk,'.lt-qtd-max',saldo);
+    setField(blk,'.lt-saldo-lbl',saldo+' pçs disponíveis ('+used+' usadas de '+total+')');
+    var bar=blk.querySelector('.lt-prog');
+    if(bar){
+      bar.style.width=Math.min(pct,100)+'%';
+      bar.className='pb '+(pct>=100?'pr':pct>=80?'py':'pg')+' lt-prog';
+    }
+    if(saldo<=0){
+      setField(blk,'.lt-saldo-lbl','⚠ Lote esgotado! ('+used+' / '+total+')');
+    }
+  });
+
+  // foca na quantidade
+  setTimeout(function(){
+    var qtd=blk.querySelector('.lt-qtd');
+    if(qtd)qtd.focus();
+  },80);
+
+  calcTotais();
+}
+
+function setField(blk,sel,val){
+  var el=blk.querySelector(sel);
+  if(el)el.value=val;
+}
+
+
+
+function calcTotais(){
+  var blks=document.querySelectorAll('.lote-blk');
+  var totCBM=0,totPeso=0,totQtd=0,ok=false;
+  blks.forEach(function(blk){
+    var qtd=parseInt((blk.querySelector('.lt-qtd')||{}).value)||0;
+    var cbmU=parseFloat((blk.querySelector('.lt-cbm-unit')||{}).value)||0;
+    var pesoM=parseFloat((blk.querySelector('.lt-peso-med')||{}).value)||0;
+    var maxQ=parseInt((blk.querySelector('.lt-qtd-max')||{}).value)||0;
+    // atualiza CBM e Peso do bloco
+    if(qtd>0){
+      var cbm=cbmU*qtd, peso=pesoM*qtd;
+      if(blk.querySelector('.lt-cbm'))blk.querySelector('.lt-cbm').value=cbm.toFixed(4)+' m³';
+      if(blk.querySelector('.lt-peso'))blk.querySelector('.lt-peso').value=peso.toFixed(3)+' kg';
+      totCBM+=cbm; totPeso+=peso; totQtd+=qtd; ok=true;
+      // alerta de saldo
+      var saldoEl=blk.querySelector('.lt-saldo-lbl');
+      var refInput=blk.querySelector('.lt-ref-input');
+      var temLote=(blk.querySelector('.lt-lista-id')||{}).value;
+      if(saldoEl&&temLote&&maxQ>0){
+        if(qtd>maxQ){
+          saldoEl.style.color='#b91c1c';
+          saldoEl.textContent='⚠ Quantidade ('+qtd+') ultrapassa saldo ('+maxQ+' disponíveis)';
+          if(blk.querySelector('.lt-qtd'))blk.querySelector('.lt-qtd').style.borderColor='#e74c3c';
+        } else {
+          saldoEl.style.color='var(--ink4)';
+          saldoEl.textContent=(maxQ-qtd)+' restantes de '+maxQ+' disponíveis';
+          if(blk.querySelector('.lt-qtd'))blk.querySelector('.lt-qtd').style.borderColor='';
+        }
+      }
+    } else {
+      if(blk.querySelector('.lt-cbm'))blk.querySelector('.lt-cbm').value='';
+      if(blk.querySelector('.lt-peso'))blk.querySelector('.lt-peso').value='';
+      if(blk.querySelector('.lt-qtd'))blk.querySelector('.lt-qtd').style.borderColor='';
+    }
+  });
+  // totais gerais
+  var totDiv=document.getElementById('tk-totais');
+  if(totDiv)totDiv.style.display=ok?'':'none';
+  var totCbmEl=document.getElementById('tk-tot-cbm');
+  var totPesoEl=document.getElementById('tk-tot-peso');
+  if(totCbmEl)totCbmEl.textContent=totCBM.toFixed(4)+' m³';
+  if(totPesoEl)totPesoEl.textContent=totPeso.toFixed(3)+' kg';
+}
+
+// ── PLACA BRASILEIRA ──
+// Formatos: AAA-1234 (antigo) ou AAA1B23 (Mercosul)
+var RE_OLD=/^[A-Z]{3}-?\d{4}$/;
+var RE_MER=/^[A-Z]{3}\d[A-Z]\d{2}$/;
+function fmtPlaca(inp){
+  var raw=inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  // format: 3 letras + hífen + resto
+  var fmt=raw;
+  if(raw.length>3)fmt=raw.slice(0,3)+'-'+raw.slice(3);
+  // max 8 chars (AAA-1234 or AAA-1B23)
+  inp.value=fmt.slice(0,8);
+  var clean=inp.value.replace('-','');
+  var hint=document.getElementById('placa-hint');
+  if(clean.length===7){
+    if(RE_OLD.test(inp.value)||RE_MER.test(inp.value)){
+      inp.classList.remove('invalid');hint.textContent='';hint.style.color='';
+    } else {
+      inp.classList.add('invalid');hint.textContent='Formato inválido. Use AAA-1234 ou AAA1B23';hint.style.color='#b91c1c';
+    }
+  } else {hint.textContent='';inp.classList.remove('invalid');}
+}
+function placaValida(p){var c=p.replace('-','');return (RE_OLD.test(p)||RE_MER.test(p))&&c.length===7;}
+
+// ── EMITIR TICKET ──
+function emitirTicket(){
+  if(!sb){toast('Configure o Supabase','error');return;}
+  if(!navioAtivo){toast('Selecione um navio','error');return;}
+  if(!currentUser){toast('Faça login primeiro','error');return;}
+  var placa=document.getElementById('tk-placa').value.trim().toUpperCase();
+  var motorista=document.getElementById('tk-motorista').value.trim();
+  var porao=document.getElementById('tk-porao').value;
+  var tier=parseInt(document.getElementById('tk-tier').value)||null;
+  var viagem=document.getElementById('tk-viagem').value.trim()||null;
+  if(!placa||!motorista){toast('Preencha Placa e Motorista','error');return;}
+  if(!placaValida(placa)){toast('Placa inválida. Use AAA-1234 ou AAA1B23','error');return;}
+  if(!porao){toast('Selecione o Porão','error');return;}
+  if(!tier){toast('Selecione o Tier','error');return;}
+  // collect lotes
+  var blks=document.querySelectorAll('.lote-blk');
+  var lotesData=[];
+  var erros=false;
+  blks.forEach(function(blk){
+    var lote=blk.querySelector('.lt-lote').value.trim();
+    var listaId=blk.querySelector('.lt-lista-id').value;
+    var qtd=parseInt(blk.querySelector('.lt-qtd').value||0);
+    var nfVal=blk.querySelector('.lt-nf').value.trim();
+    if(!lote||!listaId){erros=true;toast('Busque uma Ref em todos os blocos antes de emitir','error');return;}
+    if(!nfVal){erros=true;toast('NF é obrigatório em todos os lotes','error');blk.querySelector('.lt-nf').focus();return;}
+    if(!qtd||qtd<=0){erros=true;toast('Quantidade deve ser > 0 em todos os lotes','error');return;}
+    var maxQ=parseInt(blk.querySelector('.lt-qtd-max').value||999999);
+    if(qtd>maxQ){erros=true;toast('Quantidade ultrapassa saldo do lote '+lote+' (máx: '+maxQ+')','error');return;}
+    var cbmU=parseFloat(blk.querySelector('.lt-cbm-unit').value||0);
+    var pesoM=parseFloat(blk.querySelector('.lt-peso-med').value||0);
+    var ref=parseInt(blk.querySelector('.lt-ref-input').value)||null;
+    var listaRow=listaAll.find(function(l){return l.id===listaId;})||{};
+    lotesData.push({
+      lista_id:listaId||null,
+      ref:ref||listaRow.ref||null,
+      lote, marca:blk.querySelector('.lt-marca').value||null,
+      shipper:blk.querySelector('.lt-shipper').value||null,
+      porto_descarga:blk.querySelector('.lt-porto').value||null,
+      commodity:listaRow.commodity||null,
+      armazem:blk.querySelector('.lt-armz').value||null,
+      due:blk.querySelector('.lt-due').value||null,
+      nf:blk.querySelector('.lt-nf').value.trim()||null,
+      quantidade:qtd,
+      cbm_calculado:cbmU*qtd,
+      peso_calculado:pesoM*qtd,
+    });
+  });
+  if(erros||!lotesData.length)return;
+  var num='TK-'+(navioAtivo.codigo||'WP')+'-'+Date.now().toString().slice(-7);
+  showLd(true);
+  sb.from('wp_tickets').insert({
+    numero:num, navio_id:navioAtivo.id, placa, motorista,
+    conferente_id:currentUser.id, conferente_nome:currentUser.nome,
+    armazem:currentUser.armazem||'WRC',
+    porao, tier, viagem,
+    observacoes:document.getElementById('tk-obs').value.trim()||null,
+    status:'emitido',
+  }).select().single().then(function(r){
+    if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
+    var tkId=r.data.id;
+    var lPayload=lotesData.map(function(l){return Object.assign({},l,{ticket_id:tkId});});
+    sb.from('wp_ticket_itens').insert(lPayload).then(function(r2){
+      showLd(false);
+      if(r2.error){toast('Ticket salvo mas erro nos lotes: '+r2.error.message,'error');return;}
+      toast('Ticket '+num+' emitido!','success');
+      showTicketPrint(r.data,lotesData);
+      resetTicketForm();loadTickets();
+    });
+  });
+}
+
+function resetTicketForm(){
+  ['tk-placa','tk-motorista','tk-obs','tk-viagem'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('tk-porao').value='';
+  document.getElementById('tk-tier').value='';
+  document.getElementById('lotes-tk').innerHTML='';
+  loteTkCount=0;addLoteTk();
+  document.getElementById('tk-totais').style.display='none';
+  document.getElementById('placa-hint').textContent='';
+}
+
+// ── PRINT ──
+function sumItens(lotes,field){return lotes.reduce(function(s,l){return s+parseFloat(l[field]||0);},0);}
+function showTicketPrint(tk,lotes){
+  var totQtd=lotes.reduce(function(s,l){return s+(parseInt(l.quantidade)||0);},0);
+  var totCBM=sumItens(lotes,'cbm_calculado');
+  var totPeso=sumItens(lotes,'peso_calculado');
+
+  // helper: linha simples
+  function tr(lb,vl){return '<div class="tr"><span class="lb">'+lb+'</span><span class="vl">'+vl+'</span></div>';}
+  // helper: linha dupla (2 pares na mesma linha)
+  function t2(lb1,vl1,lb2,vl2){
+    return '<div class="t2">'
+      +'<div class="p"><span class="lb">'+lb1+'</span><span class="vl">'+vl1+'</span></div>'
+      +'<div class="p"><span class="lb">'+lb2+'</span><span class="vl">'+vl2+'</span></div>'
+      +'</div>';
+  }
+
+  var linhasLotes='';
+  lotes.forEach(function(l,i){
+    linhasLotes+='<div class="tsec">Lote '+(i+1)+'</div>'
+      +t2('Ref',(l.ref||'—'),'Lote',(l.lote||'—'))
+      +tr('Marca',(l.marca||'—'))
+      +tr('Shipper',(l.shipper||'—'))
+      +t2('Porto',(l.porto_descarga||'—'),'Armazém',(l.armazem||'—'))
+      +(l.due?tr('DUE/RUC',l.due):'')
+      +t2('NF',(l.nf||'—'),'Qtde',(l.quantidade||0)+' pçs')
+      +t2('CBM',parseFloat(l.cbm_calculado||0).toFixed(4)+' m³','Peso',parseFloat(l.peso_calculado||0).toFixed(3)+' kg');
+  });
+
+  var html=''
+    +'<div class="tl">WOODPORT</div>'
+    +'<div class="tt">Ticket de Embarque</div>'
+    +'<div class="tn">'+tk.numero+'</div>'
+    +'<div class="ts"></div>'
+    +t2('Navio',(navioAtivo?navioAtivo.nome:'—'),'Vgm Navio',(navioAtivo&&navioAtivo.viagem?navioAtivo.viagem:'—'))
+    +t2('Porão',(tk.porao||'—'),'Tier',(tk.tier?'Tier '+tk.tier:'—'))
+    +(tk.viagem?t2('Vgm Tier',tk.viagem,'',''):'')
+    +t2('Placa',tk.placa,'Motorista',tk.motorista)
+    +tr('Conferente',(tk.conferente_nome||'—'))
+    +tr('Emissão',new Date().toLocaleString('pt-BR'))
+    +'<div class="ts"></div>'
+    +linhasLotes
+    +'<div class="ts"></div>'
+    +'<div class="tsec">Totais</div>'
+    +t2('Qtde',totQtd+' pçs','CBM',totCBM.toFixed(4)+' m³')
+    +tr('Peso Total',totPeso.toFixed(3)+' kg')
+    +'<div class="ts"></div>'
+    +'<div class="tq"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent(tk.numero)+'" width="120" height="120" alt="QR" style="image-rendering:pixelated;"></div>'
+    +'<div class="tf">'+tk.numero+' — Leia o QR para confirmar embarque</div>';
+
+  document.getElementById('ticket-content').innerHTML=html;
+  document.getElementById('ticket-modal').style.display='flex';
+}
+
+function loadTickets(){
+  if(!sb||!navioAtivo)return;
+  qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('navio_id',navioAtivo.id),'armazem')
+    .order('created_at',{ascending:false}).then(function(r){
+      ticketsAll=r.data||[];renderTickets(ticketsAll);
+    });
+}
+function renderTickets(list){
+  var tb=document.getElementById('tk-tb'),emp=document.getElementById('tk-empty');
+  if(!list.length){tb.innerHTML='';emp.style.display='';return;}emp.style.display='none';
+  tb.innerHTML=list.map(function(t){
+    var lts=t.wp_ticket_itens||[];
+    var lotesStr=[...new Set(lts.map(function(l){return 'R'+(l.ref||l.lote);}))].join(', ');
+    var portosStr=[...new Set(lts.map(function(l){return l.porto_descarga;}).filter(Boolean))].join(', ');
+    var totQtd=lts.reduce(function(s,l){return s+(parseInt(l.quantidade)||0);},0);
+    var totCBM=lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0);
+    var totPeso=lts.reduce(function(s,l){return s+parseFloat(l.peso_calculado||0);},0);
+    var conf=t.conferente_nome||t.usuario_nome||'—';
+    var st=t.status==='validado'?'<span class="bge ok">Validado</span>':'<span class="bge info">Emitido</span>';
+    return '<tr>'
+      +'<td><input type="checkbox" class="tk-row-chk" data-id="'+t.id+'" onchange="updateTkBatchBar()" style="width:auto;cursor:pointer;"></td>'
+      +'<td><strong>'+t.numero+'</strong></td>'
+      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+lotesStr+'">'+lotesStr+'</td>'
+      +'<td>'+portosStr+'</td>'
+      +'<td>'+totQtd+'</td><td>'+totCBM.toFixed(3)+'</td><td>'+totPeso.toFixed(0)+'</td>'
+      +'<td>'+t.placa+'</td><td>'+conf+'</td><td>'+st+'</td>'
+      +'<td style="display:flex;gap:4px;">'
+        +'<button class="btn bs bsm" onclick="reimprimirTicket(\''+t.id+'\')" title="Reimprimir">🖨</button>'
+        +'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')" title="Editar">✏</button>'
+        +(t.status!=='validado'&&canDelete('wp_tickets',t)
+          ?'<button class="btn bd bsm" onclick="confirmDel(\'wp_tickets\',\''+t.id+'\',loadTickets)">✕</button>':'')
+      +'</td></tr>';
+  }).join('');
+}
+function filterTickets(q){
+  var s=q.toLowerCase();
+  renderTickets(ticketsAll.filter(function(t){
+    return t.numero.toLowerCase().includes(s)||t.placa.toLowerCase().includes(s)||(t.usuario_nome||'').toLowerCase().includes(s);
+  }));
+}
+function reimprimirTicket(id){
+  var tk=ticketsAll.find(function(t){return t.id===id;});if(!tk)return;
+  showTicketPrint(tk,tk.wp_ticket_itens||[]);
+}
+
+// ══════════════════════════════════════════════════
+// CÂMERA QR CODE
+// ══════════════════════════════════════════════════
+function toggleCamera(){
+  if(camStream){stopCamera();return;}
+  var video=document.getElementById('qr-video');
+  var wrap=document.getElementById('qr-video-wrap');
+  var btn=document.getElementById('cam-btn');
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+    camStream=stream;video.srcObject=stream;wrap.style.display='';
+    btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Fechar Câmera';
+    // scan loop using BarcodeDetector if available, otherwise jsQR fallback
+    startQRScan(video);
+  }).catch(function(err){toast('Câmera indisponível: '+err.message,'error');});
+}
+function stopCamera(){
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
+  clearInterval(qrScanInterval);qrScanInterval=null;
+  document.getElementById('qr-video-wrap').style.display='none';
+  document.getElementById('cam-btn').innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir Câmera QR';
+}
+function startQRScan(video){
+  var canvas=document.createElement('canvas');
+  var ctx=canvas.getContext('2d');
+  function doScan(){
+    if(!camStream||!video.videoWidth)return;
+    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+    ctx.drawImage(video,0,0);
+    if('BarcodeDetector' in window){
+      var bd=new BarcodeDetector({formats:['qr_code']});
+      // pass ImageBitmap (cloneable) instead of video element
+      createImageBitmap(canvas).then(function(bmp){
+        bd.detect(bmp).then(function(codes){
+          bmp.close();
+          if(codes.length){var val=codes[0].rawValue;stopCamera();document.getElementById('val-code').value=val;buscarTicketVal();}
+        }).catch(function(){});
+      }).catch(function(){});
+    } else if(typeof jsQR==='function'){
+      var img=ctx.getImageData(0,0,canvas.width,canvas.height);
+      var code=jsQR(img.data,img.width,img.height);
+      if(code){stopCamera();document.getElementById('val-code').value=code.data;buscarTicketVal();}
+    }
+  }
+  // load jsQR as fallback if BarcodeDetector not available
+  if(!('BarcodeDetector' in window)&&typeof jsQR==='undefined'){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js';
+    s.onload=function(){qrScanInterval=setInterval(doScan,400);};
+    document.head.appendChild(s);
+  } else {
+    qrScanInterval=setInterval(doScan,400);
+  }
+}
+
+// ══════════════════════════════════════════════════
+// VALIDAR EMBARQUE
+// ══════════════════════════════════════════════════
+var valTimeout=null;
+function onValInput(v){clearTimeout(valTimeout);if(v.length>=6)valTimeout=setTimeout(buscarTicketVal,600);}
+function buscarTicketVal(){
+  var code=document.getElementById('val-code').value.trim();
+  if(!code){toast('Informe o número','error');return;}
+  if(!sb){toast('Sem conexão','error');return;}
+  showLd(true);
+  qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('numero',code),'armazem').limit(1).then(function(r){
+    if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
+    if(r.data&&r.data.length){showLd(false);renderValResult(r.data[0]);return;}
+    qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('id',code),'armazem').limit(1).then(function(r2){
+      showLd(false);
+      if(r2.error||!r2.data||!r2.data.length){
+        toast('Ticket "'+code+'" não encontrado no seu armazém','error');return;
+      }
+      renderValResult(r2.data[0]);
+    });
+  });
+}
+// detecta período com base numa data/hora
+function calcPeriodo(dtStr){
+  var h=dtStr?new Date(dtStr).getHours():new Date().getHours();
+  if(h>=7&&h<13)return'07x13';
+  if(h>=13&&h<19)return'13x19';
+  if(h>=19||h===0)return'19x01';  // 19:00–23:59 e 00:00–00:59
+  return'01x07'; // 01:00–06:59
+}
+
+function renderValResult(tk){
+  var lts=tk.wp_ticket_itens||[];
+  var isVal=tk.status==='validado';
+  var lotesHtml=lts.map(function(l){
+    return '<div style="background:var(--s3);border-radius:var(--rsm);padding:8px 10px;margin-top:6px;font-size:12px;">'
+      +'<strong>Ref '+(l.ref||'—')+' — '+l.lote+'</strong>'+(l.marca?' | '+l.marca:'')
+      +'<div style="color:var(--ink4);margin-top:3px;">'+(l.porto_descarga||'')+(l.armazem?' · '+l.armazem:'')
+        +' · '+l.quantidade+' pçs · '+parseFloat(l.cbm_calculado||0).toFixed(3)+' m³'+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('val-card').innerHTML='<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:14px;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+    +'<span style="font-size:15px;font-weight:600;">'+tk.numero+'</span>'
+    +(isVal?'<span class="bge ok">✓ Validado</span>':'<span class="bge info">Emitido</span>')+'</div>'
+    +'<div class="gr g2" style="gap:5px;font-size:12px;margin-bottom:8px;">'
+    +'<div><span style="color:var(--ink4);">Placa:</span><br><strong>'+tk.placa+'</strong></div>'
+    +'<div><span style="color:var(--ink4);">Motorista:</span><br><strong>'+tk.motorista+'</strong></div>'
+    +'<div><span style="color:var(--ink4);">CBM Total:</span><br><strong>'+lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0).toFixed(4)+' m³</strong></div>'
+    +'<div><span style="color:var(--ink4);">Conferente:</span><br><strong>'+(tk.conferente_nome||tk.usuario_nome||'—')+'</strong></div>'
+    +(tk.porao?'<div><span style="color:var(--ink4);">Porão:</span><br><strong>'+tk.porao+'</strong></div>':'')
+    +(tk.tier?'<div><span style="color:var(--ink4);">Tier:</span><br><strong>Tier '+tk.tier+'</strong></div>':'')
+    +'</div>'
+    +lotesHtml
+    +(isVal?'<div style="margin-top:8px;font-size:12px;color:var(--ink4);">Validado em: '+new Date(tk.validado_em).toLocaleString('pt-BR')+(tk.periodo?' · Período: <strong>'+tk.periodo+'</strong>':'')+'</div>':'')
+    +'</div>';
+
+  // seletor de período: se já validado mostra o salvo; senão calcula pelo horário de emissão
+  var periodoWrap=document.getElementById('val-periodo-wrap');
+  var periodoSel=document.getElementById('val-periodo');
+  if(isVal){
+    periodoWrap.style.display='none';
+  } else {
+    periodoWrap.style.display='';
+    var p=tk.periodo||calcPeriodo(tk.created_at);
+    periodoSel.value=p;
+  }
+
+  var actions=document.getElementById('val-actions');
+  actions.innerHTML=isVal
+    ?'<button class="btn bs bsm" onclick="editTicket(\''+tk.id+'\')">✏ Editar</button>'
+     +'<button class="btn bs" onclick="document.getElementById(\'val-result\').style.display=\'none\'">Fechar</button>'
+    :'<button class="btn bf" style="flex:1;justify-content:center;" onclick="validarTicket(\''+tk.id+'\')">✅ Confirmar Embarque</button>'
+     +'<button class="btn bs bsm" onclick="editTicket(\''+tk.id+'\')">✏ Editar</button>'
+     +'<button class="btn bs" onclick="document.getElementById(\'val-result\').style.display=\'none\'">Cancelar</button>';
+  document.getElementById('val-result').style.display='';
+}
+function validarTicket(id){
+  var periodo=document.getElementById('val-periodo').value;
+  if(!periodo){toast('Selecione o período de embarque','error');return;}
+  showLd(true);
+  sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString(),periodo:periodo}).eq('id',id).then(function(r){
+    showLd(false);if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Embarque validado! Período: '+periodo,'success');
+    document.getElementById('val-result').style.display='none';
+    document.getElementById('val-code').value='';
+    loadValidados();if(typeof loadTickets==='function')loadTickets();
+  });
+}
+function loadValidados(){
+  if(!sb||!navioAtivo)return;
+  qAz(sb.from('wp_tickets')
+    .select('*,wp_ticket_itens(*)')
+    .eq('navio_id',navioAtivo.id)
+    .eq('status','validado'),'armazem')
+    .order('validado_em',{ascending:false})
+    .then(function(r){
+      var list=r.data||[];
+      var tb=document.getElementById('val-tb'),emp=document.getElementById('val-empty');
+      if(!list.length){tb.innerHTML='';emp.style.display='';return;}
+      emp.style.display='none';
+      var rows='';
+      var nomeNavio=navioAtivo?navioAtivo.nome:'—';
+      list.forEach(function(t){
+        var itens=t.wp_ticket_itens||[];
+        var conf=t.conferente_nome||t.usuario_nome||'—';
+        var valEm=t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'—';
+        if(!itens.length){
+          rows+='<tr>'
+            +'<td><input type="checkbox" class="val-row-chk" data-id="'+t.id+'" onchange="updateValBatchBar()" style="width:auto;cursor:pointer;"></td>'
+            +'<td><strong>'+t.numero+'</strong></td>'
+            +'<td>'+nomeNavio+'</td><td>'+(t.viagem||'—')+'</td>'
+            +'<td>'+(t.porao||'—')+'</td><td>'+(t.tier||'—')+'</td>'
+            +'<td colspan="9" style="color:var(--ink4);">—</td>'
+            +'<td>0</td><td>0.000</td><td>0.000</td>'
+            +'<td>'+t.placa+'</td><td>'+t.motorista+'</td><td>'+conf+'</td><td>'+(t.periodo||'—')+'</td><td>'+valEm+'</td>'
+            +'<td><button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')">✏</button></td>'
+            +'</tr>';
+        } else {
+          itens.forEach(function(it,idx){
+            rows+='<tr>'
+              +(idx===0
+                ?'<td><input type="checkbox" class="val-row-chk" data-id="'+t.id+'" onchange="updateValBatchBar()" style="width:auto;cursor:pointer;"></td>'
+                :'<td></td>')
+              +'<td><strong>'+t.numero+'</strong></td>'
+              +'<td>'+nomeNavio+'</td><td>'+(t.viagem||'—')+'</td>'
+              +'<td>'+(t.porao||'—')+'</td><td>'+(t.tier||'—')+'</td>'
+              +'<td>'+(it.ref||'—')+'</td><td>'+(it.lote||'—')+'</td>'
+              +'<td>'+(it.marca||'—')+'</td><td>'+(it.shipper||'—')+'</td>'
+              +'<td>'+(it.porto_descarga||'—')+'</td><td>'+(it.commodity||'—')+'</td>'
+              +'<td>'+(it.armazem||t.armazem||'—')+'</td><td>'+(it.due||'—')+'</td>'
+              +'<td>'+(it.nf||'—')+'</td>'
+              +'<td>'+(it.quantidade||0)+'</td>'
+              +'<td>'+parseFloat(it.cbm_calculado||0).toFixed(4)+'</td>'
+              +'<td>'+parseFloat(it.peso_calculado||0).toFixed(3)+'</td>'
+              +'<td>'+t.placa+'</td><td>'+t.motorista+'</td><td>'+conf+'</td><td>'+(t.periodo||'—')+'</td><td>'+valEm+'</td>'
+              +'<td>'+(idx===0?'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')">✏</button>':'')+'</td>'
+              +'</tr>';
+          });
+        }
+      });
+      tb.innerHTML=rows;
+    });
+}
+
+function exportValidados(){
+  if(!sb||!navioAtivo){toast('Selecione um navio','error');return;}
+  showLd(true);
+  sb.from('wp_tickets')
+    .select('*,wp_ticket_itens(*)')
+    .eq('navio_id',navioAtivo.id)
+    .eq('status','validado')
+    .order('validado_em',{ascending:false})
+    .then(function(r){
+      showLd(false);
+      var list=r.data||[];
+      if(!list.length){toast('Nenhum embarque validado para exportar','error');return;}
+      var rows=[];
+      var nomeNavio=navioAtivo?navioAtivo.nome:'—';
+      list.forEach(function(t){
+        var itens=t.wp_ticket_itens||[];
+        var conf=t.conferente_nome||t.usuario_nome||'—';
+        var valEm=t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'—';
+        if(!itens.length){
+          rows.push({
+            'Ticket':t.numero,'Navio':nomeNavio,'Viagem':t.viagem||'',
+            'Porão':t.porao||'','Tier':t.tier||'',
+            'Ref':'','Lote':'','Marca':'','Shipper':'','Porto Descarga':'',
+            'Commodity':'','Armazém':'','DUE':'','NF':'',
+            'Qtde':0,'CBM m³':0,'Peso kg':0,
+            'Placa':t.placa,'Motorista':t.motorista,'Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
+          });
+        } else {
+          itens.forEach(function(it){
+            rows.push({
+              'Ticket':t.numero,'Navio':nomeNavio,'Viagem':t.viagem||'',
+              'Porão':t.porao||'','Tier':t.tier||'',
+              'Ref':it.ref||'','Lote':it.lote||'','Marca':it.marca||'',
+              'Shipper':it.shipper||'','Porto Descarga':it.porto_descarga||'',
+              'Commodity':it.commodity||'','Armazém':it.armazem||'',
+              'DUE':it.due||'','NF':it.nf||'',
+              'Qtde':it.quantidade||0,
+              'CBM m³':parseFloat(it.cbm_calculado||0),
+              'Peso kg':parseFloat(it.peso_calculado||0),
+              'Placa':t.placa,'Motorista':t.motorista,'Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
+            });
+          });
+        }
+      });
+      var ws=XLSX.utils.json_to_sheet(rows);
+      // auto col width
+      var cols=Object.keys(rows[0]||{}).map(function(k){return{wch:Math.max(k.length,12)};});
+      ws['!cols']=cols;
+      var wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'Embarques Validados');
+      XLSX.writeFile(wb,'woodport_embarques_validados_'+new Date().toISOString().split('T')[0]+'.xlsx');
+    });
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+function loadDash(){
+  if(!sb||!navioAtivo)return;
+  showLd(true);
+  var agora=new Date();
+  var h24ago=new Date(agora.getTime()-24*60*60*1000).toISOString();
+  Promise.all([
+    qAz(sb.from('wp_lista_carga').select('porto_descarga,quantidade,cbm_total').eq('navio_id',navioAtivo.id),'armazem'),
+    qAz(sb.from('wp_tickets').select('id,numero,status,periodo,porao,tier,placa,created_at,validado_em').eq('navio_id',navioAtivo.id),'armazem').order('created_at',{ascending:false}),
+    sb.from('wp_ticket_itens').select('ticket_id,porto_descarga,quantidade,cbm_calculado,peso_calculado'),
+  ]).then(function(rs){
+    showLd(false);
+    if(rs[0].error||rs[1].error||rs[2].error){toast('Erro ao carregar dashboard','error');return;}
+    var lcarga=rs[0].data||[];
+    var tks=rs[1].data||[];
+    var itens=rs[2].data||[];
+
+    // filtra apenas itens de tickets deste navio
+    var tkIds=new Set(tks.map(function(t){return t.id;}));
+    var itensNavio=itens.filter(function(i){return tkIds.has(i.ticket_id);});
+
+    // mapa itens por ticket
+    var itensPorTk={};
+    itensNavio.forEach(function(i){
+      if(!itensPorTk[i.ticket_id])itensPorTk[i.ticket_id]={qtd:0,cbm:0,peso:0};
+      itensPorTk[i.ticket_id].qtd+=(parseInt(i.quantidade)||0);
+      itensPorTk[i.ticket_id].cbm+=parseFloat(i.cbm_calculado||0);
+    });
+
+    var val=tks.filter(function(t){return t.status==='validado';});
+    var valIds=new Set(val.map(function(t){return t.id;}));
+
+    // totais gerais
+    var totalQtdLista=lcarga.reduce(function(s,l){return s+(parseInt(l.quantidade)||0);},0);
+    var totalCbmLista=lcarga.reduce(function(s,l){return s+parseFloat(l.cbm_total||0);},0);
+    var totalQtdEmb=0,totalCbmEmb=0;
+    val.forEach(function(t){var it=itensPorTk[t.id]||{};totalQtdEmb+=(it.qtd||0);totalCbmEmb+=(it.cbm||0);});
+
+    // 24h
+    var val24=val.filter(function(t){return t.validado_em&&t.validado_em>=h24ago;});
+    var qtd24=0,cbm24=0;
+    val24.forEach(function(t){var it=itensPorTk[t.id]||{};qtd24+=(it.qtd||0);cbm24+=(it.cbm||0);});
+
+    // saldo
+    var saldoQtd=Math.max(0,totalQtdLista-totalQtdEmb);
+    var saldoCbm=Math.max(0,totalCbmLista-totalCbmEmb);
+
+    // cards
+    document.getElementById('d-lotes').textContent=lcarga.length;
+    document.getElementById('d-tks').textContent=tks.length;
+    document.getElementById('d-val').textContent=val.length;
+    document.getElementById('d-cbm').textContent=totalCbmEmb.toFixed(3)+' m³';
+    document.getElementById('d-24h-qtd').textContent=qtd24+' pçs';
+    document.getElementById('d-24h-cbm').textContent=cbm24.toFixed(3)+' m³';
+    document.getElementById('d-saldo-qtd').textContent=saldoQtd+' pçs';
+    document.getElementById('d-saldo-cbm').textContent=saldoCbm.toFixed(3)+' m³';
+
+    // embarcado por período
+    var periodos=['07x13','13x19','19x01','01x07'];
+    var pColors={'07x13':'#2980b9','13x19':'#27ae60','19x01':'#8e44ad','01x07':'#c0392b'};
+    var pQtd={},pCbm={};
+    periodos.forEach(function(p){pQtd[p]=0;pCbm[p]=0;});
+    val.forEach(function(t){
+      var p=t.periodo||calcPeriodo(t.validado_em||t.created_at);
+      var it=itensPorTk[t.id]||{};
+      pQtd[p]=(pQtd[p]||0)+(it.qtd||0);
+      pCbm[p]=(pCbm[p]||0)+(it.cbm||0);
+    });
+    var pHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    periodos.forEach(function(p){
+      var cor=pColors[p];
+      pHtml+='<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:12px;border-left:3px solid '+cor+';">'
+        +'<div style="font-size:12px;font-weight:700;color:'+cor+';margin-bottom:6px;">'+p+'</div>'
+        +'<div style="font-size:13px;"><strong>'+(pQtd[p]||0)+'</strong> pçs</div>'
+        +'<div style="font-size:12px;color:var(--ink4);">'+(pCbm[p]||0).toFixed(3)+' m³</div>'
+        +'</div>';
+    });
+    pHtml+='</div>';
+    document.getElementById('d-periodos').innerHTML=pHtml;
+
+    // últimos tickets
+    var dtb=document.getElementById('d-tk-tb');
+    if(!tks.length){dtb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--ink4);padding:16px;">Sem tickets</td></tr>';
+    } else {
+      dtb.innerHTML=tks.slice(0,12).map(function(t){
+        var it=itensPorTk[t.id]||{qtd:0,cbm:0};
+        var st=t.status==='validado'
+          ?'<span class="bge ok">Validado</span>'
+          :'<span class="bge info">Emitido</span>';
+        var per=t.status==='validado'?(t.periodo||calcPeriodo(t.validado_em||t.created_at)):'—';
+        return '<tr>'
+          +'<td><strong>'+t.numero+'</strong></td>'
+          +'<td>'+(t.porao||'—')+'</td>'
+          +'<td>'+(t.tier?'T'+t.tier:'—')+'</td>'
+          +'<td>'+(per!=='—'?'<span style="font-weight:600;color:var(--w600);">'+per+'</span>':'—')+'</td>'
+          +'<td>'+it.qtd+'</td>'
+          +'<td>'+it.cbm.toFixed(3)+'</td>'
+          +'<td>'+t.placa+'</td>'
+          +'<td>'+st+'</td>'
+          +'</tr>';
+      }).join('');
+    }
+
+    // progresso por porto
+    var portosTotal={},portosFeito={};
+    lcarga.forEach(function(l){var p=l.porto_descarga||'—';portosTotal[p]=(portosTotal[p]||0)+(parseInt(l.quantidade)||0);});
+    itensNavio.forEach(function(i){
+      if(valIds.has(i.ticket_id)){var p=i.porto_descarga||'—';portosFeito[p]=(portosFeito[p]||0)+(parseInt(i.quantidade)||0);}
+    });
+    var prgHtml='';
+    Object.keys(portosTotal).sort().forEach(function(p){
+      var tot=portosTotal[p],done=portosFeito[p]||0,pct=tot>0?Math.round(done/tot*100):0;
+      var cl=pct>=100?'pr':pct>=60?'py':'pg';
+      prgHtml+='<div style="margin-bottom:12px;">'
+        +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">'
+          +'<strong>'+p+'</strong>'
+          +'<span style="color:var(--ink4);">'+done+' / '+tot+' pçs ('+pct+'%)</span>'
+        +'</div>'
+        +'<div class="pw"><div class="pb '+cl+'" style="width:'+pct+'%"></div></div>'
+        +'</div>';
+    });
+    document.getElementById('d-porto-prog').innerHTML=prgHtml||'<p style="font-size:13px;color:var(--ink4);">Sem dados.</p>';
+  });
+}
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function v(id){var el=document.getElementById(id);return el?(el.value.trim()||null):null;}
+function fmtD(d){if(!d)return'—';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function showLd(x){document.getElementById('ld').style.display=x?'flex':'none';}
+function toast(msg,type){
+  var c=document.getElementById('tw'),el=document.createElement('div');
+  el.className='toast '+(type||'');
+  var ic={success:'✓',error:'✕',info:'ℹ'};
+  el.innerHTML='<span style="font-size:15px;">'+(ic[type]||'ℹ')+'</span><div class="tm"><strong>'+(type==='success'?'Sucesso':type==='error'?'Erro':'Info')+'</strong>'+msg+'</div>';
+  c.appendChild(el);
+  setTimeout(function(){el.style.animation='slo .3s ease forwards';setTimeout(function(){el.remove();},300);},(type==='error'?7000:3500));
+}
+// ══════════════════════════════════════════════════
+// EDIÇÃO GENÉRICA
+// ══════════════════════════════════════════════════
+var _editState={table:null,id:null,cb:null};
+
+function openEdit(title,fields,table,id,cb){
+  _editState={table,id,cb};
+  document.getElementById('edit-title').textContent=title;
+  var body=document.getElementById('edit-body');
+  body.innerHTML=fields.map(function(f){
+    if(f.type==='select'){
+      return '<div class="fg"><label class="fl">'+f.label+'</label>'
+        +'<select id="ef-'+f.key+'">'
+        +f.options.map(function(o){return '<option value="'+o.v+'"'+(o.v==f.val?' selected':'')+'>'+o.l+'</option>';}).join('')
+        +'</select></div>';
+    }
+    if(f.type==='textarea'){
+      return '<div class="fg"><label class="fl">'+f.label+'</label>'
+        +'<textarea id="ef-'+f.key+'" rows="2">'+( f.val||'')+'</textarea></div>';
+    }
+    return '<div class="fg"><label class="fl">'+f.label+'</label>'
+      +'<input type="'+(f.type||'text')+'" id="ef-'+f.key+'" value="'+(f.val||'')+'" placeholder="'+(f.ph||'')+'"></div>';
+  }).join('');
+  // layout em 2 colunas se muitos campos
+  if(fields.length>4)body.className='gr g2';else body.className='gr';
+  body.style.gap='12px';
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+function closeEdit(){document.getElementById('edit-modal').style.display='none';}
+
+function saveEdit(){
+  if(!_editState.table)return;
+  var body=document.getElementById('edit-body');
+  var inputs=body.querySelectorAll('input,select,textarea');
+  var payload={};
+  inputs.forEach(function(el){
+    var key=el.id.replace('ef-','');
+    payload[key]=el.value.trim()||null;
+  });
+  showLd(true);
+  sb.from(_editState.table).update(payload).eq('id',_editState.id).then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Salvo com sucesso!','success');
+    closeEdit();
+    if(_editState.cb)_editState.cb();
+  });
+}
+
+// ── EDITAR NAVIO ──
+function editNavio(id){
+  var n=naviosAll.find(function(x){return x.id===id;});
+  if(!n)return;
+  var preSelected=n.poroes_ativos?n.poroes_ativos.split(',').map(function(x){return x.trim();}).filter(Boolean):[];
+  // gera checkboxes para todos os porões (até o total)
+  var qty=parseInt(n.porao_qtd)||0;
+  var checkboxesHtml='';
+  for(var i=1;i<=10;i++){
+    var lbl='#'+String(i).padStart(2,'0');
+    var checked=preSelected.indexOf(lbl)>=0||(preSelected.length===0&&i<=qty);
+    checkboxesHtml+='<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:var(--s);border:1px solid var(--bdr);border-radius:var(--rsm);padding:5px 10px;">'
+      +'<input type="checkbox" class="edit-porao-cb" value="'+lbl+'"'+(checked?' checked':'')+' style="width:auto;margin:0;">Porão '+lbl+'</label>';
+  }
+  document.getElementById('edit-title').textContent='Editar Navio';
+  var body=document.getElementById('edit-body');
+  body.className='gr';body.style.gap='13px';
+  body.innerHTML=''
+    +'<div class="gr g2" style="gap:10px;">'
+      +'<div class="fg"><label class="fl">Nome do Navio</label><input type="text" id="en-nome" value="'+( n.nome||'')+'"></div>'
+      +'<div class="fg"><label class="fl">Código</label><input type="text" id="en-cod" value="'+(n.codigo||'')+'"></div>'
+    +'</div>'
+    +'<div class="gr g2" style="gap:10px;">'
+      +'<div class="fg"><label class="fl">Viagem Nº</label><input type="text" id="en-viagem" value="'+(n.viagem||'')+'"></div>'
+      +'<div class="fg"><label class="fl">Porto de Origem</label><input type="text" id="en-origem" value="'+(n.porto_origem||'')+'"></div>'
+    +'</div>'
+    +'<div class="gr g2" style="gap:10px;">'
+      +'<div class="fg"><label class="fl">ETA</label><input type="date" id="en-eta" value="'+(n.eta||'')+'"></div>'
+      +'<div class="fg"><label class="fl">Total de Porões do Navio</label>'
+        +'<select id="en-porao-qtd">'
+        +[0,1,2,3,4,5,6,7,8,9,10].map(function(v){return '<option value="'+v+'"'+(v===(n.porao_qtd||0)?' selected':'')+'>'+( v===0?'Sem porões':v)+' </option>';}).join('')
+        +'</select>'
+      +'</div>'
+    +'</div>'
+    +'<div class="fg"><label class="fl">Porões que serão trabalhados</label>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:7px;padding:10px;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rsm);">'+checkboxesHtml+'</div>'
+      +'<span style="font-size:11px;color:var(--ink4);">Marque apenas os porões que serão utilizados</span>'
+    +'</div>';
+  document.getElementById('edit-save-btn').onclick=function(){
+    var payload={
+      nome:document.getElementById('en-nome').value.trim()||null,
+      codigo:document.getElementById('en-cod').value.trim()||null,
+      viagem:document.getElementById('en-viagem').value.trim()||null,
+      porto_origem:document.getElementById('en-origem').value.trim()||null,
+      eta:document.getElementById('en-eta').value||null,
+      porao_qtd:parseInt(document.getElementById('en-porao-qtd').value)||0,
+    };
+    var ativos=[];
+    body.querySelectorAll('.edit-porao-cb:checked').forEach(function(cb){ativos.push(cb.value);});
+    payload.poroes_ativos=ativos.join(',');
+    showLd(true);
+    sb.from('wp_navios').update(payload).eq('id',id).then(function(r){
+      showLd(false);
+      if(r.error){toast('Erro: '+r.error.message,'error');return;}
+      toast('Navio atualizado!','success');closeEdit();loadNavios();loadNaviosSel();
+    });
+  };
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+// ── EDITAR USUÁRIO ──
+function editUser(id){
+  var u=usersAll.find(function(x){return x.id===id;});
+  if(!u)return;
+  openEdit('Editar Usuário',[
+    {key:'nome',label:'Nome completo',val:u.nome,ph:'Nome'},
+    {key:'login',label:'Login',val:u.login,ph:'joao.silva'},
+    {key:'senha_hash',label:'Nova senha (deixe em branco para manter)',val:'',ph:'••••••'},
+    {key:'perfil',label:'Perfil',type:'select',val:u.perfil,options:[
+      {v:'conferente',l:'Conferente'},{v:'supervisor',l:'Supervisor'},{v:'admin',l:'Administrador'}
+    ]},
+    {key:'armazem',label:'Armazém',type:'select',val:u.armazem||'WRC',options:[
+      {v:'WRC',l:'WRC'},{v:'Pratico',l:'Pratico'},{v:'Global',l:'Global'},{v:'*',l:'Todos (Admin)'}
+    ]},
+  ],'wp_usuarios',id,loadUsers);
+  document.getElementById('edit-save-btn').onclick=function(){
+    var payload={
+      nome:document.getElementById('ef-nome').value.trim()||null,
+      login:document.getElementById('ef-login').value.trim()||null,
+      perfil:document.getElementById('ef-perfil').value,
+      armazem:document.getElementById('ef-armazem').value,
+    };
+    var pass=document.getElementById('ef-senha_hash').value.trim();
+    if(pass)payload.senha_hash=pass;
+    showLd(true);
+    sb.from('wp_usuarios').update(payload).eq('id',id).then(function(r){
+      showLd(false);
+      if(r.error){toast('Erro: '+r.error.message,'error');return;}
+      toast('Usuário atualizado!','success');closeEdit();loadUsers();
+    });
+  };
+}
+
+// ── EDITAR TICKET ──
+function editTicket(id){
+  showLd(true);
+  // sempre busca no banco para ter dados frescos com itens
+  sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('id',id).single().then(function(r){
+    showLd(false);
+    if(r.error||!r.data){toast('Ticket não encontrado','error');return;}
+    var tk=r.data;
+    var itens=tk.wp_ticket_itens||[];
+
+    // atualiza cache
+    var idx=ticketsAll.findIndex(function(x){return x.id===id;});
+    if(idx>=0)ticketsAll[idx]=tk;else ticketsAll.push(tk);
+
+    // monta opções de porão a partir do navio ativo
+    var poraoAtivos=navioAtivo&&navioAtivo.poroes_ativos
+      ?navioAtivo.poroes_ativos.split(',').map(function(x){return x.trim();}).filter(Boolean)
+      :[];
+    var poraoOpts=[{v:'',l:'— selecione —'}];
+    if(poraoAtivos.length){
+      poraoAtivos.forEach(function(p){poraoOpts.push({v:p,l:'Porão '+p});});
+    } else if(navioAtivo&&navioAtivo.porao_qtd){
+      for(var i=1;i<=navioAtivo.porao_qtd;i++)poraoOpts.push({v:'#'+String(i).padStart(2,'0'),l:'Porão #'+String(i).padStart(2,'0')});
+    } else {
+      for(var j=1;j<=10;j++)poraoOpts.push({v:'#'+String(j).padStart(2,'0'),l:'Porão #'+String(j).padStart(2,'0')});
+    }
+    var tierOpts=[{v:'',l:'— selecione —'}];
+    for(var t=1;t<=12;t++)tierOpts.push({v:String(t),l:'Tier '+t});
+
+    // monta html do modal manualmente (mais controle que openEdit genérico)
+    document.getElementById('edit-title').textContent='Editar Ticket — '+tk.numero;
+    var body=document.getElementById('edit-body');
+    body.className='gr';body.style.gap='13px';
+
+    var itensHtml=itens.map(function(it,i){
+      return '<div style="background:var(--s3);border:1px solid var(--bds);border-radius:var(--rsm);padding:12px;">'
+        +'<div style="font-size:11px;font-weight:600;color:var(--w600);margin-bottom:8px;text-transform:uppercase;">Lote '+(i+1)+' — Ref '+(it.ref||'—')+' / '+it.lote+'</div>'
+        +'<div class="gr g2" style="gap:8px;">'
+        +'<div class="fg"><label class="fl">NF <span class="req">*</span></label><input type="text" class="eit-nf" data-id="'+it.id+'" value="'+(it.nf||'')+'" placeholder="NF obrigatório"></div>'
+        +'<div class="fg"><label class="fl">Quantidade</label><input type="number" class="eit-qtd" data-id="'+it.id+'" value="'+(it.quantidade||0)+'" min="1"></div>'
+        +'<div class="fg"><label class="fl">DUE / RUC</label><input type="text" class="eit-due" data-id="'+it.id+'" value="'+(it.due||'')+'"></div>'
+        +'<div class="fg"><label class="fl">Porto Descarga</label><input type="text" class="eit-porto" data-id="'+it.id+'" value="'+(it.porto_descarga||'')+'"></div>'
+        +'</div></div>';
+    }).join('');
+
+    body.innerHTML=''
+      +'<div class="gr g2" style="gap:10px;">'
+        +'<div class="fg"><label class="fl">Placa</label><input type="text" id="ef-placa" value="'+(tk.placa||'')+'" style="text-transform:uppercase;"></div>'
+        +'<div class="fg"><label class="fl">Motorista</label><input type="text" id="ef-motorista" value="'+(tk.motorista||'')+'"></div>'
+      +'</div>'
+      +'<div class="gr g3" style="gap:10px;">'
+        +'<div class="fg"><label class="fl">Porão</label>'
+          +'<select id="ef-porao">'+poraoOpts.map(function(o){return '<option value="'+o.v+'"'+(o.v===tk.porao?' selected':'')+'>'+o.l+'</option>';}).join('')+'</select>'
+        +'</div>'
+        +'<div class="fg"><label class="fl">Tier</label>'
+          +'<select id="ef-tier">'+tierOpts.map(function(o){return '<option value="'+o.v+'"'+(o.v===String(tk.tier||'')?' selected':'')+'>'+o.l+'</option>';}).join('')+'</select>'
+        +'</div>'
+        +'<div class="fg"><label class="fl">Viagem do Tier</label><input type="text" id="ef-viagem" value="'+(tk.viagem||'')+'"></div>'
+      +'</div>'
+      +'<div class="fg"><label class="fl">Observações</label><textarea id="ef-observacoes" rows="2">'+(tk.observacoes||'')+'</textarea></div>'
+      +(itensHtml?'<div style="font-size:12px;font-weight:600;color:var(--ink3);margin-top:4px;">Itens do Ticket</div>'+itensHtml:'');
+
+    document.getElementById('edit-save-btn').onclick=function(){
+      var placa=document.getElementById('ef-placa').value.trim().toUpperCase();
+      var motorista=document.getElementById('ef-motorista').value.trim();
+      var porao=document.getElementById('ef-porao').value;
+      var tier=parseInt(document.getElementById('ef-tier').value)||null;
+      var viagem=document.getElementById('ef-viagem').value.trim()||null;
+      var obs=document.getElementById('ef-observacoes').value.trim()||null;
+      if(!placa||!motorista){toast('Placa e Motorista são obrigatórios','error');return;}
+      // valida NF em todos os itens
+      var itensPayload=[];
+      var nfErr=false;
+      body.querySelectorAll('.eit-nf').forEach(function(el){
+        if(!el.value.trim()){nfErr=true;el.style.borderColor='#e74c3c';}
+        else el.style.borderColor='';
+      });
+      if(nfErr){toast('NF é obrigatório em todos os itens','error');return;}
+      body.querySelectorAll('.eit-nf').forEach(function(el){
+        var iid=el.dataset.id;
+        var qtdEl=body.querySelector('.eit-qtd[data-id="'+iid+'"]');
+        var dueEl=body.querySelector('.eit-due[data-id="'+iid+'"]');
+        var portoEl=body.querySelector('.eit-porto[data-id="'+iid+'"]');
+        itensPayload.push({
+          id:iid,
+          nf:el.value.trim(),
+          quantidade:parseInt(qtdEl?qtdEl.value:0)||0,
+          due:dueEl?dueEl.value.trim()||null:null,
+          porto_descarga:portoEl?portoEl.value.trim()||null:null,
+        });
+      });
+      showLd(true);
+      sb.from('wp_tickets').update({placa,motorista,porao,tier,viagem,observacoes:obs}).eq('id',id).then(function(r){
+        if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
+        // atualiza cada item
+        var updates=itensPayload.map(function(it){
+          var itId=it.id;var payload={nf:it.nf,quantidade:it.quantidade,due:it.due,porto_descarga:it.porto_descarga};
+          return sb.from('wp_ticket_itens').update(payload).eq('id',itId);
+        });
+        Promise.all(updates).then(function(){
+          showLd(false);toast('Ticket atualizado!','success');
+          closeEdit();loadTickets();loadValidados();
+        });
+      });
+    };
+    document.getElementById('edit-modal').style.display='flex';
+  });
+}
+
+// ── EDITAR LISTA DE CARGA ──
+function editLista(id){
+  var l=listaAll.find(function(x){return x.id===id;});
+  if(!l){toast('Lote não encontrado','error');return;}
+  openEdit('Editar Lote — Ref '+(l.ref||'?')+' / '+l.lote,[
+    {key:'ref',label:'Ref',type:'number',val:l.ref||''},
+    {key:'lote',label:'Lote',val:l.lote||''},
+    {key:'shipper',label:'Shipper',val:l.shipper||''},
+    {key:'porto_descarga',label:'Porto Descarga',val:l.porto_descarga||''},
+    {key:'invoice_pl',label:'Invoice/PL',val:l.invoice_pl||''},
+    {key:'bl',label:'B/L',val:l.bl||''},
+    {key:'receiver',label:'Receiver',val:l.receiver||''},
+    {key:'oceandoc_booking',label:'Oceandoc/Booking',val:l.oceandoc_booking||''},
+    {key:'commodity',label:'Commodity',val:l.commodity||''},
+    {key:'cbm_total',label:'CBM Total',type:'number',val:l.cbm_total||0},
+    {key:'quantidade',label:'Quantidade',type:'number',val:l.quantidade||0},
+    {key:'peso_bruto',label:'Peso Bruto',type:'number',val:l.peso_bruto||0},
+    {key:'armazem',label:'Armazém',val:l.armazem||''},
+    {key:'due',label:'DUE',val:l.due||''},
+    {key:'marca',label:'Marca',val:l.marca||''},
+  ],'wp_lista_carga',id,loadLista);
+  document.getElementById('edit-save-btn').onclick=function(){
+    var payload={
+      ref:parseInt(document.getElementById('ef-ref').value)||null,
+      lote:document.getElementById('ef-lote').value.trim()||null,
+      shipper:document.getElementById('ef-shipper').value.trim()||null,
+      porto_descarga:document.getElementById('ef-porto_descarga').value.trim()||null,
+      invoice_pl:document.getElementById('ef-invoice_pl').value.trim()||null,
+      bl:document.getElementById('ef-bl').value.trim()||null,
+      receiver:document.getElementById('ef-receiver').value.trim()||null,
+      oceandoc_booking:document.getElementById('ef-oceandoc_booking').value.trim()||null,
+      commodity:document.getElementById('ef-commodity').value.trim()||null,
+      cbm_total:parseFloat(document.getElementById('ef-cbm_total').value)||0,
+      quantidade:parseInt(document.getElementById('ef-quantidade').value)||0,
+      peso_bruto:parseFloat(document.getElementById('ef-peso_bruto').value)||0,
+      armazem:document.getElementById('ef-armazem').value.trim()||null,
+      due:document.getElementById('ef-due').value.trim()||null,
+      marca:document.getElementById('ef-marca').value.trim()||null,
+    };
+    // recalc peso_medio
+    if(payload.quantidade>0)payload.peso_medio=payload.peso_bruto/payload.quantidade;
+    showLd(true);
+    sb.from('wp_lista_carga').update(payload).eq('id',id).then(function(r){
+      showLd(false);
+      if(r.error){toast('Erro: '+r.error.message,'error');return;}
+      toast('Lote atualizado!','success');closeEdit();loadLista();
+    });
+  };
+}
+
+// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// SIDEBAR TOGGLE + MOBILE
+// ══════════════════════════════════════════════════
+var sbCollapsed=false;
+function toggleSidebar(){
+  sbCollapsed=!sbCollapsed;
+  var sb=document.getElementById('sb');
+  var main=document.getElementById('main');
+  var icon=document.getElementById('sb-toggle-icon');
+  sb.classList.toggle('collapsed',sbCollapsed);
+  main.classList.toggle('expanded',sbCollapsed);
+  // rotate arrow icon
+  icon.style.transform=sbCollapsed?'rotate(180deg)':'rotate(0deg)';
+  localStorage.setItem('wp_sb_collapsed',sbCollapsed?'1':'0');
+}
+function openMobileMenu(){
+  document.getElementById('sb').classList.add('mob-open');
+  document.getElementById('sb-overlay').classList.add('mob-open');
+}
+function closeMobileMenu(){
+  document.getElementById('sb').classList.remove('mob-open');
+  document.getElementById('sb-overlay').classList.remove('mob-open');
+}
+
+// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// SELEÇÃO EM LOTE — LISTA DE CARGA
+// ══════════════════════════════════════════════════
+function toggleAllLista(chk){
+  document.querySelectorAll('.lista-row-chk').forEach(function(c){c.checked=chk.checked;});
+  updateListaBatchBar();
+}
+function updateListaBatchBar(){
+  var sel=document.querySelectorAll('.lista-row-chk:checked');
+  var bar=document.getElementById('lista-batch-bar');
+  bar.style.display=sel.length?'flex':'none';
+  document.getElementById('lista-sel-count').textContent=sel.length+' selecionado(s)';
+  var allChk=document.getElementById('lista-chk-all');
+  var all=document.querySelectorAll('.lista-row-chk');
+  if(allChk)allChk.indeterminate=sel.length>0&&sel.length<all.length;
+  if(allChk&&sel.length===all.length&&all.length>0)allChk.checked=true;
+}
+function clearListaSelection(){
+  document.querySelectorAll('.lista-row-chk').forEach(function(c){c.checked=false;});
+  var allChk=document.getElementById('lista-chk-all');
+  if(allChk){allChk.checked=false;allChk.indeterminate=false;}
+  document.getElementById('lista-batch-bar').style.display='none';
+}
+function deleteSelectedLista(){
+  if(!canDelete('wp_lista_carga',{})){toast('Sem permissão para excluir','error');return;}
+  var ids=[].slice.call(document.querySelectorAll('.lista-row-chk:checked')).map(function(c){return c.dataset.id;});
+  if(!ids.length)return;
+  if(!confirm('Excluir '+ids.length+' lote(s) selecionado(s)? Esta ação não pode ser desfeita.'))return;
+  showLd(true);
+  sb.from('wp_lista_carga').delete().in('id',ids).then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast(ids.length+' lote(s) excluído(s)','success');clearListaSelection();loadLista();
+  });
+}
+function deleteAllNavio(){
+  if(!canDelete('wp_lista_carga',{})){toast('Sem permissão para excluir','error');return;}
+  if(!navioAtivo){toast('Nenhum navio selecionado','error');return;}
+  if(!confirm('⚠ ATENÇÃO: Excluir TODA a lista de carga do navio "'+navioAtivo.nome+'"?\nIsso excluirá todos os '+listaAll.length+' lotes. Esta ação não pode ser desfeita.'))return;
+  showLd(true);
+  var query=qAz(sb.from('wp_lista_carga').delete().eq('navio_id',navioAtivo.id),'armazem');
+  query.then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Lista de carga do navio excluída!','success');loadLista();
+  });
+}
+
+// ══════════════════════════════════════════════════
+// SELEÇÃO EM LOTE — TICKETS
+// ══════════════════════════════════════════════════
+function toggleAllTickets(chk){
+  document.querySelectorAll('.tk-row-chk').forEach(function(c){c.checked=chk.checked;});
+  updateTkBatchBar();
+}
+function updateTkBatchBar(){
+  var sel=document.querySelectorAll('.tk-row-chk:checked');
+  var bar=document.getElementById('tk-batch-bar');
+  bar.style.display=sel.length?'flex':'none';
+  document.getElementById('tk-sel-count').textContent=sel.length+' selecionado(s)';
+  var allChk=document.getElementById('tk-chk-all');
+  var all=document.querySelectorAll('.tk-row-chk');
+  if(allChk)allChk.indeterminate=sel.length>0&&sel.length<all.length;
+  if(allChk&&sel.length===all.length&&all.length>0)allChk.checked=true;
+}
+function clearTicketSelection(){
+  document.querySelectorAll('.tk-row-chk').forEach(function(c){c.checked=false;});
+  var allChk=document.getElementById('tk-chk-all');
+  if(allChk){allChk.checked=false;allChk.indeterminate=false;}
+  document.getElementById('tk-batch-bar').style.display='none';
+}
+function deleteSelectedTickets(){
+  var ids=[].slice.call(document.querySelectorAll('.tk-row-chk:checked')).map(function(c){return c.dataset.id;});
+  if(!ids.length)return;
+  // verifica permissão para cada ticket selecionado
+  var forbidden=ids.filter(function(id){
+    var tk=ticketsAll.find(function(t){return t.id===id;});
+    return !canDelete('wp_tickets',tk||{});
+  });
+  if(forbidden.length){toast('Sem permissão para excluir '+forbidden.length+' ticket(s)','error');return;}
+  if(!confirm('Excluir '+ids.length+' ticket(s) selecionado(s)? Os itens vinculados também serão excluídos.'))return;
+  showLd(true);
+  sb.from('wp_tickets').delete().in('id',ids).then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast(ids.length+' ticket(s) excluído(s)','success');clearTicketSelection();loadTickets();
+  });
+}
+
+// ══════════════════════════════════════════════════
+// SELEÇÃO EM LOTE — VALIDADOS
+// ══════════════════════════════════════════════════
+function toggleAllValidados(chk){
+  // para evitar duplicados (múltiplas linhas por ticket), usa Set
+  var seen=new Set();
+  document.querySelectorAll('.val-row-chk').forEach(function(c){
+    if(!seen.has(c.dataset.id)){seen.add(c.dataset.id);c.checked=chk.checked;}
+  });
+  updateValBatchBar();
+}
+function updateValBatchBar(){
+  var ids=new Set([].slice.call(document.querySelectorAll('.val-row-chk:checked')).map(function(c){return c.dataset.id;}));
+  var bar=document.getElementById('val-batch-bar');
+  bar.style.display=ids.size?'flex':'none';
+  document.getElementById('val-sel-count').textContent=ids.size+' ticket(s) selecionado(s)';
+}
+function clearValSelection(){
+  document.querySelectorAll('.val-row-chk').forEach(function(c){c.checked=false;});
+  var allChk=document.getElementById('val-chk-all');
+  if(allChk){allChk.checked=false;allChk.indeterminate=false;}
+  document.getElementById('val-batch-bar').style.display='none';
+}
+function deleteSelectedValidados(){
+  var ids=[...new Set([].slice.call(document.querySelectorAll('.val-row-chk:checked')).map(function(c){return c.dataset.id;}))];
+  if(!ids.length)return;
+  // verifica permissão
+  var forbidden=ids.filter(function(id){return !canDelete('wp_tickets',{armazem:currentUser&&currentUser.armazem!=='*'?currentUser.armazem:null});});
+  if(forbidden.length&&currentUser.perfil!=='admin'){toast('Sem permissão para excluir estes registros','error');return;}
+  if(!confirm('Excluir '+ids.length+' embarque(s) validado(s)? Os itens vinculados também serão excluídos. Esta ação não pode ser desfeita.'))return;
+  showLd(true);
+  sb.from('wp_tickets').delete().in('id',ids).then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast(ids.length+' embarque(s) excluído(s)','success');clearValSelection();loadValidados();
+  });
+}
+
+// PERMISSÕES DE EXCLUSÃO
+// ══════════════════════════════════════════════════
+// Regras:
+//   admin      → exclui qualquer registro de qualquer armazém
+//   supervisor → exclui tickets e lista_carga do SEU armazém
+//   conferente → não exclui nada
+function canDelete(table, row){
+  if(!currentUser)return false;
+  var p=currentUser.perfil;
+  if(p==='admin')return true;
+  if(p==='supervisor'){
+    // supervisor só pode excluir registros do seu armazém
+    var az=currentUser.armazem||'WRC';
+    if(table==='wp_tickets'){
+      // verifica se o ticket é do armazém do supervisor
+      if(row&&row.armazem&&row.armazem!==az)return false;
+      return true;
+    }
+    if(table==='wp_lista_carga'){
+      if(row&&row.armazem&&row.armazem!==az)return false;
+      return true;
+    }
+    return false;
+  }
+  return false;
+}
+
+function confirmDel(table,id,cb){
+  if(!canDelete(table,{id:id})){
+    toast('Sem permissão para excluir este registro','error');
+    return;
+  }
+  document.getElementById('del-ok').onclick=function(){
+    showLd(true);
+    sb.from(table).delete().eq('id',id).then(function(r){
+      showLd(false);document.getElementById('del-modal').style.display='none';
+      if(r.error){toast('Erro: '+r.error.message,'error');return;}
+      toast('Excluído','success');if(cb)cb();
+    });
+  };
+  document.getElementById('del-modal').style.display='flex';
+}
+</script>
+</body>
+</html>
