@@ -218,11 +218,7 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
 #qr-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
 #qr-overlay div{width:60%;height:60%;border:3px solid rgba(255,255,255,.8);border-radius:8px;box-shadow:0 0 0 1000px rgba(0,0,0,.4);}
 /* TICKET PRINT 80mm — font size +4pt vs previous 11px → 15px */
-@media print{
-  body>*{display:none!important;}
-  #ticket-print-wrap,#ticket-print-wrap *{display:block;visibility:visible;}
-  #ticket-print-wrap{position:fixed;left:0;top:0;width:80mm;background:#fff;padding:0;}
-}
+/* impressão via janela dedicada — @media print não é necessário aqui */
 .tkt{width:72mm;font-family:'Courier New',monospace;font-size:14px;background:#fff;color:#000;padding:3.5mm;line-height:1.4;}
 .tkt .tl{font-size:18px;font-weight:bold;text-align:center;border-bottom:2px solid #000;padding-bottom:2.5mm;margin-bottom:2.5mm;letter-spacing:2px;}
 .tkt .tt{font-size:12px;text-align:center;margin-bottom:2.5mm;font-weight:bold;text-transform:uppercase;}
@@ -661,7 +657,7 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
     <div class="mh"><span class="mt">Ticket Emitido</span><button class="mx" onclick="document.getElementById('ticket-modal').style.display='none'">×</button></div>
     <div id="ticket-print-wrap"><div class="tkt" id="ticket-content"></div></div>
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn bp" onclick="window.print()" style="flex:1;justify-content:center;">🖨 Imprimir</button>
+      <button class="btn bp" onclick="printTicket()" style="flex:1;justify-content:center;">🖨 Imprimir</button>
       <button class="btn bs" onclick="document.getElementById('ticket-modal').style.display='none'">Fechar</button>
     </div>
   </div>
@@ -1767,26 +1763,22 @@ function showTicketPrint(tk,lotes){
   var totCBM=sumItens(lotes,'cbm_calculado');
   var totPeso=sumItens(lotes,'peso_calculado');
 
-  // helper: linha simples
-  function tr(lb,vl){return '<div class="tr"><span class="lb">'+lb+'</span><span class="vl">'+vl+'</span></div>';}
-  // helper: linha dupla (2 pares na mesma linha)
-  function t2(lb1,vl1,lb2,vl2){
-    return '<div class="t2">'
-      +'<div class="p"><span class="lb">'+lb1+'</span><span class="vl">'+vl1+'</span></div>'
-      +'<div class="p"><span class="lb">'+lb2+'</span><span class="vl">'+vl2+'</span></div>'
-      +'</div>';
-  }
+  // helpers compactos
+  function fi(lb,vl,sm){return '<div class="fi"><span class="lb">'+lb+'</span><span class="vl'+(sm?' sm':'')+'">'+vl+'</span></div>';}
+  function fl(lb,vl){return '<div class="fl"><span class="lb">'+lb+'</span><span class="vl">'+vl+'</span></div>';}
+  function g2(a,b){return '<div class="g2">'+a+b+'</div>';}
+  function g3(a,b,c){return '<div class="g3">'+a+b+c+'</div>';}
+  function g4(a,b,c,d){return '<div class="g4">'+a+b+c+d+'</div>';}
+
+  var nomeNavio = navioAtivo?navioAtivo.nome:'—';
+  var viagemNavio = navioAtivo&&navioAtivo.viagem?navioAtivo.viagem:'—';
 
   var linhasLotes='';
   lotes.forEach(function(l,i){
-    linhasLotes+='<div class="tsec">Lote '+(i+1)+'</div>'
-      +t2('Ref',(l.ref||'—'),'Lote',(l.lote||'—'))
-      +tr('Marca',(l.marca||'—'))
-      +tr('Shipper',(l.shipper||'—'))
-      +t2('Porto',(l.porto_descarga||'—'),'Armazém',(l.armazem||'—'))
-      +(l.due?tr('DUE/RUC',l.due):'')
-      +t2('NF',(l.nf||'—'),'Qtde',(l.quantidade||0)+' pçs')
-      +t2('CBM',parseFloat(l.cbm_calculado||0).toFixed(4)+' m³','Peso',parseFloat(l.peso_calculado||0).toFixed(3)+' kg');
+    linhasLotes+='<div class="tsec">Lote '+(i+1)+(l.lote?' · '+l.lote:'')+'</div>'
+      +g2( fi('Ref',l.ref||'—'), fi('Marca',l.marca||'—') )
+      +g2( fi('Shipper',l.shipper||'—',true), fi('DUE/RUC',l.due||'—') )
+      +g3( fi('NF',l.nf||'—'), fi('Qtde',(l.quantidade||0)+' pçs'), fi('CBM',parseFloat(l.cbm_calculado||0).toFixed(3)+'m³') );
   });
 
   var html=''
@@ -1794,25 +1786,99 @@ function showTicketPrint(tk,lotes){
     +'<div class="tt">Ticket de Embarque</div>'
     +'<div class="tn">'+tk.numero+'</div>'
     +'<div class="ts"></div>'
-    +t2('Navio',(navioAtivo?navioAtivo.nome:'—'),'Vgm Navio',(navioAtivo&&navioAtivo.viagem?navioAtivo.viagem:'—'))
-    +t2('Porão',(tk.porao||'—'),'Tier',(tk.tier?'Tier '+tk.tier:'—'))
-    +(tk.viagem?t2('Vgm Tier',tk.viagem,'',''):'')
-    +t2('Placa',tk.placa,'Motorista',tk.motorista)
-    +tr('Conferente',(tk.conferente_nome||'—'))
-    +(tk.porto_descarga?tr('Porto Descarga',tk.porto_descarga):'')
-    +tr('Emissão',new Date().toLocaleString('pt-BR'))
+    +g2( fi('Navio',nomeNavio,true), fi('Vgm',viagemNavio) )
+    +g4( fi('Porão',tk.porao||'—'), fi('Tier',tk.tier||'—'), fi('Vgm Tier',tk.viagem||'—'), fi('Porto',tk.porto_descarga||'—',true) )
+    +g2( fi('Placa',tk.placa), fi('Motorista',tk.motorista,true) )
+    +fl('Conferente', tk.conferente_nome||'—')
+    +fl('Emissão', new Date().toLocaleString('pt-BR'))
     +'<div class="ts"></div>'
     +linhasLotes
     +'<div class="ts"></div>'
-    +'<div class="tsec">Totais</div>'
-    +t2('Qtde',totQtd+' pçs','CBM',totCBM.toFixed(4)+' m³')
-    +tr('Peso Total',totPeso.toFixed(3)+' kg')
-    +'<div class="ts"></div>'
-    +'<div class="tq"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent(tk.numero)+'" width="120" height="120" alt="QR" style="image-rendering:pixelated;"></div>'
-    +'<div class="tf">'+tk.numero+' — Leia o QR para confirmar embarque</div>';
+    +'<div class="tot">'
+      +'<div class="tc"><span class="lb">Qtde</span><span class="vl">'+totQtd+' pçs</span></div>'
+      +'<div class="tc"><span class="lb">CBM</span><span class="vl">'+totCBM.toFixed(3)+'m³</span></div>'
+      +'<div class="tc"><span class="lb">Peso</span><span class="vl">'+totPeso.toFixed(2)+'kg</span></div>'
+    +'</div>'
+    +'<div class="tq"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data='+encodeURIComponent(tk.numero)+'" width="100" height="100" alt="QR"></div>'
+    +'<div class="tf">'+tk.numero+'</div>';
 
   document.getElementById('ticket-content').innerHTML=html;
   document.getElementById('ticket-modal').style.display='flex';
+}
+
+function printTicket(){
+  var html = document.getElementById('ticket-content').innerHTML;
+  if(!html){ toast('Nenhum ticket carregado','error'); return; }
+
+  var win = window.open('','_blank','width=420,height=750,menubar=no,toolbar=no,location=no,status=no');
+  if(!win){ toast('Permita popups para imprimir','error'); return; }
+
+  var css = [
+    '*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}',
+    'body{background:#fff;color:#000;font-family:"Courier New",Courier,monospace;font-size:12px;line-height:1.25;}',
+    '.tkt{width:76mm;margin:0 auto;padding:2mm 1.5mm;}',
+
+    /* Cabeçalho compacto */
+    '.tl{font-size:16px;font-weight:900;text-align:center;letter-spacing:2px;border-bottom:2px solid #000;padding-bottom:1mm;margin-bottom:1mm;}',
+    '.tt{font-size:10px;font-weight:bold;text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:1mm;}',
+    '.tn{font-size:19px;font-weight:900;text-align:center;border:2px solid #000;padding:1mm;margin-bottom:1mm;letter-spacing:1px;}',
+
+    /* Separador */
+    '.ts{border-top:1.5px solid #000;margin:1.5mm 0;}',
+    '.td{border-top:1px dashed #000;margin:1mm 0;}',
+
+    /* Título de seção — inline sem quebra de linha */
+    '.tsec{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;',
+    '  color:#000;border-bottom:1.5px solid #000;padding-bottom:0.5mm;margin:1.5mm 0 1mm;display:block;}',
+
+    /* Grade 2 colunas — label em cima, valor embaixo */
+    '.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 1.5mm;margin-bottom:0.5mm;}',
+    '.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 1mm;margin-bottom:0.5mm;}',
+    '.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0 1mm;margin-bottom:0.5mm;}',
+    '.fi{border-bottom:1px solid #000;padding:0.3mm 0 0.8mm;}',
+    '.fi .lb{font-size:9px;font-weight:bold;text-transform:uppercase;color:#000;display:block;line-height:1.1;}',
+    '.fi .vl{font-size:13px;font-weight:900;color:#000;display:block;line-height:1.2;word-break:break-word;}',
+    '.fi .vl.sm{font-size:11px;}',
+
+    /* Linha simples label:valor na mesma linha (para NF, DUE) */
+    '.fl{display:flex;justify-content:space-between;align-items:baseline;',
+    '  border-bottom:1px solid #000;padding:0.5mm 0;}',
+    '.fl .lb{font-size:9px;font-weight:bold;text-transform:uppercase;}',
+    '.fl .vl{font-size:12px;font-weight:900;}',
+
+    /* Totais em destaque */
+    '.tot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:2px solid #000;margin:1mm 0;}',
+    '.tot .tc{padding:1mm;text-align:center;border-right:1px solid #000;}',
+    '.tot .tc:last-child{border-right:none;}',
+    '.tot .tc .lb{font-size:9px;font-weight:bold;text-transform:uppercase;display:block;}',
+    '.tot .tc .vl{font-size:13px;font-weight:900;display:block;}',
+
+    /* QR */
+    '.tq{text-align:center;margin:2mm 0 1mm;}',
+    '.tf{font-size:8px;font-weight:bold;text-align:center;border-top:1.5px solid #000;padding-top:1mm;word-break:break-all;}',
+
+    '@media print{',
+    '  @page{size:80mm auto;margin:0mm;}',
+    '  html,body{width:80mm;}',
+    '  .tkt{width:78mm;padding:1.5mm 1mm;}',
+    '}',
+  ].join('\n');
+
+  win.document.write('<!DOCTYPE html><html><head>');
+  win.document.write('<meta charset="UTF-8"><title>Ticket</title>');
+  win.document.write('<style>'+css+'</style>');
+  win.document.write('</head><body>');
+  win.document.write('<div class="tkt">'+html+'</div>');
+  win.document.write('</body></html>');
+  win.document.close();
+
+  win.onload = function(){
+    win.focus();
+    setTimeout(function(){
+      win.print();
+      win.onafterprint = function(){ win.close(); };
+    }, 400);
+  };
 }
 
 function loadTickets(){
