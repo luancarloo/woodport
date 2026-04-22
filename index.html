@@ -160,6 +160,10 @@ tbody tr:last-child{border-bottom:none;}
 .lote-blk{background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:14px;margin-bottom:10px;}
 .lote-blk-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .lote-blk-n{font-size:11px;font-weight:600;color:var(--w600);text-transform:uppercase;letter-spacing:.5px;}
+/* Dropdown de marca */
+.lt-marca-search{width:100%;}
+.marca-dd-item:hover,.marca-dd-item:focus,.marca-dd-item.dd-hover{background:var(--s3);outline:none;}
+.marca-dd-item:last-child{border-bottom:none!important;}
 /* SUGGEST */
 .suggest-box{position:fixed;z-index:9999;background:var(--s);border:1px solid var(--bdr);border-radius:var(--rmd);box-shadow:var(--shlg);max-height:220px;overflow-y:auto;display:none;min-width:280px;}
 .suggest-item{padding:9px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bds);}
@@ -399,13 +403,21 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
                   <option value="admin">Administrador</option>
                 </select>
               </div>
-              <div class="fg"><label class="fl">Armazém <span class="req">*</span></label>
-                <select id="u-armazem">
-                  <option value="WRC">WRC</option>
-                  <option value="Pratico">Pratico</option>
-                  <option value="Global">Global</option>
-                  <option value="*">Todos (Admin)</option>
-                </select>
+              <div class="fg"><label class="fl">Armazém(s) <span class="req">*</span></label>
+                <div id="u-armazem-wrap" style="display:flex;flex-direction:column;gap:5px;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rsm);padding:8px 10px;">
+                  <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" class="u-az-chk" value="WRC"> WRC
+                  </label>
+                  <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" class="u-az-chk" value="Pratico"> Pratico
+                  </label>
+                  <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;">
+                    <input type="checkbox" class="u-az-chk" value="Global"> Global
+                  </label>
+                  <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;border-top:1px solid var(--bds);padding-top:5px;margin-top:2px;">
+                    <input type="checkbox" class="u-az-chk" value="*" onchange="toggleAllAz(this,'u-armazem-wrap')"> Todos (Admin)
+                  </label>
+                </div>
               </div>
             </div>
             <button class="btn bp" onclick="salvarUser()">💾 Cadastrar</button>
@@ -496,6 +508,12 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
               <div class="fg"><label class="fl">Viagem do Tier <span style="color:var(--ink4);font-weight:400;font-size:10px;">(sequência do embarque)</span></label>
                 <input type="text" id="tk-viagem" placeholder="Ex: V01, V02...">
               </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Porto de Descarga <span class="req">*</span></label>
+              <select id="tk-porto-desc" style="font-size:13px;">
+                <option value="">— selecione o porto —</option>
+              </select>
             </div>
             <hr style="margin:4px 0;">
             <!-- Lotes dinâmicos -->
@@ -737,6 +755,7 @@ CREATE TABLE IF NOT EXISTS wp_tickets (
   status text DEFAULT 'emitido',
   validado_em timestamptz,
   periodo text,
+  porto_descarga text,
   created_at timestamptz DEFAULT now()
 );
 
@@ -792,6 +811,7 @@ ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS porao text;
 ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS tier integer;
 ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS viagem text;
 ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS periodo text;
+ALTER TABLE wp_tickets      ADD COLUMN IF NOT EXISTS porto_descarga text;
 ALTER TABLE wp_ticket_itens ADD COLUMN IF NOT EXISTS due text;
 ALTER TABLE wp_ticket_itens ADD COLUMN IF NOT EXISTS nf text;
 ALTER TABLE wp_usuarios     ADD COLUMN IF NOT EXISTS armazem text DEFAULT 'WRC';`;
@@ -811,10 +831,19 @@ function userArmazem(){
   var az=currentUser.armazem||'WRC';
   return az==='*'?null:az;
 }
-// aplica filtro de armazém numa query Supabase
+// Retorna array de armazéns do usuário (suporta "WRC,Global")
+function userArmazens(){
+  if(!currentUser)return null;
+  var az=currentUser.armazem||'WRC';
+  if(az==='*')return null;
+  return az.split(',').map(function(s){return s.trim();}).filter(Boolean);
+}
+// aplica filtro de armazém numa query Supabase (suporta multi-armazém)
 function qAz(query, col){
-  var az=userArmazem();
-  return az?query.eq(col,az):query;
+  var azs=userArmazens();
+  if(!azs) return query; // admin — sem filtro
+  if(azs.length===1) return query.eq(col,azs[0]);
+  return query.in(col,azs); // múltiplos: usa IN
 }
 
 // ══════════════════════════════════════════════════
@@ -862,7 +891,7 @@ function showApp(){
   document.getElementById('login-screen').style.display='none';
   var perfil=currentUser.perfil||'conferente';
   var perfilLabel={admin:'Admin',supervisor:'Supervisor',conferente:'Conferente'}[perfil]||perfil;
-  var armLabel=currentUser.armazem&&currentUser.armazem!=='*'?currentUser.armazem:'Todos';
+  var armLabel=currentUser.armazem&&currentUser.armazem!=='*'?currentUser.armazem.replace(/,/g,' · '):'Todos';
   document.getElementById('sb-user').textContent='👤 '+currentUser.nome+' ('+perfilLabel+')';
   document.getElementById('sb-ship').textContent='🏭 '+armLabel;
   // admin e supervisor veem menu de usuários
@@ -1052,17 +1081,41 @@ function loadNavios(){
 // ══════════════════════════════════════════════════
 // USUÁRIOS
 // ══════════════════════════════════════════════════
+// ── HELPERS MULTI-ARMAZÉM ──
+function getAzChecked(wrapId){
+  var wrap=document.getElementById(wrapId);
+  if(!wrap)return null;
+  // Se "Todos" marcado, retorna '*'
+  var allChk=wrap.querySelector('.u-az-chk[value="*"],.ef-az-chk[value="*"]');
+  if(allChk&&allChk.checked)return '*';
+  var checked=[].filter.call(wrap.querySelectorAll('.u-az-chk,.ef-az-chk'),function(c){
+    return c.checked&&c.value!=='*';
+  }).map(function(c){return c.value;});
+  return checked.length?checked.join(','):null;
+}
+function toggleAllAz(chk, wrapId){
+  var wrap=document.getElementById(wrapId);
+  if(!wrap)return;
+  wrap.querySelectorAll('.u-az-chk,.ef-az-chk').forEach(function(c){
+    if(c!==chk)c.checked=chk.checked?false:c.checked;
+    if(c!==chk&&c.value!=='*')c.disabled=chk.checked;
+  });
+}
+
 function salvarUser(){
   if(!sb){toast('Configure o Supabase','error');return;}
   if(currentUser&&currentUser.perfil!=='admin'){toast('Apenas administradores podem cadastrar usuários','error');return;}
   var nome=v('u-nome'),login=v('u-login'),pass=v('u-pass'),perfil=v('u-perfil');
-  var armazem=document.getElementById('u-armazem').value;
+  var armazem=getAzChecked('u-armazem-wrap');
   if(!nome||!login||!pass){toast('Preencha nome, login e senha','error');return;}
   if(pass.length<6){toast('Senha mínima de 6 caracteres','error');return;}
+  if(!armazem){toast('Selecione pelo menos um armazém','error');return;}
   showLd(true);
   sb.from('wp_usuarios').insert({nome,login,senha_hash:hashPass(pass),perfil,armazem}).then(function(r){
     showLd(false);if(r.error){toast('Erro: '+(r.error.message.includes('unique')?'Login já existe':r.error.message),'error');return;}
     toast('Usuário cadastrado!','success');['u-nome','u-login','u-pass'].forEach(function(id){document.getElementById(id).value='';});
+    // limpa checkboxes
+    document.querySelectorAll('#u-armazem-wrap .u-az-chk').forEach(function(c){c.checked=false;});
     loadUsers();
   });
 }
@@ -1079,7 +1132,7 @@ function loadUsers(){
           ?'<span class="bge warn">Supervisor</span>'
           :'<span class="bge ntrl">Conferente</span>';
       var armBadge=u.armazem&&u.armazem!=='*'
-        ?'<span class="bge" style="background:var(--w100);color:var(--w700);">'+u.armazem+'</span>'
+        ?u.armazem.split(',').map(function(a){return '<span class="bge" style="background:var(--w100);color:var(--w700);">'+a.trim()+'</span>';}).join(' ')
         :'<span class="bge ntrl">Todos</span>';
       return '<tr><td><strong>'+u.nome+'</strong></td><td><code style="font-size:12px;">'+u.login+'</code></td><td>'+perfBadge+'</td><td>'+armBadge+'</td>'
         +'<td style="display:flex;gap:4px;">'
@@ -1177,6 +1230,13 @@ function loadLista(){
     var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
     var psel=document.getElementById('lista-porto-sel');
     psel.innerHTML='<option value="">Todos portos</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+    // Popula select de porto no formulário de ticket
+    var tkPorto=document.getElementById('tk-porto-desc');
+    if(tkPorto){
+      var curVal=tkPorto.value;
+      tkPorto.innerHTML='<option value="">— selecione o porto —</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+      if(curVal)tkPorto.value=curVal;
+    }
     renderLista(listaAll,util);
   });
 }
@@ -1238,18 +1298,7 @@ function addLoteTk(){
     +(loteTkCount>1?'<button class="btn bd bsm" style="padding:3px 8px;" onclick="rmvLoteTk(\''+id+'\')">✕</button>':'')
     +'</div>'
     +'<div class="gr" style="gap:9px;">'
-    // Ref field com autocomplete
-    +'<div class="fg">'
-      +'<label class="fl">Nº da Ref. <span class="req">*</span></label>'
-      +'<div style="display:flex;gap:8px;">'
-        +'<input type="number" class="lt-ref-input" data-id="'+loteTkCount+'" placeholder="Ex: 1, 15, 151..." min="1" style="max-width:160px;" '
-          +'onkeydown="if(event.key===\'Enter\'||event.key===\'Tab\'){event.preventDefault();buscarRef(this);}" '
-          +'autocomplete="off">'
-        +'<button type="button" class="btn bs bsm" onclick="buscarRef(this.previousElementSibling)">🔍 Buscar</button>'
-      +'</div>'
-      +'<span style="font-size:11px;color:var(--ink4);">Digite o número e pressione Enter ou clique Buscar</span>'
-      +'<div class="lt-ref-info" style="display:none;margin-top:6px;"></div>'
-    +'</div>'
+    +'<div class="fg">'      +'<label class="fl">Marca / Ref <span class="req">*</span></label>'      +'<div style="position:relative;">'        +'<input type="text" class="lt-marca-search" placeholder="Marca ex: F8, F55…" autocomplete="off" oninput="onMarcaInput(this)" onkeydown="onMarcaKey(event,this)">'        +'<div class="lt-marca-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s);border:1px solid var(--bds);border-radius:var(--rsm);z-index:200;max-height:240px;overflow-y:auto;box-shadow:var(--shsm);"></div>'      +'</div>'      +'<input type="hidden" class="lt-ref-input">'      +'<span style="font-size:11px;color:var(--ink4);">Digite a marca e selecione a referência disponível</span>'      +'<div class="lt-ref-info" style="display:none;margin-top:6px;"></div>'    +'</div>'
     // campos preenchidos automaticamente
     +'<div class="gr g2">'
       +'<div class="fg"><label class="fl">Lote</label><input type="text" class="lt-lote readonly-info" readonly></div>'
@@ -1290,14 +1339,161 @@ function addLoteTk(){
 function rmvLoteTk(id){var el=document.getElementById(id);if(el){el.remove();calcTotais();}}
 
 // ══════════════════════════════════════════════════
-// BUSCA POR REF — simples, sem dropdown
-// Usuário digita o número da Ref e pressiona Enter ou Tab
+// ══════════════════════════════════════════════════
+// BUSCA POR MARCA → DROPDOWN DE REFS COM SALDO
+// ══════════════════════════════════════════════════
+var _marcaDebounce = {};
+
+function onMarcaInput(inp){
+  var blk = inp.closest('.lote-blk');
+  var dd  = blk.querySelector('.lt-marca-dd');
+  var q   = inp.value.trim().toUpperCase();
+  if(!q){ dd.style.display='none'; return; }
+
+  // debounce 300ms por bloco
+  var bid = blk.id;
+  clearTimeout(_marcaDebounce[bid]);
+  _marcaDebounce[bid] = setTimeout(function(){ _marcaBuscar(blk, q, dd); }, 300);
+}
+
+function _marcaBuscar(blk, q, dd){
+  if(!navioAtivo || !listaAll.length){ dd.style.display='none'; return; }
+
+  var portoCab = document.getElementById('tk-porto-desc').value;
+
+  // Filtra listaAll por marca ou ref (busca local, sem query)
+  var matches = listaAll.filter(function(l){
+    var marcaOk = (l.marca||'').toUpperCase().includes(q) ||
+                  String(l.ref||'').includes(q) ||
+                  (l.lote||'').toUpperCase().includes(q);
+    var portoOk = !portoCab || (l.porto_descarga||'') === portoCab;
+    return marcaOk && portoOk;
+  });
+
+  if(!matches.length){
+    dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--ink4);">Nenhuma referência encontrada</div>';
+    dd.style.display = '';
+    return;
+  }
+
+  // Uma única query buscando saldo de TODAS as refs filtradas de uma vez
+  var ids = matches.map(function(l){ return l.id; });
+  dd.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--ink4);">Consultando saldos…</div>';
+  dd.style.display = '';
+
+  sb.from('wp_ticket_itens')
+    .select('lista_id,quantidade')
+    .in('lista_id', ids)
+    .then(function(r){
+      // Soma usado por lista_id
+      var usedMap = {};
+      (r.data||[]).forEach(function(row){
+        usedMap[row.lista_id] = (usedMap[row.lista_id]||0) + (parseInt(row.quantidade)||0);
+      });
+
+      // Monta resultados com saldo calculado
+      var results = matches.map(function(l){
+        var used  = usedMap[l.id]||0;
+        var saldo = Math.max(0, (parseInt(l.quantidade)||0) - used);
+        return { l:l, saldo:saldo };
+      });
+
+      renderMarcaDD(blk, results, dd);
+    })
+    .catch(function(){
+      // Fallback: mostra sem saldo calculado
+      var results = matches.map(function(l){ return {l:l, saldo:parseInt(l.quantidade)||0}; });
+      renderMarcaDD(blk, results, dd);
+    });
+}
+
+function renderMarcaDD(blk, results, dd){
+  // só mostra refs com saldo > 0
+  var comSaldo = results.filter(function(r){ return r.saldo > 0; });
+  if(!comSaldo.length){
+    dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--ink4);">Nenhuma referência com saldo disponível</div>';
+    dd.style.display='';
+    return;
+  }
+  dd.innerHTML = comSaldo.map(function(r,i){
+    var l = r.l;
+    var pct = l.quantidade > 0 ? Math.round(r.saldo/l.quantidade*100) : 0;
+    return '<div class="marca-dd-item" data-idx="'+i+'" tabindex="0" '
+      +'onclick="selecionarRef(this)" '
+      +'onkeydown="if(event.key===\'Enter\')selecionarRef(this)" '
+      +'style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--bds);font-size:12px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+        +'<span><strong>Ref '+l.ref+'</strong> · '+l.lote+'</span>'
+        +'<span style="font-size:11px;background:var(--s2);padding:1px 7px;border-radius:10px;color:var(--ink3);">'+r.saldo+' disp.</span>'
+      +'</div>'
+      +'<div style="color:var(--ink4);margin-top:2px;">'
+        +(l.marca?'Marca: <strong>'+l.marca+'</strong> · ':'')
+        +(l.porto_descarga?'Porto: '+l.porto_descarga+' · ':'')
+        +'Armazém: '+(l.armazem||'—')
+      +'</div>'
+      +'<div style="height:3px;background:var(--bds);border-radius:2px;margin-top:4px;">'
+        +'<div style="height:100%;width:'+pct+'%;background:'+(pct<20?'#e74c3c':pct<60?'#e67e22':'#27ae60')+';border-radius:2px;"></div>'
+      +'</div>'
+      +'<input type="hidden" class="dd-lista-id" value="'+l.id+'">'
+    +'</div>';
+  }).join('');
+  dd.style.display='';
+  // store results ref on dd for selecionarRef
+  dd._results = comSaldo;
+}
+
+function onMarcaKey(event, inp){
+  var blk = inp.closest('.lote-blk');
+  var dd  = blk.querySelector('.lt-marca-dd');
+  if(dd.style.display==='none') return;
+  var items = dd.querySelectorAll('.marca-dd-item');
+  var cur = dd.querySelector('.marca-dd-item:focus') || dd.querySelector('.marca-dd-item.dd-hover');
+  if(event.key==='ArrowDown'){
+    event.preventDefault();
+    var next = cur ? cur.nextElementSibling : items[0];
+    if(next){ next.focus(); next.classList.add('dd-hover'); if(cur)cur.classList.remove('dd-hover'); }
+  } else if(event.key==='ArrowUp'){
+    event.preventDefault();
+    var prev = cur ? cur.previousElementSibling : null;
+    if(prev){ prev.focus(); prev.classList.add('dd-hover'); if(cur)cur.classList.remove('dd-hover'); }
+  } else if(event.key==='Escape'){
+    dd.style.display='none';
+  }
+}
+
+function selecionarRef(el){
+  var blk = el.closest('.lote-blk');
+  var dd  = blk.querySelector('.lt-marca-dd');
+  var id  = el.querySelector('.dd-lista-id').value;
+  dd.style.display='none';
+  // busca o lote completo em listaAll
+  var l = listaAll.find(function(x){ return x.id===id; });
+  if(!l) return;
+  // preenche campo de pesquisa com marca + ref
+  var searchInp = blk.querySelector('.lt-marca-search');
+  if(searchInp) searchInp.value = (l.marca||'')+ ' — Ref '+l.ref;
+  // preenche hidden ref
+  var refInp = blk.querySelector('.lt-ref-input');
+  if(refInp) refInp.value = l.ref;
+  preencherBlk(blk, l);
+}
+
+// Fecha dropdown ao clicar fora
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.lt-marca-search') && !e.target.closest('.lt-marca-dd')){
+    document.querySelectorAll('.lt-marca-dd').forEach(function(dd){ dd.style.display='none'; });
+  }
+});
+
+// ══════════════════════════════════════════════════
+// BUSCA POR REF (mantida para compatibilidade)
 // ══════════════════════════════════════════════════
 
 function buscarRef(input){
   var blk=input.closest('.lote-blk');
   var q=input.value.trim();
   if(!q){return;}
+
   if(!sb){toast('Supabase não conectado','error');return;}
   if(!navioAtivo){toast('Selecione um navio no topo','error');return;}
 
@@ -1490,10 +1686,12 @@ function emitirTicket(){
   var porao=document.getElementById('tk-porao').value;
   var tier=parseInt(document.getElementById('tk-tier').value)||null;
   var viagem=document.getElementById('tk-viagem').value.trim()||null;
+  var portoCab=document.getElementById('tk-porto-desc').value.trim()||null;
   if(!placa||!motorista){toast('Preencha Placa e Motorista','error');return;}
-  if(!placaValida(placa)){toast('Placa inválida. Use AAA-1234 ou AAA1B23','error');return;}
+  if(!placaValida(placa)){toast('Placa inválida. Use ABC-1234 ou ABC-1D23','error');return;}
   if(!porao){toast('Selecione o Porão','error');return;}
   if(!tier){toast('Selecione o Tier','error');return;}
+  if(!portoCab){toast('Selecione o Porto de Descarga','error');return;}
   // collect lotes
   var blks=document.querySelectorAll('.lote-blk');
   var lotesData=[];
@@ -1534,7 +1732,7 @@ function emitirTicket(){
     numero:num, navio_id:navioAtivo.id, placa, motorista,
     conferente_id:currentUser.id, conferente_nome:currentUser.nome,
     armazem:currentUser.armazem||'WRC',
-    porao, tier, viagem,
+    porao, tier, viagem, porto_descarga:portoCab,
     observacoes:document.getElementById('tk-obs').value.trim()||null,
     status:'emitido',
   }).select().single().then(function(r){
@@ -1553,6 +1751,7 @@ function emitirTicket(){
 
 function resetTicketForm(){
   ['tk-placa','tk-motorista','tk-obs','tk-viagem'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('tk-porto-desc').value='';
   document.getElementById('tk-porao').value='';
   document.getElementById('tk-tier').value='';
   document.getElementById('lotes-tk').innerHTML='';
@@ -1600,6 +1799,7 @@ function showTicketPrint(tk,lotes){
     +(tk.viagem?t2('Vgm Tier',tk.viagem,'',''):'')
     +t2('Placa',tk.placa,'Motorista',tk.motorista)
     +tr('Conferente',(tk.conferente_nome||'—'))
+    +(tk.porto_descarga?tr('Porto Descarga',tk.porto_descarga):'')
     +tr('Emissão',new Date().toLocaleString('pt-BR'))
     +'<div class="ts"></div>'
     +linhasLotes
@@ -1617,6 +1817,15 @@ function showTicketPrint(tk,lotes){
 
 function loadTickets(){
   if(!sb||!navioAtivo)return;
+  // Garante lista de carga para o dropdown de marcas/porto
+  if(!listaAll.length){
+    qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem').order('ref').then(function(r){
+      listaAll=r.data||[];
+      var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
+      var tkPorto=document.getElementById('tk-porto-desc');
+      if(tkPorto) tkPorto.innerHTML='<option value="">— selecione o porto —</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+    });
+  }
   qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('navio_id',navioAtivo.id),'armazem')
     .order('created_at',{ascending:false}).then(function(r){
       ticketsAll=r.data||[];renderTickets(ticketsAll);
@@ -1767,7 +1976,7 @@ var valTimeout=null;
 function onValInput(v){clearTimeout(valTimeout);if(v.length>=6)valTimeout=setTimeout(buscarTicketVal,600);}
 
 // Colunas explícitas — evita erro de schema cache quando periodo ainda não existe
-var TK_COLS='id,numero,navio_id,placa,motorista,conferente_id,conferente_nome,armazem,porao,tier,viagem,observacoes,status,validado_em,created_at,wp_ticket_itens(*)';
+var TK_COLS='id,numero,navio_id,placa,motorista,conferente_id,conferente_nome,armazem,porao,tier,viagem,porto_descarga,observacoes,status,validado_em,created_at,wp_ticket_itens(*)';
 
 function buscarTicketVal(){
   var code=document.getElementById('val-code').value.trim();
@@ -1825,6 +2034,7 @@ function renderValResult(tk){
     +'<div class="gr g2" style="gap:5px;font-size:12px;margin-bottom:8px;">'
     +'<div><span style="color:var(--ink4);">Placa:</span><br><strong>'+tk.placa+'</strong></div>'
     +'<div><span style="color:var(--ink4);">Motorista:</span><br><strong>'+tk.motorista+'</strong></div>'
+    +(tk.porto_descarga?'<div><span style="color:var(--ink4);">Porto:</span><br><strong>'+tk.porto_descarga+'</strong></div>':'')
     +'<div><span style="color:var(--ink4);">CBM Total:</span><br><strong>'+lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0).toFixed(4)+' m³</strong></div>'
     +'<div><span style="color:var(--ink4);">Conferente:</span><br><strong>'+(tk.conferente_nome||tk.usuario_nome||'—')+'</strong></div>'
     +(tk.porao?'<div><span style="color:var(--ink4);">Porão:</span><br><strong>'+tk.porao+'</strong></div>':'')
@@ -2252,6 +2462,11 @@ function editNavio(id){
 function editUser(id){
   var u=usersAll.find(function(x){return x.id===id;});
   if(!u)return;
+
+  // Supervisor só pode editar conferentes do seu armazém; admin edita tudo
+  var perfil=currentUser?currentUser.perfil:'';
+  if(perfil==='supervisor' && u.perfil==='admin'){toast('Supervisores não podem editar administradores','error');return;}
+
   openEdit('Editar Usuário',[
     {key:'nome',label:'Nome completo',val:u.nome,ph:'Nome'},
     {key:'login',label:'Login',val:u.login,ph:'joao.silva'},
@@ -2259,16 +2474,32 @@ function editUser(id){
     {key:'perfil',label:'Perfil',type:'select',val:u.perfil,options:[
       {v:'conferente',l:'Conferente'},{v:'supervisor',l:'Supervisor'},{v:'admin',l:'Administrador'}
     ]},
-    {key:'armazem',label:'Armazém',type:'select',val:u.armazem||'WRC',options:[
-      {v:'WRC',l:'WRC'},{v:'Pratico',l:'Pratico'},{v:'Global',l:'Global'},{v:'*',l:'Todos (Admin)'}
-    ]},
   ],'wp_usuarios',id,loadUsers);
+
+  // Substitui o campo armazém do modal genérico por checkboxes
+  var editBody=document.getElementById('edit-body');
+  var azDiv=document.createElement('div');
+  azDiv.className='fg';
+  var azs=u.armazem?u.armazem.split(',').map(function(s){return s.trim();}):['WRC'];
+  var isAll=u.armazem==='*';
+  azDiv.innerHTML='<label class="fl">Armazém(s) <span class="req">*</span></label>'
+    +'<div id="ef-armazem-wrap" style="display:flex;flex-direction:column;gap:5px;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rsm);padding:8px 10px;">'
+      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ef-az-chk" value="WRC"'+((!isAll&&azs.includes('WRC'))?' checked':'')+'>WRC</label>'
+      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ef-az-chk" value="Pratico"'+((!isAll&&azs.includes('Pratico'))?' checked':'')+'>Pratico</label>'
+      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ef-az-chk" value="Global"'+((!isAll&&azs.includes('Global'))?' checked':'')+'>Global</label>'
+      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;border-top:1px solid var(--bds);padding-top:5px;margin-top:2px;">'
+        +'<input type="checkbox" class="ef-az-chk" value="*" onchange="toggleAllAz(this,\'ef-armazem-wrap\')"'+(isAll?' checked':'')+'>Todos (Admin)</label>'
+    +'</div>';
+  editBody.appendChild(azDiv);
+
   document.getElementById('edit-save-btn').onclick=function(){
+    var armazem=getAzChecked('ef-armazem-wrap');
+    if(!armazem){toast('Selecione pelo menos um armazém','error');return;}
     var payload={
       nome:document.getElementById('ef-nome').value.trim()||null,
       login:document.getElementById('ef-login').value.trim()||null,
       perfil:document.getElementById('ef-perfil').value,
-      armazem:document.getElementById('ef-armazem').value,
+      armazem:armazem,
     };
     var pass=document.getElementById('ef-senha_hash').value.trim();
     if(pass)payload.senha_hash=pass;
