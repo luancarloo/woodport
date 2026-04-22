@@ -1455,27 +1455,30 @@ function calcTotais(){
 }
 
 // ── PLACA BRASILEIRA ──
-// Formatos: AAA-1234 (antigo) ou AAA1B23 (Mercosul)
+// Formatos aceitos:
+//   Antigo:   ABC-1234  ou  ABC1234
+//   Mercosul: ABC1D23   ou  ABC-1D23
 var RE_OLD=/^[A-Z]{3}-?\d{4}$/;
-var RE_MER=/^[A-Z]{3}\d[A-Z]\d{2}$/;
+var RE_MER=/^[A-Z]{3}-?\d[A-Z]\d{2}$/;
 function fmtPlaca(inp){
   var raw=inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  // format: 3 letras + hífen + resto
-  var fmt=raw;
-  if(raw.length>3)fmt=raw.slice(0,3)+'-'+raw.slice(3);
-  // max 8 chars (AAA-1234 or AAA-1B23)
+  // insere hífen após as 3 primeiras letras
+  var fmt=raw.length>3?raw.slice(0,3)+'-'+raw.slice(3):raw;
+  // max 8 chars (AAA-1234 ou AAA-1B23)
   inp.value=fmt.slice(0,8);
-  var clean=inp.value.replace('-','');
   var hint=document.getElementById('placa-hint');
-  if(clean.length===7){
+  if(raw.length===7){
     if(RE_OLD.test(inp.value)||RE_MER.test(inp.value)){
-      inp.classList.remove('invalid');hint.textContent='';hint.style.color='';
+      inp.classList.remove('invalid');hint.textContent='✓';hint.style.color='#1e7e34';
     } else {
-      inp.classList.add('invalid');hint.textContent='Formato inválido. Use AAA-1234 ou AAA1B23';hint.style.color='#b91c1c';
+      inp.classList.add('invalid');hint.textContent='Formato inválido. Use ABC-1234 ou ABC-1D23';hint.style.color='#b91c1c';
     }
   } else {hint.textContent='';inp.classList.remove('invalid');}
 }
-function placaValida(p){var c=p.replace('-','');return (RE_OLD.test(p)||RE_MER.test(p))&&c.length===7;}
+function placaValida(p){
+  // aceita com ou sem hífen
+  return RE_OLD.test(p)||RE_MER.test(p);
+}
 
 // ── EMITIR TICKET ──
 function emitirTicket(){
@@ -1699,67 +1702,61 @@ function stopCamera(){
 function startQRScan(video){
   var canvas=document.createElement('canvas');
   var ctx=canvas.getContext('2d');
-  var scanning=false;
+  var active=true;
+  var lastScan=0;
+  var INTERVAL=250; // ms entre scans
 
-  function doScan(){
-    if(!camStream) return;
-    if(scanning) return; // evita chamadas concorrentes
-    // Só escaneia se o vídeo tem dimensões reais
+  function doScan(ts){
+    if(!active||!camStream) return;
+    requestAnimationFrame(doScan);
+    if(ts-lastScan<INTERVAL) return;
     if(!video.videoWidth||!video.videoHeight||video.readyState<2) return;
-    scanning=true;
+    lastScan=ts;
     canvas.width=video.videoWidth;
     canvas.height=video.videoHeight;
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-    // Tenta jsQR primeiro (funciona em todos os browsers incluindo iOS Safari)
     if(typeof jsQR==='function'){
       try{
-        var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-        var code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'dontInvert'});
-        if(code&&code.data){
+        var d=ctx.getImageData(0,0,canvas.width,canvas.height);
+        var c=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});
+        if(c&&c.data){
+          active=false;
           stopCamera();
-          document.getElementById('val-code').value=code.data;
+          document.getElementById('val-code').value=c.data;
           buscarTicketVal();
-          scanning=false;
-          return;
         }
       }catch(e){}
-      scanning=false;
-      return;
-    }
-
-    // Fallback: BarcodeDetector (Chrome Android / Chrome Desktop)
-    if('BarcodeDetector' in window){
-      var bd=new BarcodeDetector({formats:['qr_code']});
+    } else if('BarcodeDetector' in window){
+      active=false; // evita chamadas paralelas
       createImageBitmap(canvas).then(function(bmp){
-        bd.detect(bmp).then(function(codes){
+        new BarcodeDetector({formats:['qr_code']}).detect(bmp).then(function(codes){
           bmp.close();
           if(codes.length){
             stopCamera();
             document.getElementById('val-code').value=codes[0].rawValue;
             buscarTicketVal();
-          }
-          scanning=false;
-        }).catch(function(){scanning=false;});
-      }).catch(function(){scanning=false;});
-      return;
+          } else { active=true; }
+        }).catch(function(){active=true;});
+      }).catch(function(){active=true;});
     }
-
-    scanning=false;
   }
 
-  // Se jsQR ainda não carregou, aguarda até 5s
+  // Guarda referência para stopCamera poder parar
+  qrScanInterval={cancel:function(){active=false;}};
+
+  // Se jsQR ainda não carregou, aguarda até 6s
   if(typeof jsQR==='undefined'){
     var waited=0;
-    var waitInterval=setInterval(function(){
-      waited+=200;
-      if(typeof jsQR==='function'||waited>5000){
-        clearInterval(waitInterval);
-        qrScanInterval=setInterval(doScan,300);
+    var wi=setInterval(function(){
+      waited+=100;
+      if(typeof jsQR==='function'||waited>6000){
+        clearInterval(wi);
+        requestAnimationFrame(doScan);
       }
-    },200);
+    },100);
   } else {
-    qrScanInterval=setInterval(doScan,300);
+    requestAnimationFrame(doScan);
   }
 }
 
@@ -1768,15 +1765,32 @@ function startQRScan(video){
 // ══════════════════════════════════════════════════
 var valTimeout=null;
 function onValInput(v){clearTimeout(valTimeout);if(v.length>=6)valTimeout=setTimeout(buscarTicketVal,600);}
+
+// Colunas explícitas — evita erro de schema cache quando periodo ainda não existe
+var TK_COLS='id,numero,navio_id,placa,motorista,conferente_id,conferente_nome,armazem,porao,tier,viagem,observacoes,status,validado_em,created_at,wp_ticket_itens(*)';
+
 function buscarTicketVal(){
   var code=document.getElementById('val-code').value.trim();
   if(!code){toast('Informe o número','error');return;}
   if(!sb){toast('Sem conexão','error');return;}
   showLd(true);
-  qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('numero',code),'armazem').limit(1).then(function(r){
+  // Tenta buscar primeiro com periodo; se falhar, tenta sem
+  function fetchComPeriodo(field,val,cb){
+    qAz(sb.from('wp_tickets').select(TK_COLS+',periodo').eq(field,val),'armazem').limit(1).then(function(r){
+      if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
+        // coluna periodo não existe no banco ainda — busca sem ela
+        qAz(sb.from('wp_tickets').select(TK_COLS).eq(field,val),'armazem').limit(1).then(function(r2){
+          cb(r2);
+        });
+      } else {
+        cb(r);
+      }
+    });
+  }
+  fetchComPeriodo('numero',code,function(r){
     if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
     if(r.data&&r.data.length){showLd(false);renderValResult(r.data[0]);return;}
-    qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('id',code),'armazem').limit(1).then(function(r2){
+    fetchComPeriodo('id',code,function(r2){
       showLd(false);
       if(r2.error||!r2.data||!r2.data.length){
         toast('Ticket "'+code+'" não encontrado no seu armazém','error');return;
@@ -1844,8 +1858,21 @@ function validarTicket(id){
   var periodo=document.getElementById('val-periodo').value;
   if(!periodo){toast('Selecione o período de embarque','error');return;}
   showLd(true);
+  // Tenta update com periodo; se a coluna não existir, faz sem ela
   sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString(),periodo:periodo}).eq('id',id).then(function(r){
-    showLd(false);if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    showLd(false);
+    if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
+      // coluna periodo não existe — valida sem ela e avisa para rodar o SQL
+      sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString()}).eq('id',id).then(function(r2){
+        if(r2.error){toast('Erro: '+r2.error.message,'error');return;}
+        toast('Embarque validado! ⚠ Execute o woodport_alter5.sql para salvar o período.','success');
+        document.getElementById('val-result').style.display='none';
+        document.getElementById('val-code').value='';
+        loadValidados();if(typeof loadTickets==='function')loadTickets();
+      });
+      return;
+    }
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
     toast('Embarque validado! Período: '+periodo,'success');
     document.getElementById('val-result').style.display='none';
     document.getElementById('val-code').value='';
@@ -1855,12 +1882,21 @@ function validarTicket(id){
 function loadValidados(){
   if(!sb||!navioAtivo)return;
   qAz(sb.from('wp_tickets')
-    .select('*,wp_ticket_itens(*)')
+    .select(TK_COLS+',periodo')
     .eq('navio_id',navioAtivo.id)
     .eq('status','validado'),'armazem')
     .order('validado_em',{ascending:false})
     .then(function(r){
-      var list=r.data||[];
+      // Se der erro de schema cache no periodo, tenta sem ele
+      if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
+        qAz(sb.from('wp_tickets').select(TK_COLS).eq('navio_id',navioAtivo.id).eq('status','validado'),'armazem')
+          .order('validado_em',{ascending:false}).then(function(r2){renderValidados(r2.data||[]);});
+        return;
+      }
+      renderValidados(r.data||[]);
+    });
+}
+function renderValidados(list){
       var tb=document.getElementById('val-tb'),emp=document.getElementById('val-empty');
       if(!list.length){tb.innerHTML='';emp.style.display='';return;}
       emp.style.display='none';
@@ -1905,7 +1941,6 @@ function loadValidados(){
         }
       });
       tb.innerHTML=rows;
-    });
 }
 
 function exportValidados(){
