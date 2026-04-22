@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>4SIDES · WOODPORT</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -53,18 +53,61 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min
 #sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150;}
 /* RESPONSIVE */
 @media(max-width:768px){
-  #sb{transform:translateX(-100%);width:240px !important;}
+  /* Sidebar vira drawer lateral */
+  #sb{transform:translateX(-100%);width:260px !important;transition:transform .25s ease;z-index:200;}
   #sb.mob-open{transform:translateX(0);}
   #sb-overlay.mob-open{display:block;}
   #main{margin-left:0 !important;}
-  .topbar{padding:0 14px;gap:10px;}
+
+  /* Topbar mobile */
+  .topbar{padding:0 10px;gap:8px;height:52px;}
   #mob-menu-btn{display:flex !important;}
-  .content{padding:14px;}
-  .spl.sp2{grid-template-columns:1fr;}
-  .sr.s4{grid-template-columns:1fr 1fr;}
-  select#navio-sel{width:160px;}
   #today-lbl{display:none;}
+  select#navio-sel{width:130px;font-size:12px;}
+  .topbar .btn{padding:6px 10px;font-size:12px;}
+
+  /* Conteúdo */
+  .content{padding:10px;}
+
+  /* Grids colapsam para 1 coluna */
+  .spl.sp2,.gr.g2,.gr.g3,.gr.g4{grid-template-columns:1fr !important;}
+  .sr.s4{grid-template-columns:1fr 1fr;}
+  .sr.s3{grid-template-columns:1fr 1fr;}
+  .sr.s2{grid-template-columns:1fr 1fr;}
+
+  /* Cards */
   .card{padding:14px;}
+  .ch{margin-bottom:12px;padding-bottom:10px;flex-wrap:wrap;gap:8px;}
+
+  /* Stats menores */
+  .sv{font-size:20px;}
+
+  /* Inputs maiores (toque) */
+  input,select,textarea{font-size:16px !important;} /* evita zoom no iOS */
+  .btn{min-height:40px;}
+
+  /* Modais full-screen no mobile */
+  .modal{max-width:100% !important;max-height:96vh;margin:0;border-radius:12px 12px 0 0;position:fixed;bottom:0;left:0;right:0;}
+  .ov{align-items:flex-end !important;}
+
+  /* Tabela lista de carga — scroll horizontal */
+  #lista-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{min-width:600px;}
+
+  /* Seção de lotes no ticket — campos empilhados */
+  .lote-blk .gr.g2,.lote-blk .gr.g3{grid-template-columns:1fr !important;}
+
+  /* QR camera full width */
+  #qr-video-wrap{max-width:100%;}
+
+  /* Validar — input maior */
+  #val-code{font-size:18px !important;height:48px;}
+  #cam-btn{width:100%;justify-content:center;}
+
+  /* Seção de validados — tabela scroll */
+  #val-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Ticket impresso — não impacta */
 }
 /* CARDS */
 .card{background:var(--s);border:1px solid var(--bds);border-radius:var(--rlg);padding:22px;box-shadow:var(--shsm);}
@@ -196,6 +239,17 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
 .tkt .tf{font-size:10px;text-align:center;margin-top:2.5mm;border-top:1px solid #000;padding-top:1.5mm;opacity:.7;}
 .tkt .tsec{font-size:11px;font-weight:bold;text-align:center;background:#000;color:#fff;padding:1mm 0;margin:2mm 0 1mm;}
 @media(max-width:1100px){.sp2{grid-template-columns:1fr;}}
+@media(max-width:480px){
+  /* Telefones pequenos */
+  .sr.s4,.sr.s3,.sr.s2{grid-template-columns:1fr 1fr;}
+  .sv{font-size:18px;}
+  .topbar .btn span{display:none;} /* esconde labels nos botões do topbar */
+  select#navio-sel{width:110px;}
+  .content{padding:8px;}
+  .card{padding:12px;border-radius:10px;}
+  /* Ticket de impressão adaptado */
+  .ticket-wrap{padding:4mm;}
+}
 </style>
 </head>
 <body>
@@ -848,7 +902,7 @@ function go(page){
       sb&&qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem').order('ref').then(function(r){listaAll=r.data||[];});
     }
   }
-  if(page==='validar')loadValidados();
+  if(page==='validar'){loadValidados();preloadJsQR();}
   if(page==='usuarios')loadUsers();
   if(page==='navio')loadNavios();
 }
@@ -1251,8 +1305,9 @@ function buscarRef(input){
   setBlkStatus(blk,'buscando');
 
   // tenta por número exato primeiro, depois por lote
+  // OBRIGATÓRIO filtrar por armazém do conferente (qAz)
   var refNum=parseInt(q);
-  var query=sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id);
+  var query=qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem');
   if(!isNaN(refNum)){
     query=query.eq('ref',refNum);
   } else {
@@ -1260,7 +1315,9 @@ function buscarRef(input){
   }
   query.limit(1).single().then(function(r){
     if(r.error||!r.data){
-      setBlkStatus(blk,'nao_encontrado',q);
+      var azUser=userArmazem();
+      var msg=azUser?'Ref "'+q+'" não encontrada no armazém '+azUser:'Ref "'+q+'" não encontrada na lista de carga';
+      setBlkStatus(blk,'nao_encontrado_az',msg);
       return;
     }
     preencherBlk(blk,r.data);
@@ -1276,6 +1333,9 @@ function setBlkStatus(blk,status,q){
   } else if(status==='nao_encontrado'){
     info.style.display='';
     info.innerHTML='<span style="color:#b91c1c;">❌ Ref "'+q+'" não encontrada na lista de carga</span>';
+  } else if(status==='nao_encontrado_az'){
+    info.style.display='';
+    info.innerHTML='<span style="color:#b91c1c;">🔒 '+q+'</span>';
   } else {
     info.style.display='none';
     info.innerHTML='';
@@ -1600,54 +1660,106 @@ function reimprimirTicket(id){
 // ══════════════════════════════════════════════════
 // CÂMERA QR CODE
 // ══════════════════════════════════════════════════
+// Pré-carrega jsQR assim que o módulo de validação é aberto
+function preloadJsQR(){
+  if(typeof jsQR==='undefined'&&!document.getElementById('jsqr-script')){
+    var s=document.createElement('script');
+    s.id='jsqr-script';
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js';
+    document.head.appendChild(s);
+  }
+}
+
 function toggleCamera(){
   if(camStream){stopCamera();return;}
   var video=document.getElementById('qr-video');
   var wrap=document.getElementById('qr-video-wrap');
   var btn=document.getElementById('cam-btn');
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+  // Garante jsQR carregado antes de abrir câmera
+  preloadJsQR();
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}}).then(function(stream){
     camStream=stream;video.srcObject=stream;wrap.style.display='';
     btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Fechar Câmera';
-    // scan loop using BarcodeDetector if available, otherwise jsQR fallback
-    startQRScan(video);
+    // Aguarda o vídeo estar realmente pronto antes de escanear
+    video.onloadedmetadata=function(){
+      video.play();
+      // Pequeno delay para garantir frames disponíveis
+      setTimeout(function(){ startQRScan(video); }, 500);
+    };
   }).catch(function(err){toast('Câmera indisponível: '+err.message,'error');});
 }
 function stopCamera(){
   if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
   clearInterval(qrScanInterval);qrScanInterval=null;
+  var video=document.getElementById('qr-video');
+  video.onloadedmetadata=null;
   document.getElementById('qr-video-wrap').style.display='none';
   document.getElementById('cam-btn').innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir Câmera QR';
 }
 function startQRScan(video){
   var canvas=document.createElement('canvas');
   var ctx=canvas.getContext('2d');
+  var scanning=false;
+
   function doScan(){
-    if(!camStream||!video.videoWidth)return;
-    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
-    ctx.drawImage(video,0,0);
+    if(!camStream) return;
+    if(scanning) return; // evita chamadas concorrentes
+    // Só escaneia se o vídeo tem dimensões reais
+    if(!video.videoWidth||!video.videoHeight||video.readyState<2) return;
+    scanning=true;
+    canvas.width=video.videoWidth;
+    canvas.height=video.videoHeight;
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+
+    // Tenta jsQR primeiro (funciona em todos os browsers incluindo iOS Safari)
+    if(typeof jsQR==='function'){
+      try{
+        var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+        var code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'dontInvert'});
+        if(code&&code.data){
+          stopCamera();
+          document.getElementById('val-code').value=code.data;
+          buscarTicketVal();
+          scanning=false;
+          return;
+        }
+      }catch(e){}
+      scanning=false;
+      return;
+    }
+
+    // Fallback: BarcodeDetector (Chrome Android / Chrome Desktop)
     if('BarcodeDetector' in window){
       var bd=new BarcodeDetector({formats:['qr_code']});
-      // pass ImageBitmap (cloneable) instead of video element
       createImageBitmap(canvas).then(function(bmp){
         bd.detect(bmp).then(function(codes){
           bmp.close();
-          if(codes.length){var val=codes[0].rawValue;stopCamera();document.getElementById('val-code').value=val;buscarTicketVal();}
-        }).catch(function(){});
-      }).catch(function(){});
-    } else if(typeof jsQR==='function'){
-      var img=ctx.getImageData(0,0,canvas.width,canvas.height);
-      var code=jsQR(img.data,img.width,img.height);
-      if(code){stopCamera();document.getElementById('val-code').value=code.data;buscarTicketVal();}
+          if(codes.length){
+            stopCamera();
+            document.getElementById('val-code').value=codes[0].rawValue;
+            buscarTicketVal();
+          }
+          scanning=false;
+        }).catch(function(){scanning=false;});
+      }).catch(function(){scanning=false;});
+      return;
     }
+
+    scanning=false;
   }
-  // load jsQR as fallback if BarcodeDetector not available
-  if(!('BarcodeDetector' in window)&&typeof jsQR==='undefined'){
-    var s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js';
-    s.onload=function(){qrScanInterval=setInterval(doScan,400);};
-    document.head.appendChild(s);
+
+  // Se jsQR ainda não carregou, aguarda até 5s
+  if(typeof jsQR==='undefined'){
+    var waited=0;
+    var waitInterval=setInterval(function(){
+      waited+=200;
+      if(typeof jsQR==='function'||waited>5000){
+        clearInterval(waitInterval);
+        qrScanInterval=setInterval(doScan,300);
+      }
+    },200);
   } else {
-    qrScanInterval=setInterval(doScan,400);
+    qrScanInterval=setInterval(doScan,300);
   }
 }
 
