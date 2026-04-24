@@ -287,9 +287,11 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
     <button class="nv" onclick="go('lista')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nv-label">Lista de Carga</span></button>
     <button class="nv" onclick="go('tickets')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg><span class="nv-label">Emissão de Tickets</span></button>
     <button class="nv" onclick="go('validar')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span class="nv-label">Validar Embarque</span></button>
+    <button class="nv" onclick="go('relatorios')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg><span class="nv-label">Relatórios</span></button>
     <div class="nav-sec">Administração</div>
     <button class="nv" onclick="go('usuarios')" id="nav-usuarios"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nv-label">Usuários</span></button>
     <button class="nv" onclick="go('navio')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2"/><path d="M12 2 4 12h16L12 2z"/><path d="M12 12v8"/></svg><span class="nv-label">Navios</span></button>
+    <button class="nv" onclick="go('backup')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="nv-label">Backup & Restore</span></button>
     <button class="nv" onclick="go('cfg')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span class="nv-label">Configurar Supabase</span></button>
   </nav>
   <div class="sb-foot">
@@ -317,6 +319,214 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
   <div class="content">
 
     <!-- CFG -->
+    <!-- ═══ RELATÓRIOS ═══ -->
+    <div class="page" id="page-relatorios">
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:2px;margin-bottom:14px;border-bottom:1px solid var(--bds);">
+        <button class="rl-tab on" id="rlt-analitico" onclick="switchRlTab('analitico')" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid var(--w500);color:var(--ink1);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">📊 Analítico</button>
+        <button class="rl-tab" id="rlt-hatchlist" onclick="switchRlTab('hatchlist')" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink4);font-family:inherit;font-size:13px;cursor:pointer;">📋 Hatch List</button>
+      </div>
+
+      <!-- ─── ABA ANALÍTICO ─── -->
+      <div id="rl-analitico">
+      <!-- Filtros globais -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="ch"><span class="ct">Filtros</span></div>
+        <div class="gr g4" style="gap:10px;align-items:flex-end;">
+          <div class="fg"><label class="fl">Período de</label>
+            <input type="date" id="rl-de" onchange="loadRelatorios()">
+          </div>
+          <div class="fg"><label class="fl">Até</label>
+            <input type="date" id="rl-ate" onchange="loadRelatorios()">
+          </div>
+          <div class="fg"><label class="fl">Porto</label>
+            <select id="rl-porto" onchange="loadRelatorios()">
+              <option value="">Todos os portos</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Armazém</label>
+            <select id="rl-az" onchange="loadRelatorios()">
+              <option value="">Todos</option>
+              <option>WRC</option><option>Pratico</option><option>Global</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn bp" onclick="loadRelatorios()">🔄 Atualizar</button>
+          <button class="btn bs" onclick="exportRelatorio('periodo')">⬇ Export Embarque/Período</button>
+          <button class="btn bs" onclick="exportRelatorio('conferente')">⬇ Export Por Conferente</button>
+          <button class="btn bs" onclick="exportRelatorio('completo')">⬇ Export Completo</button>
+        </div>
+      </div>
+      <div class="sr s4" style="margin-bottom:14px;" id="rl-cards">
+        <div class="card"><div class="cs">Tickets Emitidos</div><div class="ct" id="rl-tot-emitidos">—</div></div>
+        <div class="card"><div class="cs">Validados</div><div class="ct" id="rl-tot-validados">—</div></div>
+        <div class="card"><div class="cs">CBM Embarcado</div><div class="ct" id="rl-tot-cbm">—</div></div>
+        <div class="card"><div class="cs">Fardos Embarcados</div><div class="ct" id="rl-tot-fardos">—</div></div>
+      </div>
+      <div class="spl sp2" style="gap:14px;">
+        <div class="card">
+          <div class="ch"><span class="ct">Embarque por Período</span><span class="cs" id="rl-periodo-sub"></span></div>
+          <div id="rl-periodo-empty" class="empty-state" style="display:none;">Nenhum dado no período</div>
+          <div style="overflow-x:auto;"><table id="rl-periodo-tb" style="min-width:400px;"><thead><tr><th>Período</th><th>Tickets</th><th>Fardos</th><th>CBM</th><th>Peso (kg)</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">Produção por Conferente</span></div>
+          <div id="rl-conf-empty" class="empty-state" style="display:none;">Nenhum dado</div>
+          <div style="overflow-x:auto;"><table id="rl-conf-tb" style="min-width:360px;"><thead><tr><th>Conferente</th><th>Armazém</th><th>Tickets</th><th>Fardos</th><th>CBM</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <div class="ch"><span class="ct">Resumo por Porto de Descarga</span></div>
+        <div id="rl-porto-empty" class="empty-state" style="display:none;">Nenhum dado</div>
+        <div style="overflow-x:auto;"><table id="rl-porto-tb"><thead><tr><th>Porto</th><th>Tickets</th><th>Marcas</th><th>Fardos</th><th>CBM</th><th>Peso (kg)</th><th>% CBM</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <div class="ch"><span class="ct">Listagem Completa — Embarques Validados</span><span class="cs" id="rl-lista-count"></span></div>
+        <div id="rl-lista-empty" class="empty-state" style="display:none;">Nenhum embarque validado no período</div>
+        <div style="overflow-x:auto;" id="rl-lista-wrap">
+          <table id="rl-lista-tb" style="min-width:900px;font-size:11px;">
+            <thead><tr><th>Ticket</th><th>Data Valid.</th><th>Período</th><th>Navio</th><th>Porão</th><th>Tier</th><th>Vgm</th><th>Porto</th><th>Placa</th><th>Motorista</th><th>Conferente</th><th>Armazém</th><th>Ref</th><th>Lote</th><th>Marca</th><th>Qtde</th><th>CBM</th><th>Peso</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      </div><!-- /rl-analitico -->
+
+      <!-- ─── ABA HATCH LIST ─── -->
+      <div id="rl-hatchlist" style="display:none;">
+        <div class="card" style="margin-bottom:14px;">
+          <div class="ch"><span class="ct">Gerar Hatch List</span><span class="cs">Formato para envio ao porto de descarga</span></div>
+          <div class="gr g3" style="gap:10px;align-items:flex-end;margin-bottom:12px;">
+            <div class="fg"><label class="fl">Navio / Viagem</label>
+              <input type="text" id="hl-navio" placeholder="Ex: STAR ISMENE - ISM 2601" style="font-weight:600;">
+            </div>
+            <div class="fg"><label class="fl">Shipper / B.L. padrão</label>
+              <input type="text" id="hl-bl" placeholder="Ex: GSSWISM34093E">
+            </div>
+            <div class="fg"><label class="fl">Receivers padrão</label>
+              <input type="text" id="hl-recv" placeholder="Ex: Great Southern">
+            </div>
+          </div>
+          <div class="gr g3" style="gap:10px;align-items:flex-end;margin-bottom:12px;">
+            <div class="fg"><label class="fl">Commodity</label>
+              <input type="text" id="hl-comm" value="SLBRC" placeholder="SLBRC">
+            </div>
+            <div class="fg"><label class="fl">Porão(ões)</label>
+              <select id="hl-porao" multiple style="height:80px;font-size:12px;">
+                <option value="" selected>Todos</option>
+              </select>
+            </div>
+            <div class="fg" style="display:flex;flex-direction:column;justify-content:flex-end;gap:6px;">
+              <button class="btn bp" onclick="gerarHatchList()">📋 Gerar Hatch List</button>
+              <button class="btn bs" id="hl-export-btn" onclick="exportHatchListXLSX()" style="display:none;">⬇ Exportar Excel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview da Hatch List -->
+        <div id="hl-preview" style="display:none;">
+          <div id="hl-tabs" style="display:flex;gap:2px;flex-wrap:wrap;margin-bottom:8px;"></div>
+          <div id="hl-content"></div>
+        </div>
+        <div id="hl-empty" class="empty-state" style="display:none;">Nenhum dado encontrado. Certifique-se de ter embarques validados para o navio selecionado.</div>
+      </div><!-- /rl-hatchlist -->
+
+    </div>
+
+    <!-- ═══ BACKUP & RESTORE ═══ -->
+    <div class="page" id="page-backup">
+      <div class="spl sp2" style="gap:14px;">
+
+        <!-- BACKUP -->
+        <div>
+          <div class="card" style="margin-bottom:14px;">
+            <div class="ch"><span class="ct">Backup do Banco de Dados</span></div>
+            <p style="font-size:12px;color:var(--ink4);margin-bottom:12px;line-height:1.6;">
+              Exporta todos os dados do sistema (navios, usuários, lista de carga, tickets e itens) em formato JSON. Salve o arquivo em local seguro — nuvem, e-mail ou HD externo.
+            </p>
+            <div class="gr g2" style="gap:10px;margin-bottom:12px;">
+              <div class="fg"><label class="fl">Incluir</label>
+                <div style="display:flex;flex-direction:column;gap:5px;padding:8px;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rsm);">
+                  <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;"><input type="checkbox" id="bk-navios" checked> Navios</label>
+                  <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;"><input type="checkbox" id="bk-usuarios" checked> Usuários</label>
+                  <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;"><input type="checkbox" id="bk-lista" checked> Lista de Carga</label>
+                  <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;"><input type="checkbox" id="bk-tickets" checked> Tickets + Itens</label>
+                </div>
+              </div>
+              <div class="fg"><label class="fl">Filtrar por navio</label>
+                <select id="bk-navio-sel" style="margin-bottom:8px;">
+                  <option value="">Todos os navios</option>
+                </select>
+                <label class="fl" style="margin-top:8px;">Formato</label>
+                <select id="bk-format">
+                  <option value="json">JSON (completo)</option>
+                  <option value="csv">CSV por tabela</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn bp" onclick="fazerBackup()" id="bk-btn">⬇ Gerar Backup Agora</button>
+              <button class="btn bs" onclick="copiarBackupClipboard()">📋 Copiar JSON</button>
+            </div>
+            <div id="bk-status" style="margin-top:10px;font-size:12px;display:none;"></div>
+          </div>
+
+          <!-- Histórico de backups locais -->
+          <div class="card">
+            <div class="ch"><span class="ct">Histórico de Backups</span><span class="cs" id="bk-hist-count"></span></div>
+            <div id="bk-hist-empty" style="font-size:12px;color:var(--ink4);padding:8px 0;">Nenhum backup registrado nesta sessão</div>
+            <div id="bk-hist-list"></div>
+          </div>
+        </div>
+
+        <!-- RESTORE + INFO -->
+        <div>
+          <div class="card" style="margin-bottom:14px;">
+            <div class="ch"><span class="ct">Restaurar Backup</span></div>
+            <p style="font-size:12px;color:var(--ink4);margin-bottom:12px;line-height:1.6;">
+              Carregue um arquivo JSON de backup para restaurar os dados. <strong style="color:var(--red);">Atenção: sobrescreve os dados existentes.</strong>
+            </p>
+            <div class="fg" style="margin-bottom:10px;">
+              <label class="fl">Arquivo de Backup (.json)</label>
+              <input type="file" id="bk-restore-file" accept=".json" onchange="previewRestore(this)" style="font-size:12px;">
+            </div>
+            <div id="bk-restore-preview" style="display:none;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rsm);padding:10px;margin-bottom:10px;font-size:12px;">
+              <div id="bk-restore-info"></div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn bd" onclick="fazerRestore()" id="bk-restore-btn" style="display:none;">⚠ Restaurar Dados</button>
+              <button class="btn bs" onclick="cancelarRestore()" id="bk-cancel-btn" style="display:none;">Cancelar</button>
+            </div>
+            <div id="bk-restore-status" style="margin-top:10px;font-size:12px;display:none;"></div>
+          </div>
+
+          <!-- Guia Supabase -->
+          <div class="card">
+            <div class="ch"><span class="ct">Backup Automático — Supabase</span></div>
+            <div style="font-size:12px;color:var(--ink3);line-height:1.7;">
+              <p style="margin-bottom:8px;">O Supabase oferece backup automático nativo:</p>
+              <div style="background:var(--s2);border-radius:var(--rsm);padding:10px 12px;margin-bottom:8px;">
+                <div style="font-weight:600;margin-bottom:4px;">Free Plan</div>
+                <div style="color:var(--ink4);">Backups diários automáticos por 7 dias. Acesse em <strong>Supabase Dashboard → Settings → Backups</strong></div>
+              </div>
+              <div style="background:var(--s2);border-radius:var(--rsm);padding:10px 12px;margin-bottom:8px;">
+                <div style="font-weight:600;margin-bottom:4px;">Pro Plan (US$25/mês)</div>
+                <div style="color:var(--ink4);">Point-in-Time Recovery (PITR) — restaura para qualquer momento nos últimos 7 dias</div>
+              </div>
+              <div style="background:var(--yellow-bg);border:1px solid var(--yellow2);border-radius:var(--rsm);padding:10px 12px;">
+                <div style="font-weight:600;color:var(--w600);margin-bottom:4px;">💡 Recomendação</div>
+                <div style="color:var(--ink3);">Faça backup manual via este módulo ao final de cada embarque e armazene em Google Drive, OneDrive ou e-mail.</div>
+              </div>
+              <div style="margin-top:10px;">
+                <a href="https://supabase.com/dashboard/project/jtmmgisxeqcaqayhbxob/settings/storage" target="_blank" style="color:var(--w500);font-size:12px;">→ Abrir Backups no Supabase Dashboard</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-cfg">
       <div class="card" style="max-width:560px;margin:0 auto;padding:0;overflow:hidden;">
         <div class="cfgb"><h2>Configurar Supabase</h2><p>Conecte o WoodPort ao banco de dados dedicado</p></div>
@@ -561,6 +771,7 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
                 <video id="qr-video" autoplay playsinline muted></video>
                 <div id="qr-overlay"><div></div></div>
               </div>
+              <div id="qr-status" style="font-size:12px;color:var(--ink4);min-height:18px;margin:4px 0;text-align:center;"></div>
               <div id="qr-btns" style="display:flex;gap:8px;margin-top:8px;">
                 <button class="btn bs" id="cam-btn" onclick="toggleCamera()" style="flex:1;justify-content:center;">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir Câmera QR
@@ -790,8 +1001,9 @@ CREATE INDEX IF NOT EXISTS idx_ti_lista  ON wp_ticket_itens (lista_id);
 
 -- Admin inicial (login: admin | senha: admin123)
 INSERT INTO wp_usuarios (nome, login, senha_hash, perfil, ativo)
-VALUES ('Administrador', 'admin', 'admin123', 'admin', true)
+VALUES ('Administrador', 'admin', 'LTk2OTE2MTU5NzMyMW5pbWRh', 'admin', true)
 ON CONFLICT (login) DO NOTHING;
+-- Senha padrão do admin: admin123
 
 -- ════ SE AS TABELAS JÁ EXISTEM, RODE ESTES ALTER: ════
 ALTER TABLE wp_navios       ADD COLUMN IF NOT EXISTS porao_qtd integer DEFAULT 0;
@@ -816,6 +1028,19 @@ ALTER TABLE wp_usuarios     ADD COLUMN IF NOT EXISTS armazem text DEFAULT 'WRC';
 // STATE
 // ══════════════════════════════════════════════════
 var sb=null, navioAtivo=null, naviosAll=[], usersAll=[], listaAll=[], ticketsAll=[];
+
+// ── Formatação numérica ──
+// fNum: exibição interna — usa vírgula como separador decimal (padrão BR)
+// Os dados são embarcados para os EUA mas a operação é feita por brasileiros
+function fNum(v, dec){
+  dec = dec===undefined?3:dec;
+  return parseFloat(v||0).toFixed(dec).replace('.',',');
+}
+// fNumXL: para CSV/XLSX exportado — mantém ponto (padrão internacional)
+function fNumXL(v, dec){
+  dec = dec===undefined?3:dec;
+  return parseFloat(v||0).toFixed(dec);
+}
 var currentUser=null;  // logged-in user object
 var loteTkCount=0;     // lote blocks in ticket form
 var camStream=null;    // camera stream
@@ -876,7 +1101,12 @@ function doLogin(){
     if(r.error){showLoginErr('Erro ao consultar banco: '+r.error.message);return;}
     if(!r.data||!r.data.length){showLoginErr('Usuário não encontrado.');return;}
     var u=r.data[0];
-    if(pass!==u.senha_hash){showLoginErr('Senha incorreta.');return;}
+    if(!u.ativo){showLoginErr('Usuário inativo.');return;}
+    // Detecta senha corrompida por backup antigo
+    if(u.senha_hash==='***BACKUP***'||!u.senha_hash||u.senha_hash.length<10){
+      showLoginErr('Senha inválida. Execute woodport_reset_senhas.sql no Supabase e use a senha: WoodPort@2025');return;
+    }
+    if(hashPass(pass)!==u.senha_hash){showLoginErr('Senha incorreta.');return;}
     currentUser=u;setSession(u);showApp();
   });
 }
@@ -909,7 +1139,7 @@ function hashPass(p){
 // ══════════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════════
-var titles={cfg:'Configurar Supabase',dashboard:'Dashboard',lista:'Lista de Carga',tickets:'Emissão de Tickets',validar:'Validar Embarque',usuarios:'Usuários',navio:'Navios'};
+var titles={cfg:'Configurar Supabase',dashboard:'Dashboard',lista:'Lista de Carga',tickets:'Emissão de Tickets',validar:'Validar Embarque',relatorios:'Relatórios',backup:'Backup & Restore',usuarios:'Usuários',navio:'Navios'};
 function go(page){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nv').forEach(function(n){n.classList.remove('on');});
@@ -928,6 +1158,8 @@ function go(page){
     }
   }
   if(page==='validar'){loadValidados();preloadJsQR();}
+  if(page==='relatorios')loadRelatorios();
+  if(page==='backup')initBackupPage();
   if(page==='usuarios')loadUsers();
   if(page==='navio')loadNavios();
 }
@@ -1220,9 +1452,9 @@ function loadLista(){
     var tC=0,tQ=0,tP=0;
     listaAll.forEach(function(l){tC+=parseFloat(l.cbm_total||0);tQ+=parseInt(l.quantidade||0);tP+=parseFloat(l.peso_bruto||0);});
     document.getElementById('ls-lotes').textContent=listaAll.length;
-    document.getElementById('ls-cbm').textContent=tC.toFixed(3);
+    document.getElementById('ls-cbm').textContent=fNum(tC,3);
     document.getElementById('ls-qtd').textContent=tQ.toLocaleString('pt-BR');
-    document.getElementById('ls-peso').textContent=tP.toFixed(0)+' kg';
+    document.getElementById('ls-peso').textContent=fNum(tP,0)+' kg';
     var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
     var psel=document.getElementById('lista-porto-sel');
     psel.innerHTML='<option value="">Todos portos</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
@@ -1253,8 +1485,8 @@ function renderLista(list,um){
       +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.receiver||'—')+'</td>'
       +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.oceandoc_booking||'—')+'</td>'
       +'<td>'+(l.commodity||'—')+'</td>'
-      +'<td>'+parseFloat(l.cbm_total||0).toFixed(3)+'</td><td>'+(l.quantidade||0)+'</td><td>'+parseFloat(l.peso_bruto||0).toFixed(0)+'</td>'
-      +'<td>'+parseFloat(l.peso_medio||0).toFixed(3)+'</td><td>'+(l.armazem||'—')+'</td>'
+      +'<td>'+fNum(l.cbm_total,3)+'</td><td>'+(l.quantidade||0)+'</td><td>'+fNum(l.peso_bruto,0)+'</td>'
+      +'<td>'+fNum(l.peso_medio,3)+'</td><td>'+(l.armazem||'—')+'</td>'
       +'<td>'+(l.due||'—')+'</td>'
       +'<td>'+(l.marca||'—')+'</td>'
       +'<td><div style="min-width:80px;"><div style="font-size:11px;margin-bottom:2px;">'+used+' / '+(l.quantidade||0)+'</div><div class="pw"><div class="pb '+bc+'" style="width:'+pct+'%"></div></div></div></td>'
@@ -1563,7 +1795,7 @@ function preencherBlk(blk,l){
       +(l.porto_descarga?'<span style="color:var(--ink3);">Porto: '+l.porto_descarga+'</span><br>':'')
       +(l.armazem?'<span style="color:var(--ink3);">Armazém: '+l.armazem+'</span><br>':'')
       +(l.due?'<span style="color:var(--ink3);">DUE: '+l.due+'</span><br>':'')
-      +'<span style="color:var(--ink3);">CBM unit: '+cbmUnit.toFixed(4)+' | Peso médio: '+parseFloat(l.peso_medio||0).toFixed(3)+' kg</span>'
+      +'<span style="color:var(--ink3);">CBM unit: '+fNum(cbmUnit,4)+' | Peso médio: '+fNum(l.peso_medio,3)+' kg</span>'
       +'</div>';
   }
 
@@ -1613,8 +1845,8 @@ function calcTotais(){
     // atualiza CBM e Peso do bloco
     if(qtd>0){
       var cbm=cbmU*qtd, peso=pesoM*qtd;
-      if(blk.querySelector('.lt-cbm'))blk.querySelector('.lt-cbm').value=cbm.toFixed(4)+' m³';
-      if(blk.querySelector('.lt-peso'))blk.querySelector('.lt-peso').value=peso.toFixed(3)+' kg';
+      if(blk.querySelector('.lt-cbm'))blk.querySelector('.lt-cbm').value=fNum(cbm,4)+' m³';
+      if(blk.querySelector('.lt-peso'))blk.querySelector('.lt-peso').value=fNum(peso,3)+' kg';
       totCBM+=cbm; totPeso+=peso; totQtd+=qtd; ok=true;
       // alerta de saldo
       var saldoEl=blk.querySelector('.lt-saldo-lbl');
@@ -1642,8 +1874,8 @@ function calcTotais(){
   if(totDiv)totDiv.style.display=ok?'':'none';
   var totCbmEl=document.getElementById('tk-tot-cbm');
   var totPesoEl=document.getElementById('tk-tot-peso');
-  if(totCbmEl)totCbmEl.textContent=totCBM.toFixed(4)+' m³';
-  if(totPesoEl)totPesoEl.textContent=totPeso.toFixed(3)+' kg';
+  if(totCbmEl)totCbmEl.textContent=fNum(totCBM,4)+' m³';
+  if(totPesoEl)totPesoEl.textContent=fNum(totPeso,3)+' kg';
 }
 
 // ── PLACA BRASILEIRA ──
@@ -1778,7 +2010,7 @@ function showTicketPrint(tk,lotes){
     linhasLotes+='<div class="tsec">Lote '+(i+1)+(l.lote?' · '+l.lote:'')+'</div>'
       +g2( fi('Ref',l.ref||'—'), fi('Marca',l.marca||'—') )
       +g2( fi('Shipper',l.shipper||'—',true), fi('DUE/RUC',l.due||'—') )
-      +g3( fi('NF',l.nf||'—'), fi('Qtde',(l.quantidade||0)+' pçs'), fi('CBM',parseFloat(l.cbm_calculado||0).toFixed(3)+'m³') );
+      +g3( fi('NF',l.nf||'—'), fi('Qtde',(l.quantidade||0)+' pçs'), fi('CBM',fNum(l.cbm_calculado,3)+'m³') );
   });
 
   var html=''
@@ -1796,8 +2028,8 @@ function showTicketPrint(tk,lotes){
     +'<div class="ts"></div>'
     +'<div class="tot">'
       +'<div class="tc"><span class="lb">Qtde</span><span class="vl">'+totQtd+' pçs</span></div>'
-      +'<div class="tc"><span class="lb">CBM</span><span class="vl">'+totCBM.toFixed(3)+'m³</span></div>'
-      +'<div class="tc"><span class="lb">Peso</span><span class="vl">'+totPeso.toFixed(2)+'kg</span></div>'
+      +'<div class="tc"><span class="lb">CBM</span><span class="vl">'+fNum(totCBM,3)+'m³</span></div>'
+      +'<div class="tc"><span class="lb">Peso</span><span class="vl">'+fNum(totPeso,2)+'kg</span></div>'
     +'</div>'
     +'<div class="tq"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data='+encodeURIComponent(tk.numero)+'" width="100" height="100" alt="QR"></div>'
     +'<div class="tf">'+tk.numero+'</div>';
@@ -1914,7 +2146,7 @@ function renderTickets(list){
       +'<td><strong>'+t.numero+'</strong></td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+lotesStr+'">'+lotesStr+'</td>'
       +'<td>'+portosStr+'</td>'
-      +'<td>'+totQtd+'</td><td>'+totCBM.toFixed(3)+'</td><td>'+totPeso.toFixed(0)+'</td>'
+      +'<td>'+totQtd+'</td><td>'+fNum(totCBM,3)+'</td><td>'+fNum(totPeso,0)+'</td>'
       +'<td>'+t.placa+'</td><td>'+conf+'</td><td>'+st+'</td>'
       +'<td style="display:flex;gap:4px;">'
         +'<button class="btn bs bsm" onclick="reimprimirTicket(\''+t.id+'\')" title="Reimprimir">🖨</button>'
@@ -1936,7 +2168,940 @@ function reimprimirTicket(id){
 }
 
 // ══════════════════════════════════════════════════
-// CÂMERA QR CODE
+// RELATÓRIOS
+// ══════════════════════════════════════════════════
+var rlData = []; // cache dos dados do relatório atual
+
+function loadRelatorios(){
+  if(!sb||!navioAtivo) return;
+  showLd(true);
+
+  // Datas padrão: mês atual
+  var de  = document.getElementById('rl-de').value;
+  var ate = document.getElementById('rl-ate').value;
+  if(!de){
+    var now=new Date(); now.setDate(1);
+    document.getElementById('rl-de').value = now.toISOString().slice(0,10);
+    de = document.getElementById('rl-de').value;
+  }
+  if(!ate){
+    document.getElementById('rl-ate').value = new Date().toISOString().slice(0,10);
+    ate = document.getElementById('rl-ate').value;
+  }
+
+  var porto = document.getElementById('rl-porto').value;
+  var az    = document.getElementById('rl-az').value;
+
+  // Busca tickets validados + emitidos no período
+  var q = qAz(sb.from('wp_tickets')
+    .select(TK_COLS+',periodo')
+    .eq('navio_id', navioAtivo.id)
+    .gte('created_at', de+'T00:00:00')
+    .lte('created_at', ate+'T23:59:59'), 'armazem');
+
+  if(porto) q = q.eq('porto_descarga', porto);
+  if(az)    q = q.eq('armazem', az);
+
+  q.order('created_at',{ascending:false}).then(function(r){
+    showLd(false);
+    if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
+      // fallback sem periodo
+      var q2 = qAz(sb.from('wp_tickets').select(TK_COLS).eq('navio_id',navioAtivo.id)
+        .gte('created_at',de+'T00:00:00').lte('created_at',ate+'T23:59:59'),'armazem');
+      if(porto) q2=q2.eq('porto_descarga',porto);
+      if(az) q2=q2.eq('armazem',az);
+      q2.order('created_at',{ascending:false}).then(function(r2){
+        rlData=r2.data||[]; renderRelatorios();
+      }); return;
+    }
+    rlData = r.data||[];
+    renderRelatorios();
+    populateRlPortos();
+  }).catch(function(e){ showLd(false); toast('Erro: '+e.message,'error'); });
+}
+
+function populateRlPortos(){
+  var sel = document.getElementById('rl-porto');
+  var cur = sel.value;
+  var portos = [...new Set(rlData.map(function(t){return t.porto_descarga;}).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos os portos</option>'
+    + portos.map(function(p){return '<option value="'+p+'"'+(p===cur?' selected':'')+'>'+p+'</option>';}).join('');
+}
+
+function renderRelatorios(){
+  var validados  = rlData.filter(function(t){return t.status==='validado';});
+  var emitidos   = rlData;
+  var totalFardos= 0, totalCBM=0;
+  validados.forEach(function(t){
+    (t.wp_ticket_itens||[]).forEach(function(i){
+      totalFardos += parseInt(i.quantidade)||0;
+      totalCBM    += parseFloat(i.cbm_calculado)||0;
+    });
+  });
+
+  document.getElementById('rl-tot-emitidos').textContent  = emitidos.length;
+  document.getElementById('rl-tot-validados').textContent = validados.length;
+  document.getElementById('rl-tot-cbm').textContent       = fNum(totalCBM,3)+' m³';
+  document.getElementById('rl-tot-fardos').textContent    = totalFardos.toLocaleString('pt-BR');
+
+  renderRlPeriodo(validados);
+  renderRlConferente(validados);
+  renderRlPorto(validados);
+  renderRlLista(validados);
+}
+
+// ── Embarque por Período ──
+function renderRlPeriodo(list){
+  var map={};
+  var ORDER=['07x13','13x19','19x01','01x07','—'];
+  list.forEach(function(t){
+    var p = t.periodo||'—';
+    if(!map[p]) map[p]={tickets:0,fardos:0,cbm:0,peso:0};
+    map[p].tickets++;
+    (t.wp_ticket_itens||[]).forEach(function(i){
+      map[p].fardos += parseInt(i.quantidade)||0;
+      map[p].cbm    += parseFloat(i.cbm_calculado)||0;
+      map[p].peso   += parseFloat(i.peso_calculado)||0;
+    });
+  });
+  var tb = document.getElementById('rl-periodo-tb').querySelector('tbody');
+  var keys = Object.keys(map).sort(function(a,b){ return ORDER.indexOf(a)-ORDER.indexOf(b); });
+  if(!keys.length){ document.getElementById('rl-periodo-empty').style.display=''; tb.innerHTML=''; return; }
+  document.getElementById('rl-periodo-empty').style.display='none';
+  tb.innerHTML = keys.map(function(p){
+    var d=map[p];
+    return '<tr><td><strong>'+p+'</strong></td><td>'+d.tickets+'</td><td>'+d.fardos.toLocaleString('pt-BR')+'</td>'
+      +'<td>'+fNum(d.cbm,3)+'</td><td>'+fNum(d.peso,0)+'</td></tr>';
+  }).join('');
+}
+
+// ── Por Conferente ──
+function renderRlConferente(list){
+  var map={};
+  list.forEach(function(t){
+    var k=(t.conferente_nome||'—')+'|'+(t.armazem||'—');
+    if(!map[k]) map[k]={nome:t.conferente_nome||'—',az:t.armazem||'—',tickets:0,fardos:0,cbm:0};
+    map[k].tickets++;
+    (t.wp_ticket_itens||[]).forEach(function(i){
+      map[k].fardos += parseInt(i.quantidade)||0;
+      map[k].cbm    += parseFloat(i.cbm_calculado)||0;
+    });
+  });
+  var tb = document.getElementById('rl-conf-tb').querySelector('tbody');
+  var rows = Object.values(map).sort(function(a,b){return b.cbm-a.cbm;});
+  if(!rows.length){ document.getElementById('rl-conf-empty').style.display=''; tb.innerHTML=''; return; }
+  document.getElementById('rl-conf-empty').style.display='none';
+  tb.innerHTML = rows.map(function(r){
+    return '<tr><td><strong>'+r.nome+'</strong></td><td><span class="bge ntrl">'+r.az+'</span></td>'
+      +'<td>'+r.tickets+'</td><td>'+r.fardos.toLocaleString('pt-BR')+'</td><td>'+fNum(r.cbm,3)+'</td></tr>';
+  }).join('');
+}
+
+// ── Por Porto ──
+function renderRlPorto(list){
+  var map={}, totalCBM=0;
+  list.forEach(function(t){
+    var p = t.porto_descarga||'—';
+    if(!map[p]) map[p]={tickets:0,marcas:new Set(),fardos:0,cbm:0,peso:0};
+    map[p].tickets++;
+    (t.wp_ticket_itens||[]).forEach(function(i){
+      if(i.marca) map[p].marcas.add(i.marca);
+      map[p].fardos += parseInt(i.quantidade)||0;
+      map[p].cbm    += parseFloat(i.cbm_calculado)||0;
+      map[p].peso   += parseFloat(i.peso_calculado)||0;
+      totalCBM      += parseFloat(i.cbm_calculado)||0;
+    });
+  });
+  var tb = document.getElementById('rl-porto-tb').querySelector('tbody');
+  var rows = Object.entries(map).sort(function(a,b){return b[1].cbm-a[1].cbm;});
+  if(!rows.length){ document.getElementById('rl-porto-empty').style.display=''; tb.innerHTML=''; return; }
+  document.getElementById('rl-porto-empty').style.display='none';
+  tb.innerHTML = rows.map(function(e){
+    var p=e[0],d=e[1];
+    var pct = totalCBM>0?(d.cbm/totalCBM*100).toFixed(1):'0';
+    var bar = '<div style="height:4px;background:#e0e0e0;border-radius:2px;margin-top:3px;">'
+      +'<div style="height:100%;width:'+pct+'%;background:var(--w500);border-radius:2px;"></div></div>';
+    return '<tr><td><strong>'+p+'</strong></td><td>'+d.tickets+'</td>'
+      +'<td><span style="font-size:11px;">'+[...d.marcas].sort().join(', ')+'</span></td>'
+      +'<td>'+d.fardos.toLocaleString('pt-BR')+'</td>'
+      +'<td>'+fNum(d.cbm,3)+'</td>'
+      +'<td>'+fNum(d.peso,0)+'</td>'
+      +'<td>'+pct+'%'+bar+'</td></tr>';
+  }).join('');
+}
+
+// ── Listagem Completa ──
+function renderRlLista(list){
+  var tb   = document.getElementById('rl-lista-tb').querySelector('tbody');
+  var rows = [];
+  var nomeNavio = navioAtivo?navioAtivo.nome:'—';
+  list.forEach(function(t){
+    var valEm = t.validado_em ? new Date(t.validado_em).toLocaleString('pt-BR') : '—';
+    var itens = t.wp_ticket_itens||[];
+    if(!itens.length){
+      rows.push([t.numero, valEm, t.periodo||'—', nomeNavio,
+        t.porao||'—', t.tier||'—', t.viagem||'—', t.porto_descarga||'—',
+        t.placa, t.motorista, t.conferente_nome||'—', t.armazem||'—',
+        '—','—','—',0,0,0]);
+    } else {
+      itens.forEach(function(i){
+        rows.push([t.numero, valEm, t.periodo||'—', nomeNavio,
+          t.porao||'—', t.tier||'—', t.viagem||'—', t.porto_descarga||'—',
+          t.placa, t.motorista, t.conferente_nome||'—', t.armazem||'—',
+          i.ref||'—', i.lote||'—', i.marca||'—',
+          i.quantidade||0,
+          parseFloat(i.cbm_calculado||0).toFixed(4),
+          parseFloat(i.peso_calculado||0).toFixed(3)]);
+      });
+    }
+  });
+  document.getElementById('rl-lista-count').textContent = rows.length+' linhas';
+  if(!rows.length){ document.getElementById('rl-lista-empty').style.display=''; tb.innerHTML=''; return; }
+  document.getElementById('rl-lista-empty').style.display='none';
+  tb.innerHTML = rows.map(function(r){
+    return '<tr>'+r.map(function(v,i){
+      var bold = i===0||i===12;
+      return '<td>'+(bold?'<strong>'+v+'</strong>':v)+'</td>';
+    }).join('')+'</tr>';
+  }).join('');
+}
+
+// ── Exportar CSV ──
+function exportRelatorio(tipo){
+  if(!rlData.length){ toast('Sem dados para exportar','error'); return; }
+  var rows=[], nomeNavio=navioAtivo?navioAtivo.nome:'—';
+  var validados=rlData.filter(function(t){return t.status==='validado';});
+
+  if(tipo==='completo'){
+    rows=[['Ticket','Data Validação','Período','Navio','Porão','Tier','Vgm Tier','Porto Descarga',
+      'Placa','Motorista','Conferente','Armazém','Ref','Lote','Marca','Qtde','CBM','Peso']];
+    validados.forEach(function(t){
+      var valEm=t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'—';
+      (t.wp_ticket_itens||[{ref:'—',lote:'—',marca:'—',quantidade:0,cbm_calculado:0,peso_calculado:0}]).forEach(function(i){
+        rows.push([t.numero,valEm,t.periodo||'—',nomeNavio,t.porao||'—',t.tier||'—',t.viagem||'—',
+          t.porto_descarga||'—',t.placa,t.motorista,t.conferente_nome||'—',t.armazem||'—',
+          i.ref||'—',i.lote||'—',i.marca||'—',i.quantidade||0,
+          parseFloat(i.cbm_calculado||0).toFixed(4),parseFloat(i.peso_calculado||0).toFixed(3)]);
+      });
+    });
+  } else if(tipo==='periodo'){
+    rows=[['Período','Tickets','Fardos','CBM','Peso (kg)']];
+    var map={};
+    validados.forEach(function(t){
+      var p=t.periodo||'—';if(!map[p])map[p]={t:0,f:0,c:0,p:0};
+      map[p].t++;
+      (t.wp_ticket_itens||[]).forEach(function(i){map[p].f+=parseInt(i.quantidade)||0;map[p].c+=parseFloat(i.cbm_calculado)||0;map[p].p+=parseFloat(i.peso_calculado)||0;});
+    });
+    Object.entries(map).sort().forEach(function(e){var d=e[1];rows.push([e[0],d.t,d.f,d.c.toFixed(3),d.p.toFixed(0)]);});
+  } else if(tipo==='conferente'){
+    rows=[['Conferente','Armazém','Tickets','Fardos','CBM']];
+    var map2={};
+    validados.forEach(function(t){
+      var k=(t.conferente_nome||'—')+'|'+(t.armazem||'—');if(!map2[k])map2[k]={n:t.conferente_nome||'—',az:t.armazem||'—',t:0,f:0,c:0};
+      map2[k].t++;
+      (t.wp_ticket_itens||[]).forEach(function(i){map2[k].f+=parseInt(i.quantidade)||0;map2[k].c+=parseFloat(i.cbm_calculado)||0;});
+    });
+    Object.values(map2).sort(function(a,b){return b.c-a.c;}).forEach(function(r){rows.push([r.n,r.az,r.t,r.f,r.c.toFixed(3)]);});
+  }
+
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var de=document.getElementById('rl-de').value, ate=document.getElementById('rl-ate').value;
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='relatorio_'+tipo+'_'+de+'_a_'+ate+'.csv';
+  a.click();
+  toast('Exportando '+rows.length+' linhas...','success');
+}
+
+// ══════════════════════════════════════════════════
+// BACKUP & RESTORE
+// ══════════════════════════════════════════════════
+var bkHistory = [];
+var bkRestoreData = null;
+
+function initBackupPage(){
+  // Popula select de navios
+  var sel = document.getElementById('bk-navio-sel');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Todos os navios</option>'
+    + naviosAll.map(function(n){return '<option value="'+n.id+'">'+n.nome+(n.viagem?' — VG '+n.viagem:'')+'</option>';}).join('');
+  renderBkHist();
+}
+
+function bkStatus(msg, type){
+  var el = document.getElementById('bk-status');
+  el.style.display = '';
+  el.style.color = type==='ok'?'var(--green)':type==='error'?'var(--red)':'var(--ink3)';
+  el.textContent = msg;
+}
+
+async function fazerBackup(){
+  if(!sb){ bkStatus('Erro: sem conexão com o banco','error'); return; }
+  var btn = document.getElementById('bk-btn');
+  btn.disabled = true; btn.textContent = '⏳ Gerando...';
+  bkStatus('Buscando dados...','info');
+
+  try {
+    var payload = {
+      meta: {
+        versao: '1.0',
+        gerado_em: new Date().toISOString(),
+        gerado_por: currentUser ? currentUser.nome : '—',
+        sistema: 'WoodPort 4Sides',
+      },
+      dados: {}
+    };
+
+    var navioId = document.getElementById('bk-navio-sel').value;
+    var fmt = document.getElementById('bk-format').value;
+
+    // ── Navios ──
+    if(document.getElementById('bk-navios').checked){
+      var qN = sb.from('wp_navios').select('*');
+      if(navioId) qN = qN.eq('id', navioId);
+      var rN = await qN.order('created_at');
+      if(rN.error) throw new Error('Navios: '+rN.error.message);
+      payload.dados.wp_navios = rN.data||[];
+      bkStatus('Navios OK ('+payload.dados.wp_navios.length+')...','info');
+    }
+
+    // ── Usuários ──
+    if(document.getElementById('bk-usuarios').checked){
+      var rU = await sb.from('wp_usuarios').select('*').order('nome');
+      if(rU.error) throw new Error('Usuários: '+rU.error.message);
+      payload.dados.wp_usuarios = rU.data||[];
+      bkStatus('Usuários OK ('+payload.dados.wp_usuarios.length+')...','info');
+    }
+
+    // ── Lista de Carga ──
+    if(document.getElementById('bk-lista').checked){
+      var qL = sb.from('wp_lista_carga').select('*');
+      if(navioId) qL = qL.eq('navio_id', navioId);
+      var rL = await qL.order('ref');
+      if(rL.error) throw new Error('Lista: '+rL.error.message);
+      payload.dados.wp_lista_carga = rL.data||[];
+      bkStatus('Lista de carga OK ('+payload.dados.wp_lista_carga.length+')...','info');
+    }
+
+    // ── Tickets + Itens ──
+    if(document.getElementById('bk-tickets').checked){
+      var qT = sb.from('wp_tickets').select('*,wp_ticket_itens(*)');
+      if(navioId) qT = qT.eq('navio_id', navioId);
+      var rT = await qT.order('created_at');
+      if(rT.error) throw new Error('Tickets: '+rT.error.message);
+      payload.dados.wp_tickets = rT.data||[];
+      var totalItens = (rT.data||[]).reduce(function(s,t){return s+(t.wp_ticket_itens||[]).length;},0);
+      bkStatus('Tickets OK ('+payload.dados.wp_tickets.length+' tickets, '+totalItens+' itens)...','info');
+    }
+
+    // ── Gerar arquivo ──
+    var ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+    var navioLabel = navioId ? (naviosAll.find(function(n){return n.id===navioId;})||{}).nome||'navio' : 'todos';
+    var filename = 'woodport_backup_'+navioLabel.replace(/\s/g,'_')+'_'+ts;
+
+    if(fmt === 'json'){
+      var json = JSON.stringify(payload, null, 2);
+      downloadBlob(new Blob([json],{type:'application/json'}), filename+'.json');
+    } else {
+      // CSV: um zip com um arquivo por tabela usando JSZip
+      await exportBkCSV(payload, filename);
+    }
+
+    // Histórico
+    var entry = {
+      ts: new Date().toLocaleString('pt-BR'),
+      navio: navioLabel,
+      tabelas: Object.keys(payload.dados).join(', '),
+      registros: Object.values(payload.dados).reduce(function(s,a){return s+a.length;},0),
+      filename: filename+(fmt==='json'?'.json':'.zip'),
+      json: fmt==='json' ? JSON.stringify(payload) : null,
+    };
+    bkHistory.unshift(entry);
+    renderBkHist();
+    bkStatus('✓ Backup gerado: '+entry.filename+' ('+entry.registros+' registros)','ok');
+
+  } catch(e){
+    bkStatus('Erro: '+e.message,'error');
+    console.error(e);
+  }
+  btn.disabled = false; btn.textContent = '⬇ Gerar Backup Agora';
+}
+
+async function exportBkCSV(payload, filename){
+  // Gera um ZIP se JSZip disponível, senão CSV por tabela
+  var tables = Object.entries(payload.dados);
+  if(!tables.length) return;
+
+  // Tenta com JSZip
+  if(typeof JSZip !== 'undefined'){
+    var zip = new JSZip();
+    tables.forEach(function(entry){
+      var name = entry[0], rows = entry[1];
+      if(!rows.length) return;
+      var cols = Object.keys(rows[0]);
+      var csv = cols.join(',')+'\n'+rows.map(function(r){
+        return cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(',');
+      }).join('\n');
+      zip.file(name+'.csv', '\uFEFF'+csv);
+    });
+    var buf = await zip.generateAsync({type:'blob'});
+    downloadBlob(buf, filename+'.zip');
+  } else {
+    // Sem JSZip: baixa cada tabela separadamente
+    tables.forEach(function(entry){
+      var name = entry[0], rows = entry[1];
+      if(!rows.length) return;
+      var cols = Object.keys(rows[0]);
+      var csv = cols.join(',')+'\n'+rows.map(function(r){
+        return cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(',');
+      }).join('\n');
+      downloadBlob(new Blob(['\uFEFF'+csv],{type:'text/csv'}), filename+'_'+name+'.csv');
+    });
+  }
+}
+
+function downloadBlob(blob, filename){
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 10000);
+}
+
+function copiarBackupClipboard(){
+  if(!bkHistory.length || !bkHistory[0].json){
+    toast('Gere um backup JSON primeiro','error'); return;
+  }
+  navigator.clipboard.writeText(bkHistory[0].json).then(function(){
+    toast('JSON copiado para a área de transferência','success');
+  }).catch(function(){
+    toast('Erro ao copiar — use o botão Gerar Backup','error');
+  });
+}
+
+function renderBkHist(){
+  var el = document.getElementById('bk-hist-list');
+  var emp = document.getElementById('bk-hist-empty');
+  var cnt = document.getElementById('bk-hist-count');
+  if(!bkHistory.length){ emp.style.display=''; el.innerHTML=''; cnt.textContent=''; return; }
+  emp.style.display = 'none';
+  cnt.textContent = bkHistory.length+' backup(s) nesta sessão';
+  el.innerHTML = bkHistory.map(function(e,i){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bds);font-size:12px;">'
+      +'<div>'
+        +'<div style="font-weight:600;">'+e.filename+'</div>'
+        +'<div style="color:var(--ink4);font-size:11px;">'+e.ts+' · '+e.registros+' registros · Navio: '+e.navio+'</div>'
+      +'</div>'
+      +(e.json?'<button class="btn bs bsm" onclick="baixarBkHist('+i+')">⬇</button>':'')
+    +'</div>';
+  }).join('');
+}
+
+function baixarBkHist(i){
+  var e = bkHistory[i];
+  if(!e||!e.json) return;
+  downloadBlob(new Blob([e.json],{type:'application/json'}), e.filename);
+}
+
+// ── RESTORE ──
+var bkRestorePayload = null;
+
+function previewRestore(input){
+  var file = input.files[0];
+  if(!file){ document.getElementById('bk-restore-preview').style.display='none'; return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      var data = JSON.parse(e.target.result);
+      if(!data.meta || !data.dados) throw new Error('Formato inválido');
+      bkRestorePayload = data;
+      var info = document.getElementById('bk-restore-info');
+      var tabelas = Object.entries(data.dados).map(function(e){
+        return '<span class="bge ntrl">'+e[0]+': '+e[1].length+'</span>';
+      }).join(' ');
+      info.innerHTML = ''
+        +'<div style="margin-bottom:6px;"><strong>Gerado em:</strong> '+new Date(data.meta.gerado_em).toLocaleString('pt-BR')+'</div>'
+        +'<div style="margin-bottom:6px;"><strong>Por:</strong> '+data.meta.gerado_por+'</div>'
+        +'<div style="margin-bottom:8px;"><strong>Tabelas:</strong> '+tabelas+'</div>'
+        +'<div style="color:var(--red);font-weight:600;font-size:11px;">⚠ Esta operação sobrescreve registros existentes com os mesmos IDs</div>';
+      document.getElementById('bk-restore-preview').style.display='';
+      document.getElementById('bk-restore-btn').style.display='';
+      document.getElementById('bk-cancel-btn').style.display='';
+    } catch(err){
+      bkRestorePayload = null;
+      document.getElementById('bk-restore-info').innerHTML='<span style="color:var(--red);">Arquivo inválido: '+err.message+'</span>';
+      document.getElementById('bk-restore-preview').style.display='';
+      document.getElementById('bk-restore-btn').style.display='none';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function cancelarRestore(){
+  bkRestorePayload = null;
+  document.getElementById('bk-restore-file').value='';
+  document.getElementById('bk-restore-preview').style.display='none';
+  document.getElementById('bk-restore-btn').style.display='none';
+  document.getElementById('bk-cancel-btn').style.display='none';
+  document.getElementById('bk-restore-status').style.display='none';
+}
+
+async function fazerRestore(){
+  if(!bkRestorePayload){ toast('Carregue um arquivo de backup primeiro','error'); return; }
+  if(!confirm('Confirma a restauração? Registros com os mesmos IDs serão sobrescritos.')) return;
+  if(!sb){ toast('Sem conexão','error'); return; }
+
+  var btn = document.getElementById('bk-restore-btn');
+  btn.disabled = true;
+  var statusEl = document.getElementById('bk-restore-status');
+  statusEl.style.display=''; statusEl.style.color='var(--ink3)';
+
+  function rstStatus(msg){ statusEl.textContent = msg; }
+
+  try {
+    var dados = bkRestorePayload.dados;
+    var total = 0;
+
+    // Restaura na ordem correta (FK constraints)
+    var ordem = ['wp_navios','wp_usuarios','wp_lista_carga','wp_tickets','wp_ticket_itens'];
+
+    for(var i=0;i<ordem.length;i++){
+      var tabela = ordem[i];
+      var rows = dados[tabela];
+      if(!rows||!rows.length) continue;
+
+      rstStatus('Restaurando '+tabela+' ('+rows.length+' registros)...');
+
+      // Tickets: extrair itens embutidos antes de inserir
+      var insertRows = rows;
+      if(tabela === 'wp_tickets'){
+        insertRows = rows.map(function(t){
+          var r = Object.assign({},t);
+          delete r.wp_ticket_itens;
+          return r;
+        });
+      }
+
+      // Usuários: corrige senhas inválidas de backups antigos
+      if(tabela === 'wp_usuarios'){
+        // Hash da senha de recuperação: WoodPort@2025
+        var senhaTemp = 'NDExMjE0MDk5NTIwMkB0cm9QZG9vVw';
+        var semSenha = 0;
+        insertRows = rows.map(function(u){
+          var r = Object.assign({},u);
+          if(!r.senha_hash || r.senha_hash === '***BACKUP***' || r.senha_hash.length < 10){
+            r.senha_hash = senhaTemp;
+            semSenha++;
+          }
+          return r;
+        });
+        if(semSenha>0){
+          rstStatus('⚠ '+semSenha+' usuário(s) com senha inválida → senha temporária: WoodPort@2025');
+        }
+      }
+
+      // Upsert em lotes de 500
+      var BATCH = 500;
+      for(var b=0;b<insertRows.length;b+=BATCH){
+        var batch = insertRows.slice(b, b+BATCH);
+        var r = await sb.from(tabela).upsert(batch, {onConflict:'id'});
+        if(r.error) throw new Error(tabela+': '+r.error.message);
+        total += batch.length;
+      }
+
+      // Se tickets: restaura também os itens embutidos
+      if(tabela === 'wp_tickets'){
+        var allItens = [];
+        rows.forEach(function(t){ (t.wp_ticket_itens||[]).forEach(function(it){ allItens.push(it); }); });
+        if(allItens.length){
+          rstStatus('Restaurando wp_ticket_itens ('+allItens.length+' itens)...');
+          for(var b2=0;b2<allItens.length;b2+=BATCH){
+            var batch2 = allItens.slice(b2,b2+BATCH);
+            var r2 = await sb.from('wp_ticket_itens').upsert(batch2,{onConflict:'id'});
+            if(r2.error) throw new Error('wp_ticket_itens: '+r2.error.message);
+            total += batch2.length;
+          }
+        }
+      }
+    }
+
+    statusEl.style.color='var(--green)';
+    rstStatus('✓ Restauração concluída — '+total+' registros processados. Recarregue a página para ver os dados.');
+    cancelarRestore();
+
+  } catch(e){
+    statusEl.style.color='var(--red)';
+    rstStatus('Erro na restauração: '+e.message);
+    console.error(e);
+  }
+  btn.disabled = false;
+}
+// ══════════════════════════════════════════════════
+function switchRlTab(tab){
+  document.getElementById('rl-analitico').style.display = tab==='analitico'?'':'none';
+  document.getElementById('rl-hatchlist').style.display = tab==='hatchlist' ?'':'none';
+  document.querySelectorAll('.rl-tab').forEach(function(b){
+    var on=b.id==='rlt-'+tab;
+    b.style.borderBottom=on?'2px solid var(--w500)':'2px solid transparent';
+    b.style.color=on?'var(--ink1)':'var(--ink4)';
+    b.style.fontWeight=on?'600':'400';
+  });
+  if(tab==='hatchlist')initHatchListForm();
+}
+
+// ══════════════════════════════════════════════════
+// HATCH LIST
+// ══════════════════════════════════════════════════
+var hlRawData={};
+
+function initHatchListForm(){
+  if(!sb||!navioAtivo)return;
+  var hlNavio=document.getElementById('hl-navio');
+  if(!hlNavio.value) hlNavio.value=(navioAtivo.nome||'')+(navioAtivo.viagem?' - '+navioAtivo.viagem:'');
+  qAz(sb.from('wp_tickets').select('porao').eq('navio_id',navioAtivo.id).eq('status','validado'),'armazem')
+    .then(function(r){
+      var poroes=[...new Set((r.data||[]).map(function(t){return t.porao;}).filter(Boolean))].sort();
+      var sel=document.getElementById('hl-porao');
+      sel.innerHTML='<option value="">Todos</option>'+poroes.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+    });
+}
+
+function gerarHatchList(){
+  if(!sb||!navioAtivo){toast('Selecione um navio','error');return;}
+  showLd(true);
+  var selPorao=document.getElementById('hl-porao');
+  var poroesSel=[...selPorao.options].filter(function(o){return o.selected&&o.value;}).map(function(o){return o.value;});
+  var q=qAz(sb.from('wp_tickets').select(TK_COLS+',periodo').eq('navio_id',navioAtivo.id).eq('status','validado'),'armazem');
+  if(poroesSel.length)q=q.in('porao',poroesSel);
+  Promise.all([
+    q.order('porao').order('tier').order('created_at'),
+    qAz(sb.from('wp_lista_carga').select('id,ref,lote,bl,receiver,shipper,commodity,peso_medio,peso_bruto,quantidade,due').eq('navio_id',navioAtivo.id),'armazem')
+  ]).then(function(res){
+    showLd(false);
+    var tickets=res[0].data||[],lista=res[1].data||[];
+    var listaMap={};lista.forEach(function(l){listaMap[l.id]=l;});
+    if(!tickets.length){
+      document.getElementById('hl-preview').style.display='none';
+      document.getElementById('hl-empty').style.display='';return;
+    }
+    buildHatchListData(tickets,listaMap);
+  }).catch(function(e){showLd(false);toast('Erro: '+e.message,'error');});
+}
+
+function buildHatchListData(tickets,listaMap){
+  var bl=document.getElementById('hl-bl').value.trim();
+  var recv=document.getElementById('hl-recv').value.trim();
+  var comm=document.getElementById('hl-comm').value.trim()||'SLBRC';
+  hlRawData={};
+  tickets.forEach(function(tk){
+    var raw=(tk.porao||'01').replace(/[^0-9]/g,'').replace(/^0*/,'')||'01';
+    var holdKey='HOLD #'+raw.padStart(2,'0');
+    if(!hlRawData[holdKey])hlRawData[holdKey]=[];
+    (tk.wp_ticket_itens||[]).forEach(function(item){
+      var lc=listaMap[item.lista_id]||{};
+      // peso_calculado já está em MT (toneladas) = peso_medio(t) × quantidade
+      var mt = parseFloat(item.peso_calculado||0);
+      hlRawData[holdKey].push({
+        hold:holdKey,tier:tk.tier||'',
+        lot:item.lote||lc.lote||'—',
+        bl:bl||(lc.bl||'—'),
+        recv:recv||(lc.receiver||lc.shipper||'—'),
+        marks:item.marca||'—',comm:comm,
+        disport:tk.porto_descarga||(item.porto_descarga||'—'),
+        due:item.due||lc.due||lc.bl||'—',
+        cbm:parseFloat(item.cbm_calculado||0),
+        bdls:parseInt(item.quantidade||0),
+        mt:parseFloat(mt||0),
+      });
+    });
+  });
+  renderHatchListPreview();
+}
+
+function renderHatchListPreview(){
+  var holds=Object.keys(hlRawData).sort();
+  if(!holds.length){document.getElementById('hl-empty').style.display='';document.getElementById('hl-preview').style.display='none';return;}
+  document.getElementById('hl-empty').style.display='none';
+  document.getElementById('hl-preview').style.display='';
+  document.getElementById('hl-export-btn').style.display='';
+  document.getElementById('hl-tabs').innerHTML=holds.map(function(h,i){
+    return '<button onclick="showHlTab(\''+h+'\')" style="padding:5px 14px;background:'+(i===0?'var(--w500)':'var(--s2)')+';border:1px solid var(--bds);color:'+(i===0?'#fff':'var(--ink2)')+';font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border-radius:var(--rsm);">'+h+'</button>';
+  }).join('');
+  showHlTab(holds[0]);
+}
+
+function showHlTab(hold){
+  var rows=hlRawData[hold]||[];
+  var tierMap={};
+  rows.forEach(function(r){var t=String(r.tier);if(!tierMap[t])tierMap[t]=[];tierMap[t].push(r);});
+  var tiers=Object.keys(tierMap).sort(function(a,b){return parseFloat(b)-parseFloat(a);});
+  var nomeNavio=document.getElementById('hl-navio').value||(navioAtivo?navioAtivo.nome:'');
+  var thead='<thead style="position:sticky;top:0;background:var(--s2);"><tr>'
+    +'<th style="width:72px;">Deck/Hold</th><th style="width:42px;">Tier</th>'
+    +'<th>Lot</th><th>B / L</th><th>Receivers</th><th>Marks</th>'
+    +'<th>Comm</th><th>Disport</th><th>DUE / RUC</th>'
+    +'<th style="text-align:right;">CBM</th><th style="text-align:right;">Bdls</th><th style="text-align:right;">MT</th>'
+    +'</tr></thead>';
+  var tbody='<tbody>';
+  var gCBM=0,gBdls=0,gMT=0;
+  tiers.forEach(function(tier){
+    var items=tierMap[tier],tCBM=0,tBdls=0,tMT=0;
+    items.forEach(function(r){
+      tCBM+=r.cbm;tBdls+=r.bdls;tMT+=r.mt;gCBM+=r.cbm;gBdls+=r.bdls;gMT+=r.mt;
+      tbody+='<tr><td>'+hold+'</td><td style="text-align:center;font-weight:700;">'+tier+'</td>'
+        +'<td>'+r.lot+'</td><td style="font-size:11px;color:var(--ink3);">'+r.bl+'</td>'
+        +'<td>'+r.recv+'</td><td style="font-weight:700;color:var(--w600);">'+r.marks+'</td>'
+        +'<td>'+r.comm+'</td><td>'+r.disport+'</td>'
+        +'<td style="font-size:11px;color:var(--ink3);">'+r.due+'</td>'
+        +'<td style="text-align:right;">'+fNum(r.cbm,3)+'</td>'
+        +'<td style="text-align:right;font-weight:700;">'+r.bdls+'</td>'
+        +'<td style="text-align:right;">'+fNum(r.mt,3)+'</td></tr>';
+    });
+    tbody+='<tr style="background:var(--s2);font-weight:700;font-size:12px;border-top:1px solid var(--bds);">'
+      +'<td colspan="9" style="color:var(--ink3);padding-left:16px;">Total Tier '+tier+'</td>'
+      +'<td style="text-align:right;">'+fNum(tCBM,3)+'</td>'
+      +'<td style="text-align:right;">'+tBdls+'</td>'
+      +'<td style="text-align:right;">'+fNum(tMT,3)+'</td></tr>';
+  });
+  tbody+='<tr style="background:var(--w100);font-weight:900;border-top:2px solid var(--bds);">'
+    +'<td colspan="9" style="padding-left:16px;">Total '+hold+'</td>'
+    +'<td style="text-align:right;">'+fNum(gCBM,3)+'</td>'
+    +'<td style="text-align:right;">'+gBdls+'</td>'
+    +'<td style="text-align:right;">'+fNum(gMT,3)+'</td></tr>';
+  tbody+='</tbody>';
+  document.getElementById('hl-content').innerHTML=
+    '<div class="card" style="padding:0;overflow:hidden;">'
+    +'<div style="background:var(--s3);padding:8px 14px;border-bottom:1px solid var(--bds);display:flex;justify-content:space-between;">'
+    +'<span style="font-weight:700;">'+hold+'</span><span style="color:var(--ink4);font-size:12px;">'+nomeNavio+'</span></div>'
+    +'<div style="overflow-x:auto;max-height:500px;overflow-y:auto;"><table style="font-size:12px;min-width:900px;">'+thead+tbody+'</table></div></div>';
+  // highlight tab
+  document.querySelectorAll('#hl-tabs button').forEach(function(b){
+    var on=b.textContent.trim()===hold;
+    b.style.background=on?'var(--w500)':'var(--s2)';
+    b.style.color=on?'#fff':'var(--ink2)';
+  });
+}
+
+function exportHatchListXLSX(){
+  var holds=Object.keys(hlRawData).sort();
+  if(!holds.length){toast('Gere a Hatch List primeiro','error');return;}
+  // Carrega ExcelJS (suporta estilos, bordas, cores, merge)
+  if(typeof ExcelJS==='undefined'){
+    if(!document.getElementById('exceljs-script')){
+      var s=document.createElement('script');
+      s.id='exceljs-script';
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+      s.onload=function(){_doExportHL(holds);};
+      document.head.appendChild(s);
+    } else {
+      setTimeout(function(){exportHatchListXLSX();},200);
+    }
+  } else {
+    _doExportHL(holds);
+  }
+}
+
+function _doExportHL(holds){
+  // ExcelJS suporta estilos completos (XLSX.js community não suporta)
+  var script = document.getElementById('exceljs-script');
+  if(!script){
+    script = document.createElement('script');
+    script.id = 'exceljs-script';
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    document.head.appendChild(script);
+  }
+  if(typeof ExcelJS === 'undefined'){
+    setTimeout(function(){ _doExportHL(holds); }, 300);
+    return;
+  }
+
+  var nomeNavio = document.getElementById('hl-navio').value||(navioAtivo?navioAtivo.nome:'NAVIO');
+  var wb = new ExcelJS.Workbook();
+  wb.creator = 'WoodPort 4Sides';
+  wb.created = new Date();
+
+  // ── Estilos reutilizáveis ──
+  var fntNormal  = {name:'Calibri', size:10};
+  var fntBold    = {name:'Calibri', size:10, bold:true};
+  var fntTitle   = {name:'Calibri', size:10, bold:true};
+  var fillTier   = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFFF99'}}; // amarelo claro
+  var fillHeader = {type:'pattern', pattern:'solid', fgColor:{argb:'FFD9E1F2'}}; // azul claro
+  var fillHold   = {type:'pattern', pattern:'solid', fgColor:{argb:'FFDAE3F3'}}; // azul médio
+  var borderMed  = {style:'medium', color:{argb:'FF000000'}};
+  var borderThin = {style:'thin',   color:{argb:'FF000000'}};
+
+  function cellBorder(top, bottom, left, right){
+    var b = {};
+    if(top)    b.top    = borderMed;
+    if(bottom) b.bottom = borderMed;
+    if(left)   b.left   = borderMed;
+    if(right)  b.right  = borderMed;
+    return b;
+  }
+  function cellBorderThin(top, bottom, left, right){
+    var b = {};
+    if(top)    b.top    = borderThin;
+    if(bottom) b.bottom = borderThin;
+    if(left)   b.left   = borderThin;
+    if(right)  b.right  = borderThin;
+    return b;
+  }
+
+  holds.forEach(function(hold){
+    var rows  = hlRawData[hold]||[];
+    var tierMap = {};
+    rows.forEach(function(r){ var t=String(r.tier); if(!tierMap[t])tierMap[t]=[]; tierMap[t].push(r); });
+    var tiers = Object.keys(tierMap).sort(function(a,b){return parseFloat(b)-parseFloat(a);});
+
+    var shName = hold.replace('HOLD','HATCH LIST').trim().slice(0,31);
+    var ws = wb.addWorksheet(shName);
+
+    // ── Larguras de coluna (fiel ao modelo) ──
+    ws.columns = [
+      {width:7.4},   // A vazio
+      {width:13.4},  // B Deck/Hold
+      {width:9.3},   // C Tier
+      {width:8.7},   // D Lot
+      {width:17.4},  // E B/L
+      {width:23.3},  // F Receivers
+      {width:13.9},  // G Marks
+      {width:11.7},  // H Comm
+      {width:12.1},  // I Disport
+      {width:15.4},  // J DUE/RUC
+      {width:10.9},  // K CBM
+      {width:9.7},   // L Bdls
+      {width:12.3},  // M MT
+    ];
+
+    // ── Linha 1: Nome do navio (B1:M1 merged) ──
+    ws.getRow(1).height = 15;
+    ws.mergeCells('B1:M1');
+    var r1 = ws.getCell('B1');
+    r1.value = nomeNavio;
+    r1.font = fntTitle;
+    r1.alignment = {horizontal:'center', vertical:'middle'};
+    r1.border = cellBorder(true, true, true, true);
+
+    // ── Linha 2: Cabeçalhos ──
+    ws.getRow(2).height = 15;
+    var headers = [null,'Deck/Hold','Tier','Lot','B / L','Receivers','Marks','Comm','Disport','DUE / RUC','CBM','Bdls','MT'];
+    headers.forEach(function(h, ci){
+      if(!h) return;
+      var cell = ws.getCell(2, ci+1);
+      cell.value = h;
+      cell.font = fntBold;
+      cell.alignment = {horizontal:'center', vertical:'middle'};
+      cell.border = {
+        top:    borderMed,
+        bottom: borderMed,
+        left:   ci===1 ? borderMed : borderThin,
+        right:  ci===12? borderMed : borderThin,
+      };
+    });
+
+    // ── Linha 3: Hold name (B3:M3 merged) ──
+    ws.getRow(3).height = 13.5;
+    ws.mergeCells('B3:M3');
+    var r3 = ws.getCell('B3');
+    r3.value = hold;
+    r3.font = fntBold;
+    r3.alignment = {horizontal:'center', vertical:'middle'};
+    r3.border = cellBorder(false, true, true, true);
+
+    var currentRow = 4;
+    var gCBM=0, gBdls=0, gMT=0;
+    var tierStartRows = {}; // para formulas SUM
+
+    tiers.forEach(function(tier){
+      var items = tierMap[tier];
+      var tierDataStart = currentRow;
+
+      items.forEach(function(r){
+        gCBM+=r.cbm; gBdls+=r.bdls; gMT+=r.mt;
+        ws.getRow(currentRow).height = 12.75;
+        var vals = [null, hold, parseFloat(tier), r.lot, r.bl, r.recv, r.marks, r.comm, r.disport, r.due,
+                    r.cbm, r.bdls, r.mt];
+        vals.forEach(function(v, ci){
+          if(ci===0) return;
+          var cell = ws.getCell(currentRow, ci+1);
+          cell.value = v;
+          cell.font  = fntNormal;
+          cell.alignment = {
+            horizontal: (ci>=10) ? 'right' : (ci<=2?'center':'left'),
+            vertical: 'middle'
+          };
+          if(ci===10||ci===12) cell.numFmt = '0.000';
+          // borda esquerda na col B
+          if(ci===1) cell.border = {left: borderMed};
+          if(ci===12) cell.border = {right: borderMed};
+        });
+        currentRow++;
+      });
+
+      // ── Total Tier ──
+      var tierEndRow = currentRow - 1;
+      tierStartRows[tier] = {start: tierDataStart, end: tierEndRow};
+      ws.getRow(currentRow).height = 13.5;
+      ws.mergeCells('B'+currentRow+':J'+currentRow);
+      var tc = ws.getCell('B'+currentRow);
+      tc.value = 'Total Tier ' + tier;
+      tc.font = fntBold;
+      tc.fill = fillTier;
+      tc.alignment = {horizontal:'left', vertical:'middle'};
+      tc.border = cellBorder(true, true, true, false);
+      // CBM
+      var kcell = ws.getCell('K'+currentRow);
+      kcell.value = {formula: 'SUM(K'+tierDataStart+':K'+tierEndRow+')', result: gCBM};
+      kcell.font = fntBold; kcell.fill = fillTier; kcell.numFmt = '0.000';
+      kcell.alignment = {horizontal:'right'}; kcell.border = cellBorder(true,true,false,false);
+      // Bdls
+      var lcell = ws.getCell('L'+currentRow);
+      lcell.value = {formula: 'SUM(L'+tierDataStart+':L'+tierEndRow+')', result: gBdls};
+      lcell.font = fntBold; lcell.fill = fillTier;
+      lcell.alignment = {horizontal:'right'}; lcell.border = cellBorder(true,true,false,false);
+      // MT
+      var mcell = ws.getCell('M'+currentRow);
+      mcell.value = {formula: 'SUM(M'+tierDataStart+':M'+tierEndRow+')', result: gMT};
+      mcell.font = fntBold; mcell.fill = fillTier; mcell.numFmt = '0.000';
+      mcell.alignment = {horizontal:'right'}; mcell.border = cellBorder(true,true,false,true);
+
+      currentRow++;
+    });
+
+    // ── Total Hold (B:J merged) ──
+    ws.getRow(currentRow).height = 15;
+    ws.mergeCells('B'+currentRow+':J'+currentRow);
+    var thc = ws.getCell('B'+currentRow);
+    thc.value = 'Total ' + hold;
+    thc.font = {name:'Calibri', size:10, bold:true};
+    thc.alignment = {horizontal:'left', vertical:'middle'};
+    thc.border = cellBorder(true, true, true, false);
+
+    var thk = ws.getCell('K'+currentRow);
+    thk.value = gCBM; thk.numFmt='0.000'; thk.font=fntBold;
+    thk.alignment={horizontal:'right'}; thk.border=cellBorder(true,true,false,false);
+
+    var thl = ws.getCell('L'+currentRow);
+    thl.value = gBdls; thl.font=fntBold;
+    thl.alignment={horizontal:'right'}; thl.border=cellBorder(true,true,false,false);
+
+    var thm = ws.getCell('M'+currentRow);
+    thm.value = gMT; thm.numFmt='0.000'; thm.font=fntBold;
+    thm.alignment={horizontal:'right'}; thm.border=cellBorder(true,true,false,true);
+  });
+
+  // ── Gerar e baixar ──
+  var mvName = (navioAtivo?navioAtivo.nome:'NAVIO').replace(/[^a-zA-Z0-9_\- ]/g,'').trim();
+  wb.xlsx.writeBuffer().then(function(buf){
+    var blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'HATCH_LIST_'+mvName+'.xlsx';
+    a.click();
+    toast('Hatch List exportada!','success');
+  });
+}
+
 // ══════════════════════════════════════════════════
 // Pré-carrega jsQR assim que o módulo de validação é aberto
 function preloadJsQR(){
@@ -1953,86 +3118,92 @@ function toggleCamera(){
   var video=document.getElementById('qr-video');
   var wrap=document.getElementById('qr-video-wrap');
   var btn=document.getElementById('cam-btn');
-  // Garante jsQR carregado antes de abrir câmera
+  var status=document.getElementById('qr-status');
   preloadJsQR();
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}}).then(function(stream){
-    camStream=stream;video.srcObject=stream;wrap.style.display='';
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
+  }).then(function(stream){
+    camStream=stream;
+    video.srcObject=stream;
+    video.setAttribute('playsinline','true');
+    wrap.style.display='';
     btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Fechar Câmera';
-    // Aguarda o vídeo estar realmente pronto antes de escanear
+    if(status) status.textContent='📷 Aguardando câmera...';
     video.onloadedmetadata=function(){
-      video.play();
-      // Pequeno delay para garantir frames disponíveis
-      setTimeout(function(){ startQRScan(video); }, 500);
+      video.play().then(function(){
+        if(status) status.textContent='🔍 Aponte para o QR Code...';
+        setTimeout(function(){ if(camStream) startQRScan(video); }, 600);
+      }).catch(function(e){ toast('Erro ao iniciar vídeo: '+e.message,'error'); });
     };
-  }).catch(function(err){toast('Câmera indisponível: '+err.message,'error');});
+  }).catch(function(err){ toast('Câmera indisponível: '+err.message,'error'); });
 }
 function stopCamera(){
-  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
-  clearInterval(qrScanInterval);qrScanInterval=null;
+  if(qrScanInterval){ clearInterval(qrScanInterval); qrScanInterval=null; }
+  if(camStream){ camStream.getTracks().forEach(function(t){t.stop();}); camStream=null; }
   var video=document.getElementById('qr-video');
-  video.onloadedmetadata=null;
-  document.getElementById('qr-video-wrap').style.display='none';
-  document.getElementById('cam-btn').innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir Câmera QR';
+  if(video){ video.onloadedmetadata=null; video.srcObject=null; }
+  var wrap=document.getElementById('qr-video-wrap');
+  if(wrap) wrap.style.display='none';
+  var status=document.getElementById('qr-status');
+  if(status) status.textContent='';
+  var btn=document.getElementById('cam-btn');
+  if(btn) btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir Câmera QR';
 }
 function startQRScan(video){
   var canvas=document.createElement('canvas');
-  var ctx=canvas.getContext('2d');
-  var active=true;
-  var lastScan=0;
-  var INTERVAL=250; // ms entre scans
+  var ctx=canvas.getContext('2d',{willReadFrequently:true});
+  var scanning=false;
 
-  function doScan(ts){
-    if(!active||!camStream) return;
-    requestAnimationFrame(doScan);
-    if(ts-lastScan<INTERVAL) return;
+  function onQRDetected(val){
+    stopCamera();
+    document.getElementById('val-code').value=val;
+    buscarTicketVal();
+  }
+
+  function doScan(){
+    if(!camStream){ stopCamera(); return; }
     if(!video.videoWidth||!video.videoHeight||video.readyState<2) return;
-    lastScan=ts;
+    if(scanning) return;
+    scanning=true;
     canvas.width=video.videoWidth;
     canvas.height=video.videoHeight;
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
-
     if(typeof jsQR==='function'){
       try{
-        var d=ctx.getImageData(0,0,canvas.width,canvas.height);
-        var c=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});
-        if(c&&c.data){
-          active=false;
-          stopCamera();
-          document.getElementById('val-code').value=c.data;
-          buscarTicketVal();
-        }
+        var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+        var code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'attemptBoth'});
+        if(code&&code.data){ onQRDetected(code.data); scanning=false; return; }
       }catch(e){}
-    } else if('BarcodeDetector' in window){
-      active=false; // evita chamadas paralelas
+      scanning=false;
+      return;
+    }
+    if('BarcodeDetector' in window){
       createImageBitmap(canvas).then(function(bmp){
         new BarcodeDetector({formats:['qr_code']}).detect(bmp).then(function(codes){
           bmp.close();
-          if(codes.length){
-            stopCamera();
-            document.getElementById('val-code').value=codes[0].rawValue;
-            buscarTicketVal();
-          } else { active=true; }
-        }).catch(function(){active=true;});
-      }).catch(function(){active=true;});
+          if(codes.length) onQRDetected(codes[0].rawValue);
+          scanning=false;
+        }).catch(function(){ scanning=false; });
+      }).catch(function(){ scanning=false; });
+      return;
+    }
+    scanning=false;
+  }
+
+  function aguardarJsQR(n){
+    n=n||0;
+    if(typeof jsQR==='function'||'BarcodeDetector' in window){
+      qrScanInterval=setInterval(doScan,250);
+    } else if(n<40){
+      var st=document.getElementById('qr-status');
+      if(st) st.textContent='⏳ Carregando leitor... ('+Math.ceil(n*200/1000)+'s)';
+      setTimeout(function(){ aguardarJsQR(n+1); },200);
+    } else {
+      toast('Leitor QR não carregou. Verifique a conexão.','error');
+      stopCamera();
     }
   }
-
-  // Guarda referência para stopCamera poder parar
-  qrScanInterval={cancel:function(){active=false;}};
-
-  // Se jsQR ainda não carregou, aguarda até 6s
-  if(typeof jsQR==='undefined'){
-    var waited=0;
-    var wi=setInterval(function(){
-      waited+=100;
-      if(typeof jsQR==='function'||waited>6000){
-        clearInterval(wi);
-        requestAnimationFrame(doScan);
-      }
-    },100);
-  } else {
-    requestAnimationFrame(doScan);
-  }
+  aguardarJsQR();
 }
 
 // ══════════════════════════════════════════════════
@@ -2090,7 +3261,7 @@ function renderValResult(tk){
     return '<div style="background:var(--s3);border-radius:var(--rsm);padding:8px 10px;margin-top:6px;font-size:12px;">'
       +'<strong>Ref '+(l.ref||'—')+' — '+l.lote+'</strong>'+(l.marca?' | '+l.marca:'')
       +'<div style="color:var(--ink4);margin-top:3px;">'+(l.porto_descarga||'')+(l.armazem?' · '+l.armazem:'')
-        +' · '+l.quantidade+' pçs · '+parseFloat(l.cbm_calculado||0).toFixed(3)+' m³'+'</div>'
+        +' · '+l.quantidade+' pçs · '+fNum(l.cbm_calculado,3)+' m³'+'</div>'
       +'</div>';
   }).join('');
   document.getElementById('val-card').innerHTML='<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:14px;">'
@@ -2101,7 +3272,7 @@ function renderValResult(tk){
     +'<div><span style="color:var(--ink4);">Placa:</span><br><strong>'+tk.placa+'</strong></div>'
     +'<div><span style="color:var(--ink4);">Motorista:</span><br><strong>'+tk.motorista+'</strong></div>'
     +(tk.porto_descarga?'<div><span style="color:var(--ink4);">Porto:</span><br><strong>'+tk.porto_descarga+'</strong></div>':'')
-    +'<div><span style="color:var(--ink4);">CBM Total:</span><br><strong>'+lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0).toFixed(4)+' m³</strong></div>'
+    +'<div><span style="color:var(--ink4);">CBM Total:</span><br><strong>'+fNum(lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0),4)+' m³</strong></div>'
     +'<div><span style="color:var(--ink4);">Conferente:</span><br><strong>'+(tk.conferente_nome||tk.usuario_nome||'—')+'</strong></div>'
     +(tk.porao?'<div><span style="color:var(--ink4);">Porão:</span><br><strong>'+tk.porao+'</strong></div>':'')
     +(tk.tier?'<div><span style="color:var(--ink4);">Tier:</span><br><strong>Tier '+tk.tier+'</strong></div>':'')
@@ -2208,8 +3379,8 @@ function renderValidados(list){
               +'<td>'+(it.armazem||t.armazem||'—')+'</td><td>'+(it.due||'—')+'</td>'
               +'<td>'+(it.nf||'—')+'</td>'
               +'<td>'+(it.quantidade||0)+'</td>'
-              +'<td>'+parseFloat(it.cbm_calculado||0).toFixed(4)+'</td>'
-              +'<td>'+parseFloat(it.peso_calculado||0).toFixed(3)+'</td>'
+              +'<td>'+fNum(it.cbm_calculado,4)+'</td>'
+              +'<td>'+fNum(it.peso_calculado,3)+'</td>'
               +'<td>'+t.placa+'</td><td>'+t.motorista+'</td><td>'+conf+'</td><td>'+(t.periodo||'—')+'</td><td>'+valEm+'</td>'
               +'<td>'+(idx===0?'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')">✏</button>':'')+'</td>'
               +'</tr>';
@@ -2326,11 +3497,11 @@ function loadDash(){
     document.getElementById('d-lotes').textContent=lcarga.length;
     document.getElementById('d-tks').textContent=tks.length;
     document.getElementById('d-val').textContent=val.length;
-    document.getElementById('d-cbm').textContent=totalCbmEmb.toFixed(3)+' m³';
+    document.getElementById('d-cbm').textContent=fNum(totalCbmEmb,3)+' m³';
     document.getElementById('d-24h-qtd').textContent=qtd24+' pçs';
-    document.getElementById('d-24h-cbm').textContent=cbm24.toFixed(3)+' m³';
+    document.getElementById('d-24h-cbm').textContent=fNum(cbm24,3)+' m³';
     document.getElementById('d-saldo-qtd').textContent=saldoQtd+' pçs';
-    document.getElementById('d-saldo-cbm').textContent=saldoCbm.toFixed(3)+' m³';
+    document.getElementById('d-saldo-cbm').textContent=fNum(saldoCbm,3)+' m³';
 
     // embarcado por período
     var periodos=['07x13','13x19','19x01','01x07'];
@@ -2349,7 +3520,7 @@ function loadDash(){
       pHtml+='<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:12px;border-left:3px solid '+cor+';">'
         +'<div style="font-size:12px;font-weight:700;color:'+cor+';margin-bottom:6px;">'+p+'</div>'
         +'<div style="font-size:13px;"><strong>'+(pQtd[p]||0)+'</strong> pçs</div>'
-        +'<div style="font-size:12px;color:var(--ink4);">'+(pCbm[p]||0).toFixed(3)+' m³</div>'
+        +'<div style="font-size:12px;color:var(--ink4);">'+fNum(pCbm[p]||0,3)+' m³</div>'
         +'</div>';
     });
     pHtml+='</div>';
@@ -2371,7 +3542,7 @@ function loadDash(){
           +'<td>'+(t.tier?'T'+t.tier:'—')+'</td>'
           +'<td>'+(per!=='—'?'<span style="font-weight:600;color:var(--w600);">'+per+'</span>':'—')+'</td>'
           +'<td>'+it.qtd+'</td>'
-          +'<td>'+it.cbm.toFixed(3)+'</td>'
+          +'<td>'+fNum(it.cbm,3)+'</td>'
           +'<td>'+t.placa+'</td>'
           +'<td>'+st+'</td>'
           +'</tr>';
@@ -2568,7 +3739,7 @@ function editUser(id){
       armazem:armazem,
     };
     var pass=document.getElementById('ef-senha_hash').value.trim();
-    if(pass)payload.senha_hash=pass;
+    if(pass) payload.senha_hash=hashPass(pass);
     showLd(true);
     sb.from('wp_usuarios').update(payload).eq('id',id).then(function(r){
       showLd(false);
