@@ -1104,7 +1104,7 @@ function doLogin(){
     if(!u.ativo){showLoginErr('Usuário inativo.');return;}
     // Detecta senha corrompida por backup antigo
     if(u.senha_hash==='***BACKUP***'||!u.senha_hash||u.senha_hash.length<10){
-      showLoginErr('Senha inválida. Execute woodport_reset_senhas.sql no Supabase e use a senha: WoodPort@2025');return;
+      showLoginErr('Senha inválida. Execute woodport_reset_senhas.sql no Supabase e use a senha: admin123');return;
     }
     if(hashPass(pass)!==u.senha_hash){showLoginErr('Senha incorreta.');return;}
     currentUser=u;setSession(u);showApp();
@@ -2684,8 +2684,8 @@ async function fazerRestore(){
 
       // Usuários: corrige senhas inválidas de backups antigos
       if(tabela === 'wp_usuarios'){
-        // Hash da senha de recuperação: WoodPort@2025
-        var senhaTemp = 'NDExMjE0MDk5NTIwMkB0cm9QZG9vVw';
+        // Hash da senha de recuperação: admin123
+        var senhaTemp = 'LTk2OTE2MTU5NzMyMW5pbWRh';
         var semSenha = 0;
         insertRows = rows.map(function(u){
           var r = Object.assign({},u);
@@ -2696,7 +2696,7 @@ async function fazerRestore(){
           return r;
         });
         if(semSenha>0){
-          rstStatus('⚠ '+semSenha+' usuário(s) com senha inválida → senha temporária: WoodPort@2025');
+          rstStatus('⚠ '+semSenha+' usuário(s) com senha inválida → senha temporária: admin123');
         }
       }
 
