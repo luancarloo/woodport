@@ -1154,7 +1154,7 @@ function go(page){
     initTicketForm();loadTickets();
     // Garante lista de carga carregada para autocomplete funcionar
     if(navioAtivo&&!listaAll.length){
-      sb&&qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem').order('ref').then(function(r){listaAll=r.data||[];});
+      sb&&sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id).order('ref').then(function(r){listaAll=r.data||[];});
     }
   }
   if(page==='validar'){loadValidados();preloadJsQR();}
@@ -1444,7 +1444,7 @@ function loadLista(){
   document.getElementById('lista-navio-lbl').textContent='Navio: '+navioAtivo.nome;
   showLd(true);
   Promise.all([
-    qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem').order('ref'),
+    sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id).order('ref'),
     sb.from('wp_ticket_itens').select('lista_id,quantidade').filter('lista_id','not.is',null),
   ]).then(function(rs){
     showLd(false);listaAll=rs[0].data||[];
@@ -1731,7 +1731,7 @@ function buscarRef(input){
   // tenta por número exato primeiro, depois por lote
   // OBRIGATÓRIO filtrar por armazém do conferente (qAz)
   var refNum=parseInt(q);
-  var query=qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem');
+  var query=sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id);
   if(!isNaN(refNum)){
     query=query.eq('ref',refNum);
   } else {
@@ -2115,15 +2115,25 @@ function printTicket(){
 
 function loadTickets(){
   if(!sb||!navioAtivo)return;
-  // Garante lista de carga para o dropdown de marcas/porto
-  if(!listaAll.length){
-    qAz(sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id),'armazem').order('ref').then(function(r){
-      listaAll=r.data||[];
-      var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
-      var tkPorto=document.getElementById('tk-porto-desc');
-      if(tkPorto) tkPorto.innerHTML='<option value="">— selecione o porto —</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
-    });
+
+  function popularPortos(){
+    var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
+    var tkPorto=document.getElementById('tk-porto-desc');
+    if(!tkPorto) return;
+    var curVal=tkPorto.value;
+    tkPorto.innerHTML='<option value="">— selecione o porto —</option>'
+      +portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+    if(curVal) tkPorto.value=curVal;
   }
+
+  // Sempre recarrega lista de carga filtrada pelo armazém do usuário logado
+  sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id)
+    .order('ref').then(function(r){
+      listaAll=r.data||[];
+      popularPortos();
+    });
+
+  // Carrega tickets
   qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('navio_id',navioAtivo.id),'armazem')
     .order('created_at',{ascending:false}).then(function(r){
       ticketsAll=r.data||[];renderTickets(ticketsAll);
@@ -2775,7 +2785,7 @@ function gerarHatchList(){
   if(poroesSel.length)q=q.in('porao',poroesSel);
   Promise.all([
     q.order('porao').order('tier').order('created_at'),
-    qAz(sb.from('wp_lista_carga').select('id,ref,lote,bl,receiver,shipper,commodity,peso_medio,peso_bruto,quantidade,due').eq('navio_id',navioAtivo.id),'armazem')
+    sb.from('wp_lista_carga').select('id,ref,lote,bl,receiver,shipper,commodity,peso_medio,peso_bruto,quantidade,due').eq('navio_id',navioAtivo.id)
   ]).then(function(res){
     showLd(false);
     var tickets=res[0].data||[],lista=res[1].data||[];
@@ -3453,7 +3463,7 @@ function loadDash(){
   var agora=new Date();
   var h24ago=new Date(agora.getTime()-24*60*60*1000).toISOString();
   Promise.all([
-    qAz(sb.from('wp_lista_carga').select('porto_descarga,quantidade,cbm_total').eq('navio_id',navioAtivo.id),'armazem'),
+    sb.from('wp_lista_carga').select('porto_descarga,quantidade,cbm_total').eq('navio_id',navioAtivo.id),
     qAz(sb.from('wp_tickets').select('id,numero,status,periodo,porao,tier,placa,created_at,validado_em').eq('navio_id',navioAtivo.id),'armazem').order('created_at',{ascending:false}),
     sb.from('wp_ticket_itens').select('ticket_id,porto_descarga,quantidade,cbm_calculado,peso_calculado'),
   ]).then(function(rs){
