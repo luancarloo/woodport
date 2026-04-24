@@ -1059,6 +1059,11 @@ function userArmazens(){
   if(az==='*')return null;
   return az.split(',').map(function(s){return s.trim();}).filter(Boolean);
 }
+// Remove acentos e normaliza para comparação de armazém
+function normAz(s){
+  return (s||'').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
 // aplica filtro de armazém numa query Supabase (suporta multi-armazém)
 function qAz(query, col){
   var azs=userArmazens();
@@ -1585,53 +1590,62 @@ function onMarcaInput(inp){
 }
 
 function _marcaBuscar(blk, q, dd){
-  if(!navioAtivo || !listaAll.length){ dd.style.display='none'; return; }
+  if(!navioAtivo){ dd.style.display='none'; return; }
+
+  // Se listaAll vazio, busca antes de filtrar
+  if(!listaAll.length){
+    dd.innerHTML='<div style="padding:8px 12px;font-size:12px;color:var(--ink4);">Carregando lista...</div>';
+    dd.style.display='';
+    sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id).order('ref')
+      .then(function(r){ listaAll=r.data||[]; _marcaBuscar(blk,q,dd); });
+    return;
+  }
 
   var portoCab = document.getElementById('tk-porto-desc').value;
+  var azs = userArmazens(); // null = admin ve tudo
 
-  // Filtra listaAll por marca ou ref (busca local, sem query)
   var matches = listaAll.filter(function(l){
     var marcaOk = (l.marca||'').toUpperCase().includes(q) ||
                   String(l.ref||'').includes(q) ||
                   (l.lote||'').toUpperCase().includes(q);
     var portoOk = !portoCab || (l.porto_descarga||'') === portoCab;
-    return marcaOk && portoOk;
+    // Armazem: se lote sem armazem definido, todos podem ver
+    // Se tem armazem, confere case-insensitive
+    var azOk = !azs || !l.armazem || azs.some(function(az){
+      return normAz(l.armazem)===normAz(az);
+    });
+    return marcaOk && portoOk && azOk;
   });
 
   if(!matches.length){
-    dd.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--ink4);">Nenhuma referência encontrada</div>';
-    dd.style.display = '';
+    dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--ink4);">Nenhuma referência encontrada</div>';
+    dd.style.display='';
     return;
   }
 
   // Uma única query buscando saldo de TODAS as refs filtradas de uma vez
   var ids = matches.map(function(l){ return l.id; });
-  dd.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--ink4);">Consultando saldos…</div>';
-  dd.style.display = '';
+  dd.innerHTML='<div style="padding:8px 12px;font-size:11px;color:var(--ink4);">Consultando saldos…</div>';
+  dd.style.display='';
 
   sb.from('wp_ticket_itens')
     .select('lista_id,quantidade')
     .in('lista_id', ids)
     .then(function(r){
-      // Soma usado por lista_id
-      var usedMap = {};
+      var usedMap={};
       (r.data||[]).forEach(function(row){
-        usedMap[row.lista_id] = (usedMap[row.lista_id]||0) + (parseInt(row.quantidade)||0);
+        usedMap[row.lista_id]=(usedMap[row.lista_id]||0)+(parseInt(row.quantidade)||0);
       });
-
-      // Monta resultados com saldo calculado
-      var results = matches.map(function(l){
-        var used  = usedMap[l.id]||0;
-        var saldo = Math.max(0, (parseInt(l.quantidade)||0) - used);
-        return { l:l, saldo:saldo };
+      var results=matches.map(function(l){
+        var used=usedMap[l.id]||0;
+        var saldo=Math.max(0,(parseInt(l.quantidade)||0)-used);
+        return {l:l,saldo:saldo};
       });
-
-      renderMarcaDD(blk, results, dd);
+      renderMarcaDD(blk,results,dd);
     })
     .catch(function(){
-      // Fallback: mostra sem saldo calculado
-      var results = matches.map(function(l){ return {l:l, saldo:parseInt(l.quantidade)||0}; });
-      renderMarcaDD(blk, results, dd);
+      var results=matches.map(function(l){return {l:l,saldo:parseInt(l.quantidade)||0};});
+      renderMarcaDD(blk,results,dd);
     });
 }
 
@@ -1729,7 +1743,8 @@ function buscarRef(input){
   setBlkStatus(blk,'buscando');
 
   // tenta por número exato primeiro, depois por lote
-  // OBRIGATÓRIO filtrar por armazém do conferente (qAz)
+  // Busca sem filtro de armazém no banco (campo pode ter variação de case/espaço)
+  // Filtro de armazém aplicado client-side com normalização
   var refNum=parseInt(q);
   var query=sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id);
   if(!isNaN(refNum)){
@@ -1737,14 +1752,25 @@ function buscarRef(input){
   } else {
     query=query.ilike('lote','%'+q+'%');
   }
-  query.limit(1).single().then(function(r){
-    if(r.error||!r.data){
-      var azUser=userArmazem();
-      var msg=azUser?'Ref "'+q+'" não encontrada no armazém '+azUser:'Ref "'+q+'" não encontrada na lista de carga';
-      setBlkStatus(blk,'nao_encontrado_az',msg);
-      return;
+  query.then(function(r){
+    if(r.error){setBlkStatus(blk,'nao_encontrado',q);return;}
+    var rows=r.data||[];
+    // Filtra por armazém do usuário (case-insensitive)
+    // Lotes sem armazém definido são visíveis para todos
+    var azs=userArmazens();
+    if(azs){
+      rows=rows.filter(function(l){
+        return !l.armazem || azs.some(function(az){
+          return normAz(l.armazem)===normAz(az);
+        });
+      });
     }
-    preencherBlk(blk,r.data);
+    if(!rows.length){
+      var azUser=userArmazens();
+      var msg=azUser?'Ref "'+q+'" não encontrada no armazém '+azUser.join('/'):'Ref "'+q+'" não encontrada';
+      setBlkStatus(blk,'nao_encontrado_az',msg);return;
+    }
+    preencherBlk(blk,rows[0]);
   });
 }
 
@@ -2126,7 +2152,8 @@ function loadTickets(){
     if(curVal) tkPorto.value=curVal;
   }
 
-  // Sempre recarrega lista de carga filtrada pelo armazém do usuário logado
+  // Carrega lista de carga completa do navio para popular os portos disponíveis
+  // O filtro de armazém é aplicado na busca/seleção de lotes (não aqui)
   sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id)
     .order('ref').then(function(r){
       listaAll=r.data||[];
