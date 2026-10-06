@@ -17,6 +17,7 @@
   --bdr:#e0d8c8;--bds:#ede8dc;--s:#fff;--s2:#faf7f2;--s3:#f5f0e8;
   --shsm:0 1px 3px rgba(26,16,5,.08);--shlg:0 8px 28px rgba(26,16,5,.13);
   --rsm:6px;--rmd:10px;--rlg:16px;--rxl:24px;
+  --ink1:var(--ink);--red:#b91c1c;--green:#1e7e34;--yellow-bg:#fef9ec;--yellow2:#fde9a0;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:14px;}
@@ -288,11 +289,11 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
     <button class="nv" onclick="go('tickets')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg><span class="nv-label">Emissão de Tickets</span></button>
     <button class="nv" onclick="go('validar')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span class="nv-label">Validar Embarque</span></button>
     <button class="nv" onclick="go('relatorios')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg><span class="nv-label">Relatórios</span></button>
-    <div class="nav-sec">Administração</div>
-    <button class="nv" onclick="go('usuarios')" id="nav-usuarios"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nv-label">Usuários</span></button>
-    <button class="nv" onclick="go('navio')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2"/><path d="M12 2 4 12h16L12 2z"/><path d="M12 12v8"/></svg><span class="nv-label">Navios</span></button>
-    <button class="nv" onclick="go('backup')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="nv-label">Backup & Restore</span></button>
-    <button class="nv" onclick="go('cfg')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span class="nv-label">Configurar Supabase</span></button>
+    <div class="nav-sec nv-adm">Administração</div>
+    <button class="nv nv-adm nv-sup" onclick="go('usuarios')" id="nav-usuarios"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nv-label">Usuários</span></button>
+    <button class="nv nv-adm nv-sup" onclick="go('navio')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2"/><path d="M12 2 4 12h16L12 2z"/><path d="M12 12v8"/></svg><span class="nv-label">Navios</span></button>
+    <button class="nv nv-adm" onclick="go('backup')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="nv-label">Backup & Restore</span></button>
+    <button class="nv nv-adm" onclick="go('cfg')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span class="nv-label">Configurar Supabase</span></button>
   </nav>
   <div class="sb-foot">
     <div id="conn-lbl" class="sb-foot-text">⬤ Não conectado</div>
@@ -659,7 +660,7 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
         <div class="ch">
           <div><div class="ct">Lotes</div><div class="cs" id="lista-navio-lbl">—</div></div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <div class="sw"><span style="color:var(--ink4);">🔍</span><input type="text" placeholder="Buscar..." oninput="filterLista(this.value)"></div>
+            <div class="sw"><span style="color:var(--ink4);">🔍</span><input type="text" id="lista-busca" placeholder="Buscar..." oninput="filterLista()"></div>
             <select id="lista-porto-sel" onchange="filterLista()" style="width:150px;font-size:12px;padding:5px 8px;"><option value="">Todos portos</option></select>
           </div>
         </div>
@@ -741,7 +742,7 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
         <div class="card">
           <div class="ch">
             <div class="ct">Tickets Emitidos</div>
-            <div class="sw"><span style="color:var(--ink4);">🔍</span><input type="text" placeholder="Buscar..." oninput="filterTickets(this.value)"></div>
+            <div class="sw"><span style="color:var(--ink4);">🔍</span><input type="text" id="tk-busca" placeholder="Nº, placa, motorista, conferente, marca..." oninput="filterTickets(this.value)"></div>
           </div>
           <!-- barra de ações em lote -->
           <div id="tk-batch-bar" style="display:none;background:var(--w50);border:1px solid var(--w200);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -845,7 +846,7 @@ hr{border:none;border-top:1px solid var(--bds);margin:14px 0;}
         <div class="sc" style="border-left:3px solid #e67e22;"><div class="sl">Saldo a Embarcar (CBM)</div><div class="sv" id="d-saldo-cbm">—</div></div>
       </div>
       <!-- Períodos e progresso -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="gr g2" style="gap:16px;margin-bottom:16px;">
         <div class="card">
           <div class="ch"><div class="ct">Embarcado por Período</div></div>
           <div id="d-periodos"><p style="font-size:13px;color:var(--ink4);">Selecione um navio.</p></div>
@@ -925,7 +926,7 @@ CREATE TABLE IF NOT EXISTS wp_usuarios (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   nome text NOT NULL,
   login text UNIQUE NOT NULL,
-  senha_hash text NOT NULL,
+  senha_hash text, -- legado (antes do Supabase Auth)
   perfil text DEFAULT 'conferente',
   armazem text DEFAULT 'WRC',
   ativo boolean DEFAULT true,
@@ -985,11 +986,8 @@ ALTER TABLE wp_lista_carga  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wp_tickets      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wp_ticket_itens ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "wp_nav" ON wp_navios       FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "wp_usr" ON wp_usuarios     FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "wp_lc"  ON wp_lista_carga  FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "wp_tk"  ON wp_tickets      FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "wp_ti"  ON wp_ticket_itens FOR ALL USING (true) WITH CHECK (true);
+-- Regras de acesso (RLS) e login: rode em seguida o arquivo woodport_auth.sql
+-- (NÃO crie políticas "USING (true)" — liberam o banco para qualquer um)
 
 -- Índices
 CREATE INDEX IF NOT EXISTS idx_lc_navio  ON wp_lista_carga (navio_id);
@@ -999,11 +997,10 @@ CREATE INDEX IF NOT EXISTS idx_tk_navio  ON wp_tickets (navio_id);
 CREATE INDEX IF NOT EXISTS idx_ti_ticket ON wp_ticket_itens (ticket_id);
 CREATE INDEX IF NOT EXISTS idx_ti_lista  ON wp_ticket_itens (lista_id);
 
--- Admin inicial (login: admin | senha: admin123)
-INSERT INTO wp_usuarios (nome, login, senha_hash, perfil, ativo)
-VALUES ('Administrador', 'admin', 'LTk2OTE2MTU5NzMyMW5pbWRh', 'admin', true)
-ON CONFLICT (login) DO NOTHING;
--- Senha padrão do admin: admin123
+-- Primeiro admin (instalação nova): depois do woodport_auth.sql, rode
+--   select wp_priv.criar_auth('admin@woodport.local', 'SUA-SENHA-FORTE');
+-- e insira em wp_usuarios (nome, login, perfil, armazem, ativo, auth_id)
+-- com o id retornado, perfil 'admin' e armazem '*'.
 
 -- ════ SE AS TABELAS JÁ EXISTEM, RODE ESTES ALTER: ════
 ALTER TABLE wp_navios       ADD COLUMN IF NOT EXISTS porao_qtd integer DEFAULT 0;
@@ -1028,6 +1025,7 @@ ALTER TABLE wp_usuarios     ADD COLUMN IF NOT EXISTS armazem text DEFAULT 'WRC';
 // STATE
 // ══════════════════════════════════════════════════
 var sb=null, navioAtivo=null, naviosAll=[], usersAll=[], listaAll=[], ticketsAll=[];
+var listaUsed={}; // lista_id → quantidade já usada em tickets (navio ativo)
 
 // ── Formatação numérica ──
 // fNum: exibição interna — usa vírgula como separador decimal (padrão BR)
@@ -1072,6 +1070,38 @@ function qAz(query, col){
   return query.in(col,azs); // múltiplos: usa IN
 }
 
+// Escapa texto para uso em innerHTML e em atributos value="..."
+// (aspas na marca/shipper quebravam o modal de edição e truncavam o dado ao salvar)
+function esc(s){
+  if(s===null||s===undefined)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// O Supabase (PostgREST) devolve no máximo 1000 linhas por consulta, sem avisar.
+// supaAll pagina até trazer tudo. mk() deve devolver uma query NOVA com .order() definido.
+function supaAll(mk){
+  var PAGE=1000,all=[];
+  function next(from){
+    return mk().range(from,from+PAGE-1).then(function(r){
+      if(r.error)return {data:all,error:r.error};
+      all=all.concat(r.data||[]);
+      if((r.data||[]).length<PAGE)return {data:all,error:null};
+      return next(from+PAGE);
+    });
+  }
+  return next(0);
+}
+
+// Data local AAAA-MM-DD (toISOString usa UTC e vira o dia depois das 21h no Brasil)
+function localISODate(d){
+  d=d||new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// Perfis
+function isAdmin(){return !!currentUser&&currentUser.perfil==='admin';}
+function isSupOrAdmin(){return !!currentUser&&(currentUser.perfil==='admin'||currentUser.perfil==='supervisor');}
+
 // ══════════════════════════════════════════════════
 // BOOT
 // ══════════════════════════════════════════════════
@@ -1084,16 +1114,48 @@ window.addEventListener('load',function(){
   document.getElementById('cfg-url').value=cfg.url;
   document.getElementById('cfg-key').value=cfg.key;
   initSB(cfg.url,cfg.key);
-  var sess=getSession();
-  if(sess){currentUser=sess;showApp();return;}
-  document.getElementById('login-screen').style.display='';
+  try{sessionStorage.removeItem('wp_sess');}catch(e){} // sessão do login antigo
+  restaurarSessao();
 });
 
-
-
-function getSession(){try{return JSON.parse(sessionStorage.getItem('wp_sess')||'null');}catch{return null;}}
-function setSession(u){sessionStorage.setItem('wp_sess',JSON.stringify(u));}
-function clearSession(){sessionStorage.removeItem('wp_sess');}
+// ══════════════════════════════════════════════════
+// LOGIN — Supabase Auth
+// O login "joao.silva" corresponde ao e-mail "joao.silva@woodport.local" no Auth.
+// As permissões valem no banco (RLS), não só na tela.
+// ══════════════════════════════════════════════════
+var WP_EMAIL_DOM='@woodport.local';
+function loginParaEmail(login){
+  login=(login||'').trim().toLowerCase();
+  return login.indexOf('@')>=0?login:login+WP_EMAIL_DOM;
+}
+function mostrarLogin(msg){
+  document.getElementById('login-screen').style.display='';
+  if(msg)showLoginErr(msg);
+}
+// Sessão já aberta nesta aba → entra direto
+function restaurarSessao(){
+  if(!sb){mostrarLogin('Erro de conexão com o banco');return;}
+  sb.auth.getSession().then(function(r){
+    var sess=r.data&&r.data.session;
+    if(!sess){mostrarLogin();return;}
+    carregarPerfil(sess.user).then(function(res){
+      if(res.user){currentUser=res.user;showApp();}
+      else mostrarLogin(res.msg);
+    });
+  });
+}
+// Busca o cadastro em wp_usuarios ligado à conta do Auth
+function carregarPerfil(authUser){
+  return sb.from('wp_usuarios').select('id,nome,login,perfil,armazem,ativo')
+    .eq('auth_id',authUser.id).maybeSingle().then(function(r){
+      var msg=null;
+      if(r.error)msg='Erro ao consultar usuário: '+r.error.message;
+      else if(!r.data)msg='Conta sem cadastro no WoodPort. Fale com o administrador.';
+      else if(!r.data.ativo)msg='Usuário inativo.';
+      if(msg){return sb.auth.signOut().then(function(){return {user:null,msg:msg};});}
+      return {user:r.data,msg:null};
+    });
+}
 
 function doLogin(){
   if(!sb){toast('Erro de conexão com o banco','error');return;}
@@ -1101,18 +1163,22 @@ function doLogin(){
   var pass=document.getElementById('li-pass').value;
   if(!login||!pass){document.getElementById('li-err').style.display='';document.getElementById('li-err').textContent='Preencha login e senha.';return;}
   showLd(true);
-  sb.from('wp_usuarios').select('*').eq('login',login).limit(1).then(function(r){
-    showLd(false);
-    if(r.error){showLoginErr('Erro ao consultar banco: '+r.error.message);return;}
-    if(!r.data||!r.data.length){showLoginErr('Usuário não encontrado.');return;}
-    var u=r.data[0];
-    if(!u.ativo){showLoginErr('Usuário inativo.');return;}
-    // Detecta senha corrompida por backup antigo
-    if(u.senha_hash==='***BACKUP***'||!u.senha_hash||u.senha_hash.length<10){
-      showLoginErr('Senha inválida. Execute woodport_reset_senhas.sql no Supabase e use a senha: admin123');return;
+  document.getElementById('li-err').style.display='none';
+  sb.auth.signInWithPassword({email:loginParaEmail(login),password:pass}).then(function(r){
+    if(r.error){
+      showLd(false);
+      var m=r.error.message||'';
+      showLoginErr(/invalid login credentials/i.test(m)?'Usuário ou senha incorretos.'
+        :/rate limit|too many/i.test(m)?'Muitas tentativas. Aguarde alguns minutos.'
+        :'Erro no login: '+m);
+      return;
     }
-    if(hashPass(pass)!==u.senha_hash){showLoginErr('Senha incorreta.');return;}
-    currentUser=u;setSession(u);showApp();
+    carregarPerfil(r.data.user).then(function(res){
+      showLd(false);
+      if(!res.user){showLoginErr(res.msg);return;}
+      document.getElementById('li-pass').value='';
+      currentUser=res.user;showApp();
+    });
   });
 }
 
@@ -1125,27 +1191,31 @@ function showApp(){
   var armLabel=currentUser.armazem&&currentUser.armazem!=='*'?currentUser.armazem.replace(/,/g,' · '):'Todos';
   document.getElementById('sb-user').textContent='👤 '+currentUser.nome+' ('+perfilLabel+')';
   document.getElementById('sb-ship').textContent='🏭 '+armLabel;
-  // admin e supervisor veem menu de usuários
-  if(perfil==='admin'||perfil==='supervisor'){
-    document.getElementById('nav-usuarios').style.display='';
-  }
+  // Menu por perfil: admin vê tudo; supervisor vê Usuários e Navios; conferente só a operação
+  document.querySelectorAll('.nv-adm').forEach(function(el){
+    var ok=perfil==='admin'||(perfil==='supervisor'&&el.classList.contains('nv-sup'));
+    if(el.classList.contains('nav-sec'))ok=perfil==='admin'||perfil==='supervisor';
+    el.style.display=ok?'':'none';
+  });
   loadNaviosSel();
   go('dashboard');
 }
 
-function doLogout(){clearSession();currentUser=null;location.reload();}
-
-// simple repeatable hash (not cryptographic — for production use Supabase Auth or Edge Function)
-function hashPass(p){
-  var h=0;for(var i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0;}
-  return btoa(String(h+p.split('').reverse().join(''))).replace(/=/g,'');
+function doLogout(){
+  currentUser=null;
+  var fim=function(){location.reload();};
+  if(sb)sb.auth.signOut().then(fim,fim);else fim();
 }
 
 // ══════════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════════
 var titles={cfg:'Configurar Supabase',dashboard:'Dashboard',lista:'Lista de Carga',tickets:'Emissão de Tickets',validar:'Validar Embarque',relatorios:'Relatórios',backup:'Backup & Restore',usuarios:'Usuários',navio:'Navios'};
+var PAGE_PERM={usuarios:isSupOrAdmin,navio:isSupOrAdmin,backup:isAdmin,cfg:isAdmin};
+var currentPage='dashboard';
 function go(page){
+  if(PAGE_PERM[page]&&!PAGE_PERM[page]()){toast('Sem permissão para acessar esta área','error');return;}
+  currentPage=page;
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.nv').forEach(function(n){n.classList.remove('on');});
   var el=document.getElementById('page-'+page);if(el)el.classList.add('on');
@@ -1157,10 +1227,6 @@ function go(page){
   if(page==='lista')loadLista();
   if(page==='tickets'){
     initTicketForm();loadTickets();
-    // Garante lista de carga carregada para autocomplete funcionar
-    if(navioAtivo&&!listaAll.length){
-      sb&&sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id).order('ref').then(function(r){listaAll=r.data||[];});
-    }
   }
   if(page==='validar'){loadValidados();preloadJsQR();}
   if(page==='relatorios')loadRelatorios();
@@ -1179,7 +1245,14 @@ function setCfg(u,k){if(u)WP_SB_URL=u;if(k)WP_SB_KEY=k;}
 function initSB(url,key){
   if(sb)return true; // já inicializado, não cria outro
   try{
-    sb=window.supabase.createClient(url,key,{auth:{storageKey:'wp_auth_'+url.split('.')[0].split('//')[1]}});
+    sb=window.supabase.createClient(url,key,{auth:{
+      storageKey:'wp_auth_'+url.split('.')[0].split('//')[1],
+      storage:window.sessionStorage, // sessão por aba: fechar a aba = sair (terminais compartilhados)
+      persistSession:true,autoRefreshToken:true,
+    }});
+    sb.auth.onAuthStateChange(function(ev){
+      if(ev==='SIGNED_OUT'&&currentUser){currentUser=null;location.reload();}
+    });
     document.getElementById('conn-lbl').textContent='⬤ Conectado';
     document.getElementById('conn-lbl').style.color='#5a9a5a';
     return true;
@@ -1224,8 +1297,38 @@ function onNavioChange(){
   navioAtivo=naviosAll.find(function(n){return n.id===id;})||null;
   localStorage.setItem('wp_navio',id||'');
   document.getElementById('sb-ship').textContent=navioAtivo?'⚓ '+navioAtivo.nome:'';
+  // descarta dados do navio anterior (senão o autocomplete do ticket oferecia lotes do navio errado)
+  listaAll=[];ticketsAll=[];listaUsed={};rlData=[];hlRawData={};
   // atualiza select de porões no ticket
   populatePoraoBySel();
+  // recarrega a tela atual com o navio novo
+  if(currentUser&&['dashboard','lista','tickets','validar','relatorios'].indexOf(currentPage)>=0)go(currentPage);
+}
+
+// Lista de carga completa do navio (paginada — navios grandes passam de 1000 lotes)
+function fetchLista(navioId){
+  return supaAll(function(){
+    return sb.from('wp_lista_carga').select('*').eq('navio_id',navioId).order('ref').order('id');
+  });
+}
+// Quantidade já usada em tickets, por lista_id, só deste navio
+// (antes buscava os itens de TODOS os navios e cortava em 1000 → saldo errado)
+function fetchUsadoNavio(navioId){
+  return supaAll(function(){
+    return sb.from('wp_ticket_itens').select('id,lista_id,quantidade,wp_lista_carga!inner(navio_id)')
+      .eq('wp_lista_carga.navio_id',navioId).order('id');
+  }).then(function(r){
+    var m={};(r.data||[]).forEach(function(i){m[i.lista_id]=(m[i.lista_id]||0)+(parseInt(i.quantidade)||0);});
+    return {map:m,error:r.error};
+  });
+}
+// Saldo atual (consulta direta no banco) de um conjunto pequeno de lotes
+function fetchUsadoPorLista(ids){
+  if(!ids.length)return Promise.resolve({map:{},error:null});
+  return sb.from('wp_ticket_itens').select('lista_id,quantidade').in('lista_id',ids).then(function(r){
+    var m={};(r.data||[]).forEach(function(i){m[i.lista_id]=(m[i.lista_id]||0)+(parseInt(i.quantidade)||0);});
+    return {map:m,error:r.error};
+  });
 }
 
 function populatePoraoBySel(){
@@ -1299,8 +1402,8 @@ function loadNavios(){
       var poroesLabel=n.poroes_ativos
         ?n.poroes_ativos.split(',').filter(Boolean).join(', ')
         :(n.porao_qtd?n.porao_qtd+' porão(ões)':'—');
-      return '<tr><td><strong>'+n.nome+'</strong></td><td>'+(n.codigo||'—')+'</td><td>'+(n.viagem||'—')+'</td>'
-        +'<td>'+poroesLabel+'</td>'
+      return '<tr><td><strong>'+esc(n.nome)+'</strong></td><td>'+esc(n.codigo||'—')+'</td><td>'+esc(n.viagem||'—')+'</td>'
+        +'<td>'+esc(poroesLabel)+'</td>'
         +'<td>'+(n.eta?fmtD(n.eta):'—')+'</td>'
         +'<td style="display:flex;gap:4px;">'
         +'<button class="btn bs bsm" onclick="editNavio(\''+n.id+'\')">✏</button>'
@@ -1338,14 +1441,15 @@ function toggleAllAz(chk, wrapId){
 function salvarUser(){
   if(!sb){toast('Configure o Supabase','error');return;}
   if(currentUser&&currentUser.perfil!=='admin'){toast('Apenas administradores podem cadastrar usuários','error');return;}
-  var nome=v('u-nome'),login=v('u-login'),pass=v('u-pass'),perfil=v('u-perfil');
+  var nome=v('u-nome'),login=(v('u-login')||'').toLowerCase()||null,pass=v('u-pass'),perfil=v('u-perfil');
   var armazem=getAzChecked('u-armazem-wrap');
   if(!nome||!login||!pass){toast('Preencha nome, login e senha','error');return;}
   if(pass.length<6){toast('Senha mínima de 6 caracteres','error');return;}
   if(!armazem){toast('Selecione pelo menos um armazém','error');return;}
+  if(!/^[a-z0-9._-]{2,}$/.test(login)){toast('Login inválido: use letras, números, ponto, hífen ou _ (sem espaços/acentos)','error');return;}
   showLd(true);
-  sb.from('wp_usuarios').insert({nome,login,senha_hash:hashPass(pass),perfil,armazem}).then(function(r){
-    showLd(false);if(r.error){toast('Erro: '+(r.error.message.includes('unique')?'Login já existe':r.error.message),'error');return;}
+  sb.rpc('wp_admin_criar_usuario',{p_nome:nome,p_login:login,p_senha:pass,p_perfil:perfil,p_armazem:armazem}).then(function(r){
+    showLd(false);if(r.error){toast('Erro: '+r.error.message,'error');return;}
     toast('Usuário cadastrado!','success');['u-nome','u-login','u-pass'].forEach(function(id){document.getElementById(id).value='';});
     // limpa checkboxes
     document.querySelectorAll('#u-armazem-wrap .u-az-chk').forEach(function(c){c.checked=false;});
@@ -1354,7 +1458,7 @@ function salvarUser(){
 }
 function loadUsers(){
   if(!sb)return;
-  sb.from('wp_usuarios').select('*').order('nome').then(function(r){
+  sb.from('wp_usuarios').select('id,nome,login,perfil,armazem,ativo,created_at').order('nome').then(function(r){
     usersAll=r.data||[];
     var tb=document.getElementById('u-tb'),emp=document.getElementById('u-empty');
     if(!usersAll.length){tb.innerHTML='';emp.style.display='';return;}emp.style.display='none';
@@ -1365,9 +1469,9 @@ function loadUsers(){
           ?'<span class="bge warn">Supervisor</span>'
           :'<span class="bge ntrl">Conferente</span>';
       var armBadge=u.armazem&&u.armazem!=='*'
-        ?u.armazem.split(',').map(function(a){return '<span class="bge" style="background:var(--w100);color:var(--w700);">'+a.trim()+'</span>';}).join(' ')
+        ?u.armazem.split(',').map(function(a){return '<span class="bge" style="background:var(--w100);color:var(--w700);">'+esc(a.trim())+'</span>';}).join(' ')
         :'<span class="bge ntrl">Todos</span>';
-      return '<tr><td><strong>'+u.nome+'</strong></td><td><code style="font-size:12px;">'+u.login+'</code></td><td>'+perfBadge+'</td><td>'+armBadge+'</td>'
+      return '<tr><td><strong>'+esc(u.nome)+'</strong>'+(u.ativo===false?' <span class="bge dng">Inativo</span>':'')+'</td><td><code style="font-size:12px;">'+esc(u.login)+'</code></td><td>'+perfBadge+'</td><td>'+armBadge+'</td>'
         +'<td style="display:flex;gap:4px;">'
         +'<button class="btn bs bsm" onclick="editUser(\''+u.id+'\')">✏</button>'
         +(canDelete('wp_usuarios',u)
@@ -1381,6 +1485,7 @@ function loadUsers(){
 // LISTA DE CARGA — IMPORT
 // ══════════════════════════════════════════════════
 function importXLSX(input){
+  if(!isSupOrAdmin()){toast('Apenas supervisores e administradores importam a lista de carga','error');input.value='';return;}
   if(!sb||!navioAtivo){toast('Selecione um navio antes de importar','error');return;}
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
@@ -1390,6 +1495,9 @@ function importXLSX(input){
     wb.SheetNames.forEach(function(sn){
       var ws=wb.Sheets[sn];
       var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      // versão formatada (texto como aparece no Excel) — preserva zero à esquerda em lote/DUE/marca
+      var rawTxt=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+      function txt(r2,ci){return ci<0?null:(String((rawTxt[r2]||[])[ci]||raw[r2][ci]||'').trim()||null);}
       var hRow=-1;
       for(var i=0;i<raw.length;i++){
         var r=raw[i].map(function(c){return String(c||'').toUpperCase();});
@@ -1407,7 +1515,7 @@ function importXLSX(input){
       if(iLot<0)return;
       for(var r2=hRow+1;r2<raw.length;r2++){
         var row=raw[r2];
-        var lot=String(row[iLot]||'').trim();
+        var lot=txt(r2,iLot)||'';
         if(!lot||lot==='0'||lot.toUpperCase()==='LOT'||lot.toUpperCase()==='LOTE')continue;
         var peso=parseFloat(row[iPeso]||0)||0;
         var qtd=parseInt(row[iQtd]||0)||0;
@@ -1416,30 +1524,76 @@ function importXLSX(input){
           navio_id:navioAtivo.id,
           ref:iRef>=0?(parseInt(row[iRef])||null):null,
           lote:lot,
-          shipper:iShip>=0?String(row[iShip]||'').trim()||null:null,
-          porto_descarga:iDisch>=0?String(row[iDisch]||'').trim()||null:null,
-          invoice_pl:iInv>=0?String(row[iInv]||'').trim()||null:null,
-          bl:iBL>=0?String(row[iBL]||'').trim()||null:null,
-          receiver:iReceiver>=0?String(row[iReceiver]||'').trim()||null:null,
-          oceandoc_booking:iOcean>=0?String(row[iOcean]||'').trim()||null:null,
-          commodity:iComm>=0?String(row[iComm]||'').trim()||null:null,
+          shipper:txt(r2,iShip),
+          porto_descarga:txt(r2,iDisch),
+          invoice_pl:txt(r2,iInv),
+          bl:txt(r2,iBL),
+          receiver:txt(r2,iReceiver),
+          oceandoc_booking:txt(r2,iOcean),
+          commodity:txt(r2,iComm),
           cbm_total:cbm,quantidade:qtd,peso_bruto:peso,
           peso_medio:qtd>0?peso/qtd:0,
-          armazem:iAz>=0?String(row[iAz]||'').trim()||null:null,
-          due:iDue>=0?String(row[iDue]||'').trim()||null:null,
-          marca:iMark>=0?String(row[iMark]||'').trim()||null:null,
+          armazem:txt(r2,iAz),
+          due:txt(r2,iDue),
+          marca:txt(r2,iMark),
         });
       }
     });
     if(!rows.length){toast('Nenhuma linha válida encontrada','error');return;}
-    showLd(true);
-    sb.from('wp_lista_carga').delete().eq('navio_id',navioAtivo.id).then(function(){
-      var bsz=100,p=Promise.resolve();
-      for(var i=0;i<rows.length;i+=bsz)(function(batch){p=p.then(function(){return sb.from('wp_lista_carga').insert(batch);});})(rows.slice(i,i+bsz));
-      p.then(function(){showLd(false);toast(rows.length+' lotes importados com sucesso!','success');loadLista();});
-    });
+    sincronizarLista(rows);
   };
   reader.readAsArrayBuffer(file);input.value='';
+}
+
+// Sincroniza a lista importada com a do banco SEM apagar lotes que já têm tickets.
+// Antes: apagava tudo e reinseria; com tickets emitidos o delete falhava (FK) em silêncio
+// e a lista inteira era duplicada.
+function sincronizarLista(rows){
+  var navio=navioAtivo;
+  showLd(true);
+  Promise.all([fetchLista(navio.id),fetchUsadoNavio(navio.id)]).then(function(rs){
+    if(rs[0].error||rs[1].error){showLd(false);toast('Erro ao ler a lista atual: '+(rs[0].error||rs[1].error).message,'error');return;}
+    var existentes=rs[0].data||[],usado=rs[1].map;
+    function chave(l){return String(l.lote||'').trim().toUpperCase()+'|'+(l.ref==null?'':l.ref);}
+    var porChave={};
+    existentes.forEach(function(l){(porChave[chave(l)]=porChave[chave(l)]||[]).push(l);});
+    var novos=[],atualizar=[],casados={};
+    rows.forEach(function(r){
+      var c=porChave[chave(r)];
+      var ex=c&&c.length?c.shift():null;
+      if(ex){casados[ex.id]=1;atualizar.push(Object.assign({id:ex.id},r));}
+      else novos.push(r);
+    });
+    var sobra=existentes.filter(function(l){return !casados[l.id];});
+    var remover=sobra.filter(function(l){return !usado[l.id];}).map(function(l){return l.id;});
+    var mantidos=sobra.length-remover.length;
+    // lotes atualizados cuja nova quantidade fica abaixo do já embarcado
+    var abaixo=atualizar.filter(function(r){return (usado[r.id]||0)>(r.quantidade||0);});
+    showLd(false);
+    var msg='Importação para "'+navio.nome+'":\n\n'
+      +'• '+novos.length+' lote(s) novo(s)\n'
+      +'• '+atualizar.length+' lote(s) atualizado(s)\n'
+      +'• '+remover.length+' lote(s) removido(s) (não estão no arquivo)\n'
+      +(mantidos?'• '+mantidos+' lote(s) fora do arquivo MANTIDOS porque já têm tickets\n':'')
+      +(abaixo.length?'\n⚠ '+abaixo.length+' lote(s) ficarão com quantidade menor que o já usado em tickets.\n':'')
+      +'\nConfirmar?';
+    if(!confirm(msg))return;
+    showLd(true);
+    var BSZ=200,p=Promise.resolve();
+    function lote(fn,arr){for(var i=0;i<arr.length;i+=BSZ)(function(b){p=p.then(function(){return fn(b).then(function(r){if(r.error)throw r.error;});});})(arr.slice(i,i+BSZ));}
+    lote(function(b){return sb.from('wp_lista_carga').upsert(b,{onConflict:'id'});},atualizar);
+    lote(function(b){return sb.from('wp_lista_carga').insert(b);},novos);
+    lote(function(b){return sb.from('wp_lista_carga').delete().in('id',b);},remover);
+    p.then(function(){
+      showLd(false);
+      toast(novos.length+' novos · '+atualizar.length+' atualizados · '+remover.length+' removidos'+(mantidos?' · '+mantidos+' mantidos (com tickets)':''),'success');
+      loadLista();
+    }).catch(function(e){
+      showLd(false);
+      toast('Importação interrompida: '+(e.message||e)+'. Parte dos dados pode ter sido gravada — importe o arquivo novamente.','error');
+      loadLista();
+    });
+  });
 }
 
 function loadLista(){
@@ -1448,12 +1602,14 @@ function loadLista(){
   document.getElementById('no-navio-warn').style.display='none';
   document.getElementById('lista-navio-lbl').textContent='Navio: '+navioAtivo.nome;
   showLd(true);
-  Promise.all([
-    sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id).order('ref'),
-    sb.from('wp_ticket_itens').select('lista_id,quantidade').filter('lista_id','not.is',null),
-  ]).then(function(rs){
-    showLd(false);listaAll=rs[0].data||[];
-    var util={};(rs[1].data||[]).forEach(function(l){util[l.lista_id]=(util[l.lista_id]||0)+l.quantidade;});
+  var navioId=navioAtivo.id;
+  Promise.all([fetchLista(navioId),fetchUsadoNavio(navioId)]).then(function(rs){
+    showLd(false);
+    if(!navioAtivo||navioAtivo.id!==navioId)return; // navio trocado no meio da carga
+    if(rs[0].error){toast('Erro ao carregar lista: '+rs[0].error.message,'error');return;}
+    if(rs[1].error)toast('Erro ao calcular saldos: '+rs[1].error.message,'error');
+    listaAll=rs[0].data||[];
+    var util=listaUsed=rs[1].map;
     var tC=0,tQ=0,tP=0;
     listaAll.forEach(function(l){tC+=parseFloat(l.cbm_total||0);tQ+=parseInt(l.quantidade||0);tP+=parseFloat(l.peso_bruto||0);});
     document.getElementById('ls-lotes').textContent=listaAll.length;
@@ -1462,53 +1618,61 @@ function loadLista(){
     document.getElementById('ls-peso').textContent=fNum(tP,0)+' kg';
     var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
     var psel=document.getElementById('lista-porto-sel');
-    psel.innerHTML='<option value="">Todos portos</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
-    // Popula select de porto no formulário de ticket
-    var tkPorto=document.getElementById('tk-porto-desc');
-    if(tkPorto){
-      var curVal=tkPorto.value;
-      tkPorto.innerHTML='<option value="">— selecione o porto —</option>'+portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
-      if(curVal)tkPorto.value=curVal;
-    }
-    renderLista(listaAll,util);
+    var curPorto=psel.value;
+    psel.innerHTML='<option value="">Todos portos</option>'+portos.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('');
+    if(curPorto)psel.value=curPorto;
+    popularPortosTicket();
+    filterLista();
   });
+}
+// Popula select de porto no formulário de ticket a partir de listaAll
+function popularPortosTicket(){
+  var tkPorto=document.getElementById('tk-porto-desc');
+  if(!tkPorto)return;
+  var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
+  var curVal=tkPorto.value;
+  tkPorto.innerHTML='<option value="">— selecione o porto —</option>'+portos.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('');
+  if(curVal)tkPorto.value=curVal;
 }
 function renderLista(list,um){
   var tb=document.getElementById('lista-tb'),emp=document.getElementById('lista-empty');
   if(!list.length){tb.innerHTML='';emp.style.display='';return;}emp.style.display='none';
   tb.innerHTML=list.map(function(l){
     var used=um?um[l.id]||0:0;
-    var saldo=Math.max(0,(l.quantidade||0)-used);
+    var saldo=(l.quantidade||0)-used;
     var pct=l.quantidade>0?Math.round(used/l.quantidade*100):0;
     var bc=pct>=100?'pr':pct>=80?'py':'pg';
-    var st=saldo<=0?'<span class="bge dng">Esgotado</span>':pct>=80?'<span class="bge warn">'+saldo+' restam</span>':'<span class="bge ok">'+saldo+' disp.</span>';
+    var st=saldo<0?'<span class="bge dng">Excedido '+(-saldo)+'</span>'
+      :saldo===0?'<span class="bge dng">Esgotado</span>'
+      :pct>=80?'<span class="bge warn">'+saldo+' restam</span>':'<span class="bge ok">'+saldo+' disp.</span>';
+    function tdx(v){return '<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(v||'')+'">'+esc(v||'—')+'</td>';}
     return '<tr>'
       +'<td><input type="checkbox" class="lista-row-chk" data-id="'+l.id+'" onchange="updateListaBatchBar()" style="width:auto;cursor:pointer;"></td>'
-      +'<td>'+(l.ref||'—')+'</td><td><strong>'+l.lote+'</strong></td><td>'+(l.shipper||'—')+'</td><td>'+(l.porto_descarga||'—')+'</td>'
-      +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.invoice_pl||'—')+'</td>'
-      +'<td>'+(l.bl||'—')+'</td>'
-      +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.receiver||'—')+'</td>'
-      +'<td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(l.oceandoc_booking||'—')+'</td>'
-      +'<td>'+(l.commodity||'—')+'</td>'
+      +'<td>'+esc(l.ref||'—')+'</td><td><strong>'+esc(l.lote)+'</strong></td><td>'+esc(l.shipper||'—')+'</td><td>'+esc(l.porto_descarga||'—')+'</td>'
+      +tdx(l.invoice_pl)
+      +'<td>'+esc(l.bl||'—')+'</td>'
+      +tdx(l.receiver)
+      +tdx(l.oceandoc_booking)
+      +'<td>'+esc(l.commodity||'—')+'</td>'
       +'<td>'+fNum(l.cbm_total,3)+'</td><td>'+(l.quantidade||0)+'</td><td>'+fNum(l.peso_bruto,0)+'</td>'
-      +'<td>'+fNum(l.peso_medio,3)+'</td><td>'+(l.armazem||'—')+'</td>'
-      +'<td>'+(l.due||'—')+'</td>'
-      +'<td>'+(l.marca||'—')+'</td>'
+      +'<td>'+fNum(l.peso_medio,3)+'</td><td>'+esc(l.armazem||'—')+'</td>'
+      +'<td>'+esc(l.due||'—')+'</td>'
+      +'<td>'+esc(l.marca||'—')+'</td>'
       +'<td><div style="min-width:80px;"><div style="font-size:11px;margin-bottom:2px;">'+used+' / '+(l.quantidade||0)+'</div><div class="pw"><div class="pb '+bc+'" style="width:'+pct+'%"></div></div></div></td>'
       +'<td>'+st+'</td>'
       +'<td style="display:flex;gap:4px;">'
-        +'<button class="btn bs bsm" onclick="editLista(\''+l.id+'\')">✏</button>'
+        +(isSupOrAdmin()?'<button class="btn bs bsm" onclick="editLista(\''+l.id+'\')">✏</button>':'')
         +(canDelete('wp_lista_carga',l)
           ?'<button class="btn bd bsm" onclick="confirmDel(\'wp_lista_carga\',\''+l.id+'\',loadLista)">✕</button>':'')
       +'</td></tr>';
   }).join('');
 }
-function filterLista(q){
-  var s=(q||'').toLowerCase(),porto=document.getElementById('lista-porto-sel').value;
+function filterLista(){
+  var s=(document.getElementById('lista-busca').value||'').trim().toLowerCase(),porto=document.getElementById('lista-porto-sel').value;
   renderLista(listaAll.filter(function(l){
-    var mQ=!s||l.lote.toLowerCase().includes(s)||(l.shipper||'').toLowerCase().includes(s)||(l.marca||'').toLowerCase().includes(s);
+    var mQ=!s||String(l.lote||'').toLowerCase().includes(s)||String(l.ref||'')===s||(l.shipper||'').toLowerCase().includes(s)||(l.marca||'').toLowerCase().includes(s);
     return mQ&&(!porto||(l.porto_descarga||'')===porto);
-  }),null);
+  }),listaUsed);
 }
 
 // ══════════════════════════════════════════════════
@@ -1596,8 +1760,12 @@ function _marcaBuscar(blk, q, dd){
   if(!listaAll.length){
     dd.innerHTML='<div style="padding:8px 12px;font-size:12px;color:var(--ink4);">Carregando lista...</div>';
     dd.style.display='';
-    sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id).order('ref')
-      .then(function(r){ listaAll=r.data||[]; _marcaBuscar(blk,q,dd); });
+    var nid=navioAtivo.id;
+    fetchLista(nid).then(function(r){
+      if(!navioAtivo||navioAtivo.id!==nid)return;
+      if(r.error||!(r.data||[]).length){ dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--ink4);">Lista de carga vazia para este navio</div>'; return; }
+      listaAll=r.data; _marcaBuscar(blk,q,dd);
+    });
     return;
   }
 
@@ -1623,19 +1791,24 @@ function _marcaBuscar(blk, q, dd){
     return;
   }
 
+  // Prioriza marca exata, depois começa-com; limita para não estourar a URL da consulta
+  matches.sort(function(a,b){
+    function rank(l){var m=(l.marca||'').toUpperCase();return m===q?0:m.indexOf(q)===0?1:String(l.ref||'')===q?0:2;}
+    return rank(a)-rank(b)||(a.ref||0)-(b.ref||0);
+  });
+  var MAXDD=60, cortados=Math.max(0,matches.length-MAXDD);
+  matches=matches.slice(0,MAXDD);
+  dd._cortados=cortados;
+
   // Uma única query buscando saldo de TODAS as refs filtradas de uma vez
   var ids = matches.map(function(l){ return l.id; });
   dd.innerHTML='<div style="padding:8px 12px;font-size:11px;color:var(--ink4);">Consultando saldos…</div>';
   dd.style.display='';
 
-  sb.from('wp_ticket_itens')
-    .select('lista_id,quantidade')
-    .in('lista_id', ids)
+  fetchUsadoPorLista(ids)
     .then(function(r){
-      var usedMap={};
-      (r.data||[]).forEach(function(row){
-        usedMap[row.lista_id]=(usedMap[row.lista_id]||0)+(parseInt(row.quantidade)||0);
-      });
+      if(r.error)throw r.error;
+      var usedMap=r.map;
       var results=matches.map(function(l){
         var used=usedMap[l.id]||0;
         var saldo=Math.max(0,(parseInt(l.quantidade)||0)-used);
@@ -1643,9 +1816,10 @@ function _marcaBuscar(blk, q, dd){
       });
       renderMarcaDD(blk,results,dd);
     })
-    .catch(function(){
-      var results=matches.map(function(l){return {l:l,saldo:parseInt(l.quantidade)||0};});
-      renderMarcaDD(blk,results,dd);
+    .catch(function(e){
+      // sem saldo confiável não oferece lotes (antes mostrava a quantidade total como disponível)
+      dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:#b91c1c;">Erro ao consultar saldos: '+esc(e&&e.message||e)+'</div>';
+      dd.style.display='';
     });
 }
 
@@ -1665,20 +1839,21 @@ function renderMarcaDD(blk, results, dd){
       +'onkeydown="if(event.key===\'Enter\')selecionarRef(this)" '
       +'style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--bds);font-size:12px;">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;">'
-        +'<span><strong>Ref '+l.ref+'</strong> · '+l.lote+'</span>'
+        +'<span><strong>Ref '+esc(l.ref)+'</strong> · '+esc(l.lote)+'</span>'
         +'<span style="font-size:11px;background:var(--s2);padding:1px 7px;border-radius:10px;color:var(--ink3);">'+r.saldo+' disp.</span>'
       +'</div>'
       +'<div style="color:var(--ink4);margin-top:2px;">'
-        +(l.marca?'Marca: <strong>'+l.marca+'</strong> · ':'')
-        +(l.porto_descarga?'Porto: '+l.porto_descarga+' · ':'')
-        +'Armazém: '+(l.armazem||'—')
+        +(l.marca?'Marca: <strong>'+esc(l.marca)+'</strong> · ':'')
+        +(l.porto_descarga?'Porto: '+esc(l.porto_descarga)+' · ':'')
+        +'Armazém: '+esc(l.armazem||'—')
       +'</div>'
       +'<div style="height:3px;background:var(--bds);border-radius:2px;margin-top:4px;">'
         +'<div style="height:100%;width:'+pct+'%;background:'+(pct<20?'#e74c3c':pct<60?'#e67e22':'#27ae60')+';border-radius:2px;"></div>'
       +'</div>'
       +'<input type="hidden" class="dd-lista-id" value="'+l.id+'">'
     +'</div>';
-  }).join('');
+  }).join('')
+  +(dd._cortados?'<div style="padding:7px 12px;font-size:11px;color:var(--ink4);">+'+dd._cortados+' resultado(s) não exibido(s) — digite mais caracteres</div>':'');
   dd.style.display='';
   // store results ref on dd for selecionarRef
   dd._results = comSaldo;
@@ -1815,12 +1990,12 @@ function preencherBlk(blk,l){
     info.style.display='';
     info.innerHTML=
       '<div style="background:var(--f50);border:1px solid var(--f100);border-radius:var(--rsm);padding:8px 10px;font-size:12px;line-height:1.8;">'
-      +'<strong style="color:var(--ink);">Ref '+l.ref+' · '+l.lote+'</strong><br>'
-      +(l.marca?'<span style="color:var(--ink3);">Marca: <strong>'+l.marca+'</strong></span><br>':'')
-      +(l.shipper?'<span style="color:var(--ink3);">Shipper: '+l.shipper+'</span><br>':'')
-      +(l.porto_descarga?'<span style="color:var(--ink3);">Porto: '+l.porto_descarga+'</span><br>':'')
-      +(l.armazem?'<span style="color:var(--ink3);">Armazém: '+l.armazem+'</span><br>':'')
-      +(l.due?'<span style="color:var(--ink3);">DUE: '+l.due+'</span><br>':'')
+      +'<strong style="color:var(--ink);">Ref '+esc(l.ref)+' · '+esc(l.lote)+'</strong><br>'
+      +(l.marca?'<span style="color:var(--ink3);">Marca: <strong>'+esc(l.marca)+'</strong></span><br>':'')
+      +(l.shipper?'<span style="color:var(--ink3);">Shipper: '+esc(l.shipper)+'</span><br>':'')
+      +(l.porto_descarga?'<span style="color:var(--ink3);">Porto: '+esc(l.porto_descarga)+'</span><br>':'')
+      +(l.armazem?'<span style="color:var(--ink3);">Armazém: '+esc(l.armazem)+'</span><br>':'')
+      +(l.due?'<span style="color:var(--ink3);">DUE: '+esc(l.due)+'</span><br>':'')
       +'<span style="color:var(--ink3);">CBM unit: '+fNum(cbmUnit,4)+' | Peso médio: '+fNum(l.peso_medio,3)+' kg</span>'
       +'</div>';
   }
@@ -1980,10 +2155,33 @@ function emitirTicket(){
     });
   });
   if(erros||!lotesData.length)return;
-  var num='TK-'+(navioAtivo.codigo||'WP')+'-'+Date.now().toString().slice(-7);
+  // soma por lote (o mesmo lote pode estar em mais de um bloco)
+  var pedidoPorLista={};
+  lotesData.forEach(function(l){pedidoPorLista[l.lista_id]=(pedidoPorLista[l.lista_id]||0)+l.quantidade;});
+  var navio=navioAtivo;
   showLd(true);
+  // Re-confere o saldo no banco imediatamente antes de gravar
+  // (outro conferente pode ter usado o mesmo lote desde que o bloco foi preenchido)
+  var ids=Object.keys(pedidoPorLista);
+  Promise.all([
+    fetchUsadoPorLista(ids),
+    sb.from('wp_lista_carga').select('id,lote,ref,quantidade').in('id',ids),
+  ]).then(function(rs){
+    if(rs[0].error||rs[1].error){showLd(false);toast('Erro ao conferir saldo: '+(rs[0].error||rs[1].error).message,'error');return;}
+    var usado=rs[0].map,estouro=[];
+    (rs[1].data||[]).forEach(function(l){
+      var saldo=(parseInt(l.quantidade)||0)-(usado[l.id]||0);
+      if(pedidoPorLista[l.id]>saldo)estouro.push('Ref '+(l.ref||'—')+' / '+l.lote+': pedido '+pedidoPorLista[l.id]+', saldo '+Math.max(0,saldo));
+    });
+    if(estouro.length){showLd(false);toast('Saldo insuficiente — '+estouro.join(' · '),'error');return;}
+    gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData);
+  });
+}
+
+function gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData){
+  var num='TK-'+(navio.codigo||'WP')+'-'+Date.now().toString().slice(-7);
   sb.from('wp_tickets').insert({
-    numero:num, navio_id:navioAtivo.id, placa, motorista,
+    numero:num, navio_id:navio.id, placa, motorista,
     conferente_id:currentUser.id, conferente_nome:currentUser.nome,
     armazem:currentUser.armazem||'WRC',
     porao, tier, viagem, porto_descarga:portoCab,
@@ -1994,8 +2192,15 @@ function emitirTicket(){
     var tkId=r.data.id;
     var lPayload=lotesData.map(function(l){return Object.assign({},l,{ticket_id:tkId});});
     sb.from('wp_ticket_itens').insert(lPayload).then(function(r2){
+      if(r2.error){
+        // desfaz o cabeçalho para não deixar ticket sem itens
+        sb.from('wp_tickets').delete().eq('id',tkId).then(function(){
+          showLd(false);
+          toast('Erro ao gravar os lotes — ticket não emitido: '+r2.error.message,'error');
+        });
+        return;
+      }
       showLd(false);
-      if(r2.error){toast('Ticket salvo mas erro nos lotes: '+r2.error.message,'error');return;}
       toast('Ticket '+num+' emitido!','success');
       showTicketPrint(r.data,lotesData);
       resetTicketForm();loadTickets();
@@ -2022,8 +2227,8 @@ function showTicketPrint(tk,lotes){
   var totPeso=sumItens(lotes,'peso_calculado');
 
   // helpers compactos
-  function fi(lb,vl,sm){return '<div class="fi"><span class="lb">'+lb+'</span><span class="vl'+(sm?' sm':'')+'">'+vl+'</span></div>';}
-  function fl(lb,vl){return '<div class="fl"><span class="lb">'+lb+'</span><span class="vl">'+vl+'</span></div>';}
+  function fi(lb,vl,sm){return '<div class="fi"><span class="lb">'+lb+'</span><span class="vl'+(sm?' sm':'')+'">'+esc(vl)+'</span></div>';}
+  function fl(lb,vl){return '<div class="fl"><span class="lb">'+lb+'</span><span class="vl">'+esc(vl)+'</span></div>';}
   function g2(a,b){return '<div class="g2">'+a+b+'</div>';}
   function g3(a,b,c){return '<div class="g3">'+a+b+c+'</div>';}
   function g4(a,b,c,d){return '<div class="g4">'+a+b+c+d+'</div>';}
@@ -2033,7 +2238,7 @@ function showTicketPrint(tk,lotes){
 
   var linhasLotes='';
   lotes.forEach(function(l,i){
-    linhasLotes+='<div class="tsec">Lote '+(i+1)+(l.lote?' · '+l.lote:'')+'</div>'
+    linhasLotes+='<div class="tsec">Lote '+(i+1)+(l.lote?' · '+esc(l.lote):'')+'</div>'
       +g2( fi('Ref',l.ref||'—'), fi('Marca',l.marca||'—') )
       +g2( fi('Shipper',l.shipper||'—',true), fi('DUE/RUC',l.due||'—') )
       +g3( fi('NF',l.nf||'—'), fi('Qtde',(l.quantidade||0)+' pçs'), fi('CBM',fNum(l.cbm_calculado,3)+'m³') );
@@ -2042,13 +2247,13 @@ function showTicketPrint(tk,lotes){
   var html=''
     +'<div class="tl">WOODPORT</div>'
     +'<div class="tt">Ticket de Embarque</div>'
-    +'<div class="tn">'+tk.numero+'</div>'
+    +'<div class="tn">'+esc(tk.numero)+'</div>'
     +'<div class="ts"></div>'
     +g2( fi('Navio',nomeNavio,true), fi('Vgm',viagemNavio) )
     +g4( fi('Porão',tk.porao||'—'), fi('Tier',tk.tier||'—'), fi('Vgm Tier',tk.viagem||'—'), fi('Porto',tk.porto_descarga||'—',true) )
     +g2( fi('Placa',tk.placa), fi('Motorista',tk.motorista,true) )
     +fl('Conferente', tk.conferente_nome||'—')
-    +fl('Emissão', new Date().toLocaleString('pt-BR'))
+    +fl('Emissão', (tk.created_at?new Date(tk.created_at):new Date()).toLocaleString('pt-BR'))
     +'<div class="ts"></div>'
     +linhasLotes
     +'<div class="ts"></div>'
@@ -2058,7 +2263,7 @@ function showTicketPrint(tk,lotes){
       +'<div class="tc"><span class="lb">Peso</span><span class="vl">'+fNum(totPeso,2)+'kg</span></div>'
     +'</div>'
     +'<div class="tq"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data='+encodeURIComponent(tk.numero)+'" width="100" height="100" alt="QR"></div>'
-    +'<div class="tf">'+tk.numero+'</div>';
+    +'<div class="tf">'+esc(tk.numero)+'</div>';
 
   document.getElementById('ticket-content').innerHTML=html;
   document.getElementById('ticket-modal').style.display='flex';
@@ -2141,30 +2346,27 @@ function printTicket(){
 
 function loadTickets(){
   if(!sb||!navioAtivo)return;
-
-  function popularPortos(){
-    var portos=[...new Set(listaAll.map(function(l){return l.porto_descarga;}).filter(Boolean))].sort();
-    var tkPorto=document.getElementById('tk-porto-desc');
-    if(!tkPorto) return;
-    var curVal=tkPorto.value;
-    tkPorto.innerHTML='<option value="">— selecione o porto —</option>'
-      +portos.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
-    if(curVal) tkPorto.value=curVal;
-  }
+  var nid=navioAtivo.id;
 
   // Carrega lista de carga completa do navio para popular os portos disponíveis
   // O filtro de armazém é aplicado na busca/seleção de lotes (não aqui)
-  sb.from('wp_lista_carga').select('*').eq('navio_id',navioAtivo.id)
-    .order('ref').then(function(r){
-      listaAll=r.data||[];
-      popularPortos();
-    });
+  fetchLista(nid).then(function(r){
+    if(!navioAtivo||navioAtivo.id!==nid)return;
+    listaAll=r.data||[];
+    popularPortosTicket();
+  });
 
   // Carrega tickets
-  qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('navio_id',navioAtivo.id),'armazem')
-    .order('created_at',{ascending:false}).then(function(r){
-      ticketsAll=r.data||[];renderTickets(ticketsAll);
-    });
+  supaAll(function(){
+    return qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('navio_id',nid),'armazem')
+      .order('created_at',{ascending:false}).order('id');
+  }).then(function(r){
+    if(!navioAtivo||navioAtivo.id!==nid)return;
+    if(r.error){toast('Erro ao carregar tickets: '+r.error.message,'error');return;}
+    ticketsAll=r.data||[];
+    var busca=document.getElementById('tk-busca');
+    if(busca&&busca.value)filterTickets(busca.value);else renderTickets(ticketsAll);
+  });
 }
 function renderTickets(list){
   var tb=document.getElementById('tk-tb'),emp=document.getElementById('tk-empty');
@@ -2176,15 +2378,15 @@ function renderTickets(list){
     var totQtd=lts.reduce(function(s,l){return s+(parseInt(l.quantidade)||0);},0);
     var totCBM=lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0);
     var totPeso=lts.reduce(function(s,l){return s+parseFloat(l.peso_calculado||0);},0);
-    var conf=t.conferente_nome||t.usuario_nome||'—';
+    var conf=t.conferente_nome||'—';
     var st=t.status==='validado'?'<span class="bge ok">Validado</span>':'<span class="bge info">Emitido</span>';
     return '<tr>'
       +'<td><input type="checkbox" class="tk-row-chk" data-id="'+t.id+'" onchange="updateTkBatchBar()" style="width:auto;cursor:pointer;"></td>'
-      +'<td><strong>'+t.numero+'</strong></td>'
-      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+lotesStr+'">'+lotesStr+'</td>'
-      +'<td>'+portosStr+'</td>'
+      +'<td><strong>'+esc(t.numero)+'</strong></td>'
+      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(lotesStr)+'">'+esc(lotesStr)+'</td>'
+      +'<td>'+esc(portosStr)+'</td>'
       +'<td>'+totQtd+'</td><td>'+fNum(totCBM,3)+'</td><td>'+fNum(totPeso,0)+'</td>'
-      +'<td>'+t.placa+'</td><td>'+conf+'</td><td>'+st+'</td>'
+      +'<td>'+esc(t.placa)+'</td><td>'+esc(conf)+'</td><td>'+st+'</td>'
       +'<td style="display:flex;gap:4px;">'
         +'<button class="btn bs bsm" onclick="reimprimirTicket(\''+t.id+'\')" title="Reimprimir">🖨</button>'
         +'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')" title="Editar">✏</button>'
@@ -2194,9 +2396,12 @@ function renderTickets(list){
   }).join('');
 }
 function filterTickets(q){
-  var s=q.toLowerCase();
+  var s=(q||'').trim().toLowerCase();
   renderTickets(ticketsAll.filter(function(t){
-    return t.numero.toLowerCase().includes(s)||t.placa.toLowerCase().includes(s)||(t.usuario_nome||'').toLowerCase().includes(s);
+    if(!s)return true;
+    var campos=[t.numero,t.placa,t.motorista,t.conferente_nome];
+    (t.wp_ticket_itens||[]).forEach(function(i){campos.push(i.marca,i.lote,i.nf,String(i.ref||''));});
+    return campos.some(function(c){return String(c||'').toLowerCase().includes(s);});
   }));
 }
 function reimprimirTicket(id){
@@ -2218,39 +2423,39 @@ function loadRelatorios(){
   var ate = document.getElementById('rl-ate').value;
   if(!de){
     var now=new Date(); now.setDate(1);
-    document.getElementById('rl-de').value = now.toISOString().slice(0,10);
-    de = document.getElementById('rl-de').value;
+    de = document.getElementById('rl-de').value = localISODate(now);
   }
   if(!ate){
-    document.getElementById('rl-ate').value = new Date().toISOString().slice(0,10);
-    ate = document.getElementById('rl-ate').value;
+    ate = document.getElementById('rl-ate').value = localISODate();
   }
 
   var porto = document.getElementById('rl-porto').value;
   var az    = document.getElementById('rl-az').value;
+  // limites do período no fuso do navegador (o banco grava em UTC)
+  var deTs  = new Date(de+'T00:00:00').toISOString();
+  var ateTs = new Date(ate+'T23:59:59.999').toISOString();
+  var nid   = navioAtivo.id;
 
   // Busca tickets validados + emitidos no período
-  var q = qAz(sb.from('wp_tickets')
-    .select(TK_COLS+',periodo')
-    .eq('navio_id', navioAtivo.id)
-    .gte('created_at', de+'T00:00:00')
-    .lte('created_at', ate+'T23:59:59'), 'armazem');
+  function montar(cols){
+    return function(){
+      var q = qAz(sb.from('wp_tickets').select(cols).eq('navio_id', nid)
+        .gte('created_at', deTs).lte('created_at', ateTs), 'armazem');
+      if(porto) q = q.eq('porto_descarga', porto);
+      if(az)    q = q.eq('armazem', az);
+      return q.order('created_at',{ascending:false}).order('id');
+    };
+  }
 
-  if(porto) q = q.eq('porto_descarga', porto);
-  if(az)    q = q.eq('armazem', az);
-
-  q.order('created_at',{ascending:false}).then(function(r){
+  supaAll(montar(TK_COLS+',periodo')).then(function(r){
     showLd(false);
     if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
       // fallback sem periodo
-      var q2 = qAz(sb.from('wp_tickets').select(TK_COLS).eq('navio_id',navioAtivo.id)
-        .gte('created_at',de+'T00:00:00').lte('created_at',ate+'T23:59:59'),'armazem');
-      if(porto) q2=q2.eq('porto_descarga',porto);
-      if(az) q2=q2.eq('armazem',az);
-      q2.order('created_at',{ascending:false}).then(function(r2){
+      supaAll(montar(TK_COLS)).then(function(r2){
         rlData=r2.data||[]; renderRelatorios();
       }); return;
     }
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
     rlData = r.data||[];
     renderRelatorios();
     populateRlPortos();
@@ -2262,7 +2467,7 @@ function populateRlPortos(){
   var cur = sel.value;
   var portos = [...new Set(rlData.map(function(t){return t.porto_descarga;}).filter(Boolean))].sort();
   sel.innerHTML = '<option value="">Todos os portos</option>'
-    + portos.map(function(p){return '<option value="'+p+'"'+(p===cur?' selected':'')+'>'+p+'</option>';}).join('');
+    + portos.map(function(p){return '<option value="'+esc(p)+'"'+(p===cur?' selected':'')+'>'+esc(p)+'</option>';}).join('');
 }
 
 function renderRelatorios(){
@@ -2329,7 +2534,7 @@ function renderRlConferente(list){
   if(!rows.length){ document.getElementById('rl-conf-empty').style.display=''; tb.innerHTML=''; return; }
   document.getElementById('rl-conf-empty').style.display='none';
   tb.innerHTML = rows.map(function(r){
-    return '<tr><td><strong>'+r.nome+'</strong></td><td><span class="bge ntrl">'+r.az+'</span></td>'
+    return '<tr><td><strong>'+esc(r.nome)+'</strong></td><td><span class="bge ntrl">'+esc(r.az)+'</span></td>'
       +'<td>'+r.tickets+'</td><td>'+r.fardos.toLocaleString('pt-BR')+'</td><td>'+fNum(r.cbm,3)+'</td></tr>';
   }).join('');
 }
@@ -2358,8 +2563,8 @@ function renderRlPorto(list){
     var pct = totalCBM>0?(d.cbm/totalCBM*100).toFixed(1):'0';
     var bar = '<div style="height:4px;background:#e0e0e0;border-radius:2px;margin-top:3px;">'
       +'<div style="height:100%;width:'+pct+'%;background:var(--w500);border-radius:2px;"></div></div>';
-    return '<tr><td><strong>'+p+'</strong></td><td>'+d.tickets+'</td>'
-      +'<td><span style="font-size:11px;">'+[...d.marcas].sort().join(', ')+'</span></td>'
+    return '<tr><td><strong>'+esc(p)+'</strong></td><td>'+d.tickets+'</td>'
+      +'<td><span style="font-size:11px;">'+esc([...d.marcas].sort().join(', '))+'</span></td>'
       +'<td>'+d.fardos.toLocaleString('pt-BR')+'</td>'
       +'<td>'+fNum(d.cbm,3)+'</td>'
       +'<td>'+fNum(d.peso,0)+'</td>'
@@ -2398,7 +2603,7 @@ function renderRlLista(list){
   tb.innerHTML = rows.map(function(r){
     return '<tr>'+r.map(function(v,i){
       var bold = i===0||i===12;
-      return '<td>'+(bold?'<strong>'+v+'</strong>':v)+'</td>';
+      return '<td>'+(bold?'<strong>'+esc(v)+'</strong>':esc(v))+'</td>';
     }).join('')+'</tr>';
   }).join('');
 }
@@ -2494,9 +2699,11 @@ async function fazerBackup(){
 
     // ── Navios ──
     if(document.getElementById('bk-navios').checked){
-      var qN = sb.from('wp_navios').select('*');
-      if(navioId) qN = qN.eq('id', navioId);
-      var rN = await qN.order('created_at');
+      var rN = await supaAll(function(){
+        var qN = sb.from('wp_navios').select('*');
+        if(navioId) qN = qN.eq('id', navioId);
+        return qN.order('created_at').order('id');
+      });
       if(rN.error) throw new Error('Navios: '+rN.error.message);
       payload.dados.wp_navios = rN.data||[];
       bkStatus('Navios OK ('+payload.dados.wp_navios.length+')...','info');
@@ -2504,7 +2711,7 @@ async function fazerBackup(){
 
     // ── Usuários ──
     if(document.getElementById('bk-usuarios').checked){
-      var rU = await sb.from('wp_usuarios').select('*').order('nome');
+      var rU = await supaAll(function(){ return sb.from('wp_usuarios').select('*').order('nome').order('id'); });
       if(rU.error) throw new Error('Usuários: '+rU.error.message);
       payload.dados.wp_usuarios = rU.data||[];
       bkStatus('Usuários OK ('+payload.dados.wp_usuarios.length+')...','info');
@@ -2512,9 +2719,11 @@ async function fazerBackup(){
 
     // ── Lista de Carga ──
     if(document.getElementById('bk-lista').checked){
-      var qL = sb.from('wp_lista_carga').select('*');
-      if(navioId) qL = qL.eq('navio_id', navioId);
-      var rL = await qL.order('ref');
+      var rL = await supaAll(function(){
+        var qL = sb.from('wp_lista_carga').select('*');
+        if(navioId) qL = qL.eq('navio_id', navioId);
+        return qL.order('ref').order('id');
+      });
       if(rL.error) throw new Error('Lista: '+rL.error.message);
       payload.dados.wp_lista_carga = rL.data||[];
       bkStatus('Lista de carga OK ('+payload.dados.wp_lista_carga.length+')...','info');
@@ -2522,9 +2731,11 @@ async function fazerBackup(){
 
     // ── Tickets + Itens ──
     if(document.getElementById('bk-tickets').checked){
-      var qT = sb.from('wp_tickets').select('*,wp_ticket_itens(*)');
-      if(navioId) qT = qT.eq('navio_id', navioId);
-      var rT = await qT.order('created_at');
+      var rT = await supaAll(function(){
+        var qT = sb.from('wp_tickets').select('*,wp_ticket_itens(*)');
+        if(navioId) qT = qT.eq('navio_id', navioId);
+        return qT.order('created_at').order('id');
+      });
       if(rT.error) throw new Error('Tickets: '+rT.error.message);
       payload.dados.wp_tickets = rT.data||[];
       var totalItens = (rT.data||[]).reduce(function(s,t){return s+(t.wp_ticket_itens||[]).length;},0);
@@ -2564,6 +2775,12 @@ async function fazerBackup(){
   btn.disabled = false; btn.textContent = '⬇ Gerar Backup Agora';
 }
 
+// zero continua zero; itens embutidos viram JSON (antes saíam vazio e "[object Object]")
+function csvVal(v){
+  if(v===null||v===undefined)return '';
+  if(typeof v==='object')return JSON.stringify(v);
+  return String(v);
+}
 async function exportBkCSV(payload, filename){
   // Gera um ZIP se JSZip disponível, senão CSV por tabela
   var tables = Object.entries(payload.dados);
@@ -2577,7 +2794,7 @@ async function exportBkCSV(payload, filename){
       if(!rows.length) return;
       var cols = Object.keys(rows[0]);
       var csv = cols.join(',')+'\n'+rows.map(function(r){
-        return cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(',');
+        return cols.map(function(c){return '"'+csvVal(r[c]).replace(/"/g,'""')+'"';}).join(',');
       }).join('\n');
       zip.file(name+'.csv', '\uFEFF'+csv);
     });
@@ -2590,7 +2807,7 @@ async function exportBkCSV(payload, filename){
       if(!rows.length) return;
       var cols = Object.keys(rows[0]);
       var csv = cols.join(',')+'\n'+rows.map(function(r){
-        return cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(',');
+        return cols.map(function(c){return '"'+csvVal(r[c]).replace(/"/g,'""')+'"';}).join(',');
       }).join('\n');
       downloadBlob(new Blob(['\uFEFF'+csv],{type:'text/csv'}), filename+'_'+name+'.csv');
     });
@@ -2654,11 +2871,11 @@ function previewRestore(input){
       bkRestorePayload = data;
       var info = document.getElementById('bk-restore-info');
       var tabelas = Object.entries(data.dados).map(function(e){
-        return '<span class="bge ntrl">'+e[0]+': '+e[1].length+'</span>';
+        return '<span class="bge ntrl">'+esc(e[0])+': '+(e[1]||[]).length+'</span>';
       }).join(' ');
       info.innerHTML = ''
         +'<div style="margin-bottom:6px;"><strong>Gerado em:</strong> '+new Date(data.meta.gerado_em).toLocaleString('pt-BR')+'</div>'
-        +'<div style="margin-bottom:6px;"><strong>Por:</strong> '+data.meta.gerado_por+'</div>'
+        +'<div style="margin-bottom:6px;"><strong>Por:</strong> '+esc(data.meta.gerado_por)+'</div>'
         +'<div style="margin-bottom:8px;"><strong>Tabelas:</strong> '+tabelas+'</div>'
         +'<div style="color:var(--red);font-weight:600;font-size:11px;">⚠ Esta operação sobrescreve registros existentes com os mesmos IDs</div>';
       document.getElementById('bk-restore-preview').style.display='';
@@ -2697,7 +2914,7 @@ async function fazerRestore(){
 
   try {
     var dados = bkRestorePayload.dados;
-    var total = 0;
+    var total = 0, pulouUsuarios = 0;
 
     // Restaura na ordem correta (FK constraints)
     var ordem = ['wp_navios','wp_usuarios','wp_lista_carga','wp_tickets','wp_ticket_itens'];
@@ -2719,22 +2936,10 @@ async function fazerRestore(){
         });
       }
 
-      // Usuários: corrige senhas inválidas de backups antigos
+      // Usuários ficam no Supabase Auth (senhas não vão no backup) — não são restaurados por aqui
       if(tabela === 'wp_usuarios'){
-        // Hash da senha de recuperação: admin123
-        var senhaTemp = 'LTk2OTE2MTU5NzMyMW5pbWRh';
-        var semSenha = 0;
-        insertRows = rows.map(function(u){
-          var r = Object.assign({},u);
-          if(!r.senha_hash || r.senha_hash === '***BACKUP***' || r.senha_hash.length < 10){
-            r.senha_hash = senhaTemp;
-            semSenha++;
-          }
-          return r;
-        });
-        if(semSenha>0){
-          rstStatus('⚠ '+semSenha+' usuário(s) com senha inválida → senha temporária: admin123');
-        }
+        pulouUsuarios = rows.length;
+        continue;
       }
 
       // Upsert em lotes de 500
@@ -2763,7 +2968,9 @@ async function fazerRestore(){
     }
 
     statusEl.style.color='var(--green)';
-    rstStatus('✓ Restauração concluída — '+total+' registros processados. Recarregue a página para ver os dados.');
+    rstStatus('✓ Restauração concluída — '+total+' registros processados.'
+      +(pulouUsuarios?' '+pulouUsuarios+' usuário(s) não restaurados: cadastre-os em Usuários.':'')
+      +' Recarregue a página para ver os dados.');
     cancelarRestore();
 
   } catch(e){
@@ -2799,7 +3006,7 @@ function initHatchListForm(){
     .then(function(r){
       var poroes=[...new Set((r.data||[]).map(function(t){return t.porao;}).filter(Boolean))].sort();
       var sel=document.getElementById('hl-porao');
-      sel.innerHTML='<option value="">Todos</option>'+poroes.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+      sel.innerHTML='<option value="">Todos</option>'+poroes.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('');
     });
 }
 
@@ -2808,13 +3015,17 @@ function gerarHatchList(){
   showLd(true);
   var selPorao=document.getElementById('hl-porao');
   var poroesSel=[...selPorao.options].filter(function(o){return o.selected&&o.value;}).map(function(o){return o.value;});
-  var q=qAz(sb.from('wp_tickets').select(TK_COLS+',periodo').eq('navio_id',navioAtivo.id).eq('status','validado'),'armazem');
-  if(poroesSel.length)q=q.in('porao',poroesSel);
+  var nid=navioAtivo.id;
   Promise.all([
-    q.order('porao').order('tier').order('created_at'),
-    sb.from('wp_lista_carga').select('id,ref,lote,bl,receiver,shipper,commodity,peso_medio,peso_bruto,quantidade,due').eq('navio_id',navioAtivo.id)
+    supaAll(function(){
+      var q=qAz(sb.from('wp_tickets').select(TK_COLS+',periodo').eq('navio_id',nid).eq('status','validado'),'armazem');
+      if(poroesSel.length)q=q.in('porao',poroesSel);
+      return q.order('porao').order('tier').order('created_at').order('id');
+    }),
+    supaAll(function(){return sb.from('wp_lista_carga').select('id,ref,lote,bl,receiver,shipper,commodity,peso_medio,peso_bruto,quantidade,due').eq('navio_id',nid).order('id');})
   ]).then(function(res){
     showLd(false);
+    if(res[0].error||res[1].error){toast('Erro: '+(res[0].error||res[1].error).message,'error');return;}
     var tickets=res[0].data||[],lista=res[1].data||[];
     var listaMap={};lista.forEach(function(l){listaMap[l.id]=l;});
     if(!tickets.length){
@@ -2885,11 +3096,11 @@ function showHlTab(hold){
     var items=tierMap[tier],tCBM=0,tBdls=0,tMT=0;
     items.forEach(function(r){
       tCBM+=r.cbm;tBdls+=r.bdls;tMT+=r.mt;gCBM+=r.cbm;gBdls+=r.bdls;gMT+=r.mt;
-      tbody+='<tr><td>'+hold+'</td><td style="text-align:center;font-weight:700;">'+tier+'</td>'
-        +'<td>'+r.lot+'</td><td style="font-size:11px;color:var(--ink3);">'+r.bl+'</td>'
-        +'<td>'+r.recv+'</td><td style="font-weight:700;color:var(--w600);">'+r.marks+'</td>'
-        +'<td>'+r.comm+'</td><td>'+r.disport+'</td>'
-        +'<td style="font-size:11px;color:var(--ink3);">'+r.due+'</td>'
+      tbody+='<tr><td>'+esc(hold)+'</td><td style="text-align:center;font-weight:700;">'+esc(tier)+'</td>'
+        +'<td>'+esc(r.lot)+'</td><td style="font-size:11px;color:var(--ink3);">'+esc(r.bl)+'</td>'
+        +'<td>'+esc(r.recv)+'</td><td style="font-weight:700;color:var(--w600);">'+esc(r.marks)+'</td>'
+        +'<td>'+esc(r.comm)+'</td><td>'+esc(r.disport)+'</td>'
+        +'<td style="font-size:11px;color:var(--ink3);">'+esc(r.due)+'</td>'
         +'<td style="text-align:right;">'+fNum(r.cbm,3)+'</td>'
         +'<td style="text-align:right;font-weight:700;">'+r.bdls+'</td>'
         +'<td style="text-align:right;">'+fNum(r.mt,3)+'</td></tr>';
@@ -2909,7 +3120,7 @@ function showHlTab(hold){
   document.getElementById('hl-content').innerHTML=
     '<div class="card" style="padding:0;overflow:hidden;">'
     +'<div style="background:var(--s3);padding:8px 14px;border-bottom:1px solid var(--bds);display:flex;justify-content:space-between;">'
-    +'<span style="font-weight:700;">'+hold+'</span><span style="color:var(--ink4);font-size:12px;">'+nomeNavio+'</span></div>'
+    +'<span style="font-weight:700;">'+esc(hold)+'</span><span style="color:var(--ink4);font-size:12px;">'+esc(nomeNavio)+'</span></div>'
     +'<div style="overflow-x:auto;max-height:500px;overflow-y:auto;"><table style="font-size:12px;min-width:900px;">'+thead+tbody+'</table></div></div>';
   // highlight tab
   document.querySelectorAll('#hl-tabs button').forEach(function(b){
@@ -3052,9 +3263,11 @@ function _doExportHL(holds){
     tiers.forEach(function(tier){
       var items = tierMap[tier];
       var tierDataStart = currentRow;
+      var tCBM=0, tBdls=0, tMT=0;
 
       items.forEach(function(r){
         gCBM+=r.cbm; gBdls+=r.bdls; gMT+=r.mt;
+        tCBM+=r.cbm; tBdls+=r.bdls; tMT+=r.mt;
         ws.getRow(currentRow).height = 12.75;
         var vals = [null, hold, parseFloat(tier), r.lot, r.bl, r.recv, r.marks, r.comm, r.disport, r.due,
                     r.cbm, r.bdls, r.mt];
@@ -3088,17 +3301,17 @@ function _doExportHL(holds){
       tc.border = cellBorder(true, true, true, false);
       // CBM
       var kcell = ws.getCell('K'+currentRow);
-      kcell.value = {formula: 'SUM(K'+tierDataStart+':K'+tierEndRow+')', result: gCBM};
+      kcell.value = {formula: 'SUM(K'+tierDataStart+':K'+tierEndRow+')', result: tCBM};
       kcell.font = fntBold; kcell.fill = fillTier; kcell.numFmt = '0.000';
       kcell.alignment = {horizontal:'right'}; kcell.border = cellBorder(true,true,false,false);
       // Bdls
       var lcell = ws.getCell('L'+currentRow);
-      lcell.value = {formula: 'SUM(L'+tierDataStart+':L'+tierEndRow+')', result: gBdls};
+      lcell.value = {formula: 'SUM(L'+tierDataStart+':L'+tierEndRow+')', result: tBdls};
       lcell.font = fntBold; lcell.fill = fillTier;
       lcell.alignment = {horizontal:'right'}; lcell.border = cellBorder(true,true,false,false);
       // MT
       var mcell = ws.getCell('M'+currentRow);
-      mcell.value = {formula: 'SUM(M'+tierDataStart+':M'+tierEndRow+')', result: gMT};
+      mcell.value = {formula: 'SUM(M'+tierDataStart+':M'+tierEndRow+')', result: tMT};
       mcell.font = fntBold; mcell.fill = fillTier; mcell.numFmt = '0.000';
       mcell.alignment = {horizontal:'right'}; mcell.border = cellBorder(true,true,false,true);
 
@@ -3255,6 +3468,8 @@ var TK_COLS='id,numero,navio_id,placa,motorista,conferente_id,conferente_nome,ar
 function buscarTicketVal(){
   var code=document.getElementById('val-code').value.trim();
   if(!code){toast('Informe o número','error');return;}
+  if(/^tk-/i.test(code))code=code.toUpperCase(); // números são gravados em maiúsculas
+  var isUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
   if(!sb){toast('Sem conexão','error');return;}
   showLd(true);
   // Tenta buscar primeiro com periodo; se falhar, tenta sem
@@ -3273,6 +3488,7 @@ function buscarTicketVal(){
   fetchComPeriodo('numero',code,function(r){
     if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
     if(r.data&&r.data.length){showLd(false);renderValResult(r.data[0]);return;}
+    if(!isUuid){showLd(false);toast('Ticket "'+code+'" não encontrado'+(userArmazens()?' no seu armazém':''),'error');return;}
     fetchComPeriodo('id',code,function(r2){
       showLd(false);
       if(r2.error||!r2.data||!r2.data.length){
@@ -3296,22 +3512,22 @@ function renderValResult(tk){
   var isVal=tk.status==='validado';
   var lotesHtml=lts.map(function(l){
     return '<div style="background:var(--s3);border-radius:var(--rsm);padding:8px 10px;margin-top:6px;font-size:12px;">'
-      +'<strong>Ref '+(l.ref||'—')+' — '+l.lote+'</strong>'+(l.marca?' | '+l.marca:'')
-      +'<div style="color:var(--ink4);margin-top:3px;">'+(l.porto_descarga||'')+(l.armazem?' · '+l.armazem:'')
+      +'<strong>Ref '+esc(l.ref||'—')+' — '+esc(l.lote)+'</strong>'+(l.marca?' | '+esc(l.marca):'')
+      +'<div style="color:var(--ink4);margin-top:3px;">'+esc(l.porto_descarga||'')+(l.armazem?' · '+esc(l.armazem):'')
         +' · '+l.quantidade+' pçs · '+fNum(l.cbm_calculado,3)+' m³'+'</div>'
       +'</div>';
   }).join('');
   document.getElementById('val-card').innerHTML='<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:14px;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
-    +'<span style="font-size:15px;font-weight:600;">'+tk.numero+'</span>'
+    +'<span style="font-size:15px;font-weight:600;">'+esc(tk.numero)+'</span>'
     +(isVal?'<span class="bge ok">✓ Validado</span>':'<span class="bge info">Emitido</span>')+'</div>'
     +'<div class="gr g2" style="gap:5px;font-size:12px;margin-bottom:8px;">'
-    +'<div><span style="color:var(--ink4);">Placa:</span><br><strong>'+tk.placa+'</strong></div>'
-    +'<div><span style="color:var(--ink4);">Motorista:</span><br><strong>'+tk.motorista+'</strong></div>'
-    +(tk.porto_descarga?'<div><span style="color:var(--ink4);">Porto:</span><br><strong>'+tk.porto_descarga+'</strong></div>':'')
+    +'<div><span style="color:var(--ink4);">Placa:</span><br><strong>'+esc(tk.placa)+'</strong></div>'
+    +'<div><span style="color:var(--ink4);">Motorista:</span><br><strong>'+esc(tk.motorista)+'</strong></div>'
+    +(tk.porto_descarga?'<div><span style="color:var(--ink4);">Porto:</span><br><strong>'+esc(tk.porto_descarga)+'</strong></div>':'')
     +'<div><span style="color:var(--ink4);">CBM Total:</span><br><strong>'+fNum(lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0),4)+' m³</strong></div>'
-    +'<div><span style="color:var(--ink4);">Conferente:</span><br><strong>'+(tk.conferente_nome||tk.usuario_nome||'—')+'</strong></div>'
-    +(tk.porao?'<div><span style="color:var(--ink4);">Porão:</span><br><strong>'+tk.porao+'</strong></div>':'')
+    +'<div><span style="color:var(--ink4);">Conferente:</span><br><strong>'+esc(tk.conferente_nome||'—')+'</strong></div>'
+    +(tk.porao?'<div><span style="color:var(--ink4);">Porão:</span><br><strong>'+esc(tk.porao)+'</strong></div>':'')
     +(tk.tier?'<div><span style="color:var(--ink4);">Tier:</span><br><strong>Tier '+tk.tier+'</strong></div>':'')
     +'</div>'
     +lotesHtml
@@ -3343,7 +3559,8 @@ function validarTicket(id){
   if(!periodo){toast('Selecione o período de embarque','error');return;}
   showLd(true);
   // Tenta update com periodo; se a coluna não existir, faz sem ela
-  sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString(),periodo:periodo}).eq('id',id).then(function(r){
+  // .eq('status','emitido'): se outro conferente validou antes, não sobrescreve data/período
+  sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString(),periodo:periodo}).eq('id',id).eq('status','emitido').select('id').then(function(r){
     showLd(false);
     if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
       // coluna periodo não existe — valida sem ela e avisa para rodar o SQL
@@ -3357,6 +3574,7 @@ function validarTicket(id){
       return;
     }
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(!r.data||!r.data.length){toast('Este ticket já havia sido validado por outra pessoa.','error');buscarTicketVal();return;}
     toast('Embarque validado! Período: '+periodo,'success');
     document.getElementById('val-result').style.display='none';
     document.getElementById('val-code').value='';
@@ -3365,18 +3583,21 @@ function validarTicket(id){
 }
 function loadValidados(){
   if(!sb||!navioAtivo)return;
-  qAz(sb.from('wp_tickets')
-    .select(TK_COLS+',periodo')
-    .eq('navio_id',navioAtivo.id)
-    .eq('status','validado'),'armazem')
-    .order('validado_em',{ascending:false})
-    .then(function(r){
+  var nid=navioAtivo.id;
+  function montar(cols){
+    return function(){
+      return qAz(sb.from('wp_tickets').select(cols).eq('navio_id',nid).eq('status','validado'),'armazem')
+        .order('validado_em',{ascending:false}).order('id');
+    };
+  }
+  supaAll(montar(TK_COLS+',periodo')).then(function(r){
+      if(!navioAtivo||navioAtivo.id!==nid)return;
       // Se der erro de schema cache no periodo, tenta sem ele
       if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
-        qAz(sb.from('wp_tickets').select(TK_COLS).eq('navio_id',navioAtivo.id).eq('status','validado'),'armazem')
-          .order('validado_em',{ascending:false}).then(function(r2){renderValidados(r2.data||[]);});
+        supaAll(montar(TK_COLS)).then(function(r2){renderValidados(r2.data||[]);});
         return;
       }
+      if(r.error){toast('Erro ao carregar validados: '+r.error.message,'error');return;}
       renderValidados(r.data||[]);
     });
 }
@@ -3388,17 +3609,17 @@ function renderValidados(list){
       var nomeNavio=navioAtivo?navioAtivo.nome:'—';
       list.forEach(function(t){
         var itens=t.wp_ticket_itens||[];
-        var conf=t.conferente_nome||t.usuario_nome||'—';
+        var conf=t.conferente_nome||'—';
         var valEm=t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'—';
         if(!itens.length){
           rows+='<tr>'
             +'<td><input type="checkbox" class="val-row-chk" data-id="'+t.id+'" onchange="updateValBatchBar()" style="width:auto;cursor:pointer;"></td>'
-            +'<td><strong>'+t.numero+'</strong></td>'
-            +'<td>'+nomeNavio+'</td><td>'+(t.viagem||'—')+'</td>'
-            +'<td>'+(t.porao||'—')+'</td><td>'+(t.tier||'—')+'</td>'
+            +'<td><strong>'+esc(t.numero)+'</strong></td>'
+            +'<td>'+esc(nomeNavio)+'</td><td>'+esc(t.viagem||'—')+'</td>'
+            +'<td>'+esc(t.porao||'—')+'</td><td>'+esc(t.tier||'—')+'</td>'
             +'<td colspan="9" style="color:var(--ink4);">—</td>'
-            +'<td>0</td><td>0.000</td><td>0.000</td>'
-            +'<td>'+t.placa+'</td><td>'+t.motorista+'</td><td>'+conf+'</td><td>'+(t.periodo||'—')+'</td><td>'+valEm+'</td>'
+            +'<td>0</td><td>0,000</td><td>0,000</td>'
+            +'<td>'+esc(t.placa)+'</td><td>'+esc(t.motorista)+'</td><td>'+esc(conf)+'</td><td>'+esc(t.periodo||'—')+'</td><td>'+valEm+'</td>'
             +'<td><button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')">✏</button></td>'
             +'</tr>';
         } else {
@@ -3407,18 +3628,18 @@ function renderValidados(list){
               +(idx===0
                 ?'<td><input type="checkbox" class="val-row-chk" data-id="'+t.id+'" onchange="updateValBatchBar()" style="width:auto;cursor:pointer;"></td>'
                 :'<td></td>')
-              +'<td><strong>'+t.numero+'</strong></td>'
-              +'<td>'+nomeNavio+'</td><td>'+(t.viagem||'—')+'</td>'
-              +'<td>'+(t.porao||'—')+'</td><td>'+(t.tier||'—')+'</td>'
-              +'<td>'+(it.ref||'—')+'</td><td>'+(it.lote||'—')+'</td>'
-              +'<td>'+(it.marca||'—')+'</td><td>'+(it.shipper||'—')+'</td>'
-              +'<td>'+(it.porto_descarga||'—')+'</td><td>'+(it.commodity||'—')+'</td>'
-              +'<td>'+(it.armazem||t.armazem||'—')+'</td><td>'+(it.due||'—')+'</td>'
-              +'<td>'+(it.nf||'—')+'</td>'
+              +'<td><strong>'+esc(t.numero)+'</strong></td>'
+              +'<td>'+esc(nomeNavio)+'</td><td>'+esc(t.viagem||'—')+'</td>'
+              +'<td>'+esc(t.porao||'—')+'</td><td>'+esc(t.tier||'—')+'</td>'
+              +'<td>'+esc(it.ref||'—')+'</td><td>'+esc(it.lote||'—')+'</td>'
+              +'<td>'+esc(it.marca||'—')+'</td><td>'+esc(it.shipper||'—')+'</td>'
+              +'<td>'+esc(it.porto_descarga||'—')+'</td><td>'+esc(it.commodity||'—')+'</td>'
+              +'<td>'+esc(it.armazem||t.armazem||'—')+'</td><td>'+esc(it.due||'—')+'</td>'
+              +'<td>'+esc(it.nf||'—')+'</td>'
               +'<td>'+(it.quantidade||0)+'</td>'
               +'<td>'+fNum(it.cbm_calculado,4)+'</td>'
               +'<td>'+fNum(it.peso_calculado,3)+'</td>'
-              +'<td>'+t.placa+'</td><td>'+t.motorista+'</td><td>'+conf+'</td><td>'+(t.periodo||'—')+'</td><td>'+valEm+'</td>'
+              +'<td>'+esc(t.placa)+'</td><td>'+esc(t.motorista)+'</td><td>'+esc(conf)+'</td><td>'+esc(t.periodo||'—')+'</td><td>'+valEm+'</td>'
               +'<td>'+(idx===0?'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')">✏</button>':'')+'</td>'
               +'</tr>';
           });
@@ -3430,20 +3651,20 @@ function renderValidados(list){
 function exportValidados(){
   if(!sb||!navioAtivo){toast('Selecione um navio','error');return;}
   showLd(true);
-  sb.from('wp_tickets')
-    .select('*,wp_ticket_itens(*)')
-    .eq('navio_id',navioAtivo.id)
-    .eq('status','validado')
-    .order('validado_em',{ascending:false})
-    .then(function(r){
+  var nid=navioAtivo.id;
+  supaAll(function(){
+    return qAz(sb.from('wp_tickets').select('*,wp_ticket_itens(*)').eq('navio_id',nid).eq('status','validado'),'armazem')
+      .order('validado_em',{ascending:false}).order('id');
+  }).then(function(r){
       showLd(false);
+      if(r.error){toast('Erro: '+r.error.message,'error');return;}
       var list=r.data||[];
       if(!list.length){toast('Nenhum embarque validado para exportar','error');return;}
       var rows=[];
       var nomeNavio=navioAtivo?navioAtivo.nome:'—';
       list.forEach(function(t){
         var itens=t.wp_ticket_itens||[];
-        var conf=t.conferente_nome||t.usuario_nome||'—';
+        var conf=t.conferente_nome||'—';
         var valEm=t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'—';
         if(!itens.length){
           rows.push({
@@ -3489,13 +3710,16 @@ function loadDash(){
   showLd(true);
   var agora=new Date();
   var h24ago=new Date(agora.getTime()-24*60*60*1000).toISOString();
+  var nid=navioAtivo.id;
   Promise.all([
-    sb.from('wp_lista_carga').select('porto_descarga,quantidade,cbm_total').eq('navio_id',navioAtivo.id),
-    qAz(sb.from('wp_tickets').select('id,numero,status,periodo,porao,tier,placa,created_at,validado_em').eq('navio_id',navioAtivo.id),'armazem').order('created_at',{ascending:false}),
-    sb.from('wp_ticket_itens').select('ticket_id,porto_descarga,quantidade,cbm_calculado,peso_calculado'),
+    supaAll(function(){return sb.from('wp_lista_carga').select('id,porto_descarga,quantidade,cbm_total').eq('navio_id',nid).order('id');}),
+    supaAll(function(){return qAz(sb.from('wp_tickets').select('id,numero,status,periodo,porao,tier,placa,created_at,validado_em').eq('navio_id',nid),'armazem').order('created_at',{ascending:false}).order('id');}),
+    // só itens de tickets deste navio (antes trazia de todos os navios e cortava em 1000)
+    supaAll(function(){return sb.from('wp_ticket_itens').select('id,ticket_id,porto_descarga,quantidade,cbm_calculado,peso_calculado,wp_tickets!inner(navio_id)').eq('wp_tickets.navio_id',nid).order('id');}),
   ]).then(function(rs){
     showLd(false);
-    if(rs[0].error||rs[1].error||rs[2].error){toast('Erro ao carregar dashboard','error');return;}
+    if(!navioAtivo||navioAtivo.id!==nid)return;
+    if(rs[0].error||rs[1].error||rs[2].error){toast('Erro ao carregar dashboard: '+(rs[0].error||rs[1].error||rs[2].error).message,'error');return;}
     var lcarga=rs[0].data||[];
     var tks=rs[1].data||[];
     var itens=rs[2].data||[];
@@ -3574,13 +3798,13 @@ function loadDash(){
           :'<span class="bge info">Emitido</span>';
         var per=t.status==='validado'?(t.periodo||calcPeriodo(t.validado_em||t.created_at)):'—';
         return '<tr>'
-          +'<td><strong>'+t.numero+'</strong></td>'
-          +'<td>'+(t.porao||'—')+'</td>'
+          +'<td><strong>'+esc(t.numero)+'</strong></td>'
+          +'<td>'+esc(t.porao||'—')+'</td>'
           +'<td>'+(t.tier?'T'+t.tier:'—')+'</td>'
           +'<td>'+(per!=='—'?'<span style="font-weight:600;color:var(--w600);">'+per+'</span>':'—')+'</td>'
           +'<td>'+it.qtd+'</td>'
           +'<td>'+fNum(it.cbm,3)+'</td>'
-          +'<td>'+t.placa+'</td>'
+          +'<td>'+esc(t.placa)+'</td>'
           +'<td>'+st+'</td>'
           +'</tr>';
       }).join('');
@@ -3598,7 +3822,7 @@ function loadDash(){
       var cl=pct>=100?'pr':pct>=60?'py':'pg';
       prgHtml+='<div style="margin-bottom:12px;">'
         +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">'
-          +'<strong>'+p+'</strong>'
+          +'<strong>'+esc(p)+'</strong>'
           +'<span style="color:var(--ink4);">'+done+' / '+tot+' pçs ('+pct+'%)</span>'
         +'</div>'
         +'<div class="pw"><div class="pb '+cl+'" style="width:'+pct+'%"></div></div>'
@@ -3618,7 +3842,7 @@ function toast(msg,type){
   var c=document.getElementById('tw'),el=document.createElement('div');
   el.className='toast '+(type||'');
   var ic={success:'✓',error:'✕',info:'ℹ'};
-  el.innerHTML='<span style="font-size:15px;">'+(ic[type]||'ℹ')+'</span><div class="tm"><strong>'+(type==='success'?'Sucesso':type==='error'?'Erro':'Info')+'</strong>'+msg+'</div>';
+  el.innerHTML='<span style="font-size:15px;">'+(ic[type]||'ℹ')+'</span><div class="tm"><strong>'+(type==='success'?'Sucesso':type==='error'?'Erro':'Info')+'</strong>'+esc(msg)+'</div>';
   c.appendChild(el);
   setTimeout(function(){el.style.animation='slo .3s ease forwards';setTimeout(function(){el.remove();},300);},(type==='error'?7000:3500));
 }
@@ -3635,15 +3859,15 @@ function openEdit(title,fields,table,id,cb){
     if(f.type==='select'){
       return '<div class="fg"><label class="fl">'+f.label+'</label>'
         +'<select id="ef-'+f.key+'">'
-        +f.options.map(function(o){return '<option value="'+o.v+'"'+(o.v==f.val?' selected':'')+'>'+o.l+'</option>';}).join('')
+        +f.options.map(function(o){return '<option value="'+esc(o.v)+'"'+(o.v==f.val?' selected':'')+'>'+esc(o.l)+'</option>';}).join('')
         +'</select></div>';
     }
     if(f.type==='textarea'){
       return '<div class="fg"><label class="fl">'+f.label+'</label>'
-        +'<textarea id="ef-'+f.key+'" rows="2">'+( f.val||'')+'</textarea></div>';
+        +'<textarea id="ef-'+f.key+'" rows="2">'+esc(f.val)+'</textarea></div>';
     }
     return '<div class="fg"><label class="fl">'+f.label+'</label>'
-      +'<input type="'+(f.type||'text')+'" id="ef-'+f.key+'" value="'+(f.val||'')+'" placeholder="'+(f.ph||'')+'"></div>';
+      +'<input type="'+(f.type||'text')+'" id="ef-'+f.key+'" value="'+esc(f.val===0?0:(f.val||''))+'" placeholder="'+esc(f.ph||'')+'"></div>';
   }).join('');
   // layout em 2 colunas se muitos campos
   if(fields.length>4)body.className='gr g2';else body.className='gr';
@@ -3691,12 +3915,12 @@ function editNavio(id){
   body.className='gr';body.style.gap='13px';
   body.innerHTML=''
     +'<div class="gr g2" style="gap:10px;">'
-      +'<div class="fg"><label class="fl">Nome do Navio</label><input type="text" id="en-nome" value="'+( n.nome||'')+'"></div>'
-      +'<div class="fg"><label class="fl">Código</label><input type="text" id="en-cod" value="'+(n.codigo||'')+'"></div>'
+      +'<div class="fg"><label class="fl">Nome do Navio</label><input type="text" id="en-nome" value="'+esc(n.nome)+'"></div>'
+      +'<div class="fg"><label class="fl">Código</label><input type="text" id="en-cod" value="'+esc(n.codigo)+'"></div>'
     +'</div>'
     +'<div class="gr g2" style="gap:10px;">'
-      +'<div class="fg"><label class="fl">Viagem Nº</label><input type="text" id="en-viagem" value="'+(n.viagem||'')+'"></div>'
-      +'<div class="fg"><label class="fl">Porto de Origem</label><input type="text" id="en-origem" value="'+(n.porto_origem||'')+'"></div>'
+      +'<div class="fg"><label class="fl">Viagem Nº</label><input type="text" id="en-viagem" value="'+esc(n.viagem)+'"></div>'
+      +'<div class="fg"><label class="fl">Porto de Origem</label><input type="text" id="en-origem" value="'+esc(n.porto_origem)+'"></div>'
     +'</div>'
     +'<div class="gr g2" style="gap:10px;">'
       +'<div class="fg"><label class="fl">ETA</label><input type="date" id="en-eta" value="'+(n.eta||'')+'"></div>'
@@ -3744,10 +3968,11 @@ function editUser(id){
   openEdit('Editar Usuário',[
     {key:'nome',label:'Nome completo',val:u.nome,ph:'Nome'},
     {key:'login',label:'Login',val:u.login,ph:'joao.silva'},
-    {key:'senha_hash',label:'Nova senha (deixe em branco para manter)',val:'',ph:'••••••'},
+    {key:'nova_senha',label:'Nova senha (deixe em branco para manter)',type:'password',val:'',ph:'••••••'},
+    {key:'ativo',label:'Situação',type:'select',val:u.ativo===false?'0':'1',options:[{v:'1',l:'Ativo'},{v:'0',l:'Inativo (bloqueia o acesso)'}]},
     {key:'perfil',label:'Perfil',type:'select',val:u.perfil,options:[
-      {v:'conferente',l:'Conferente'},{v:'supervisor',l:'Supervisor'},{v:'admin',l:'Administrador'}
-    ]},
+      {v:'conferente',l:'Conferente'},{v:'supervisor',l:'Supervisor'}
+    ].concat(perfil==='admin'?[{v:'admin',l:'Administrador'}]:[])},
   ],'wp_usuarios',id,loadUsers);
 
   // Substitui o campo armazém do modal genérico por checkboxes
@@ -3770,15 +3995,21 @@ function editUser(id){
     var armazem=getAzChecked('ef-armazem-wrap');
     if(!armazem){toast('Selecione pelo menos um armazém','error');return;}
     var payload={
-      nome:document.getElementById('ef-nome').value.trim()||null,
-      login:document.getElementById('ef-login').value.trim()||null,
-      perfil:document.getElementById('ef-perfil').value,
-      armazem:armazem,
+      p_id:id,
+      p_nome:document.getElementById('ef-nome').value.trim()||null,
+      p_login:document.getElementById('ef-login').value.trim().toLowerCase()||null,
+      p_perfil:document.getElementById('ef-perfil').value,
+      p_armazem:armazem,
+      p_ativo:document.getElementById('ef-ativo').value==='1',
+      p_senha:document.getElementById('ef-nova_senha').value||null,
     };
-    var pass=document.getElementById('ef-senha_hash').value.trim();
-    if(pass) payload.senha_hash=hashPass(pass);
+    if(perfil!=='admin'&&payload.p_perfil==='admin'){toast('Apenas administradores podem conceder perfil de admin','error');return;}
+    if(!payload.p_nome||!payload.p_login){toast('Nome e login são obrigatórios','error');return;}
+    if(!/^[a-z0-9._-]{2,}$/.test(payload.p_login)){toast('Login inválido: use letras, números, ponto, hífen ou _','error');return;}
+    if(payload.p_senha&&payload.p_senha.length<6){toast('Senha mínima de 6 caracteres','error');return;}
     showLd(true);
-    sb.from('wp_usuarios').update(payload).eq('id',id).then(function(r){
+    // validação de permissão é feita no banco (wp_admin_atualizar_usuario)
+    sb.rpc('wp_admin_atualizar_usuario',payload).then(function(r){
       showLd(false);
       if(r.error){toast('Erro: '+r.error.message,'error');return;}
       toast('Usuário atualizado!','success');closeEdit();loadUsers();
@@ -3812,6 +4043,8 @@ function editTicket(id){
     } else {
       for(var j=1;j<=10;j++)poraoOpts.push({v:'#'+String(j).padStart(2,'0'),l:'Porão #'+String(j).padStart(2,'0')});
     }
+    // mantém o porão gravado mesmo que não esteja mais na lista do navio (senão salvar apagava o porão)
+    if(tk.porao&&!poraoOpts.some(function(o){return o.v===tk.porao;}))poraoOpts.push({v:tk.porao,l:'Porão '+tk.porao});
     var tierOpts=[{v:'',l:'— selecione —'}];
     for(var t=1;t<=12;t++)tierOpts.push({v:String(t),l:'Tier '+t});
 
@@ -3822,30 +4055,30 @@ function editTicket(id){
 
     var itensHtml=itens.map(function(it,i){
       return '<div style="background:var(--s3);border:1px solid var(--bds);border-radius:var(--rsm);padding:12px;">'
-        +'<div style="font-size:11px;font-weight:600;color:var(--w600);margin-bottom:8px;text-transform:uppercase;">Lote '+(i+1)+' — Ref '+(it.ref||'—')+' / '+it.lote+'</div>'
+        +'<div style="font-size:11px;font-weight:600;color:var(--w600);margin-bottom:8px;text-transform:uppercase;">Lote '+(i+1)+' — Ref '+esc(it.ref||'—')+' / '+esc(it.lote)+'</div>'
         +'<div class="gr g2" style="gap:8px;">'
-        +'<div class="fg"><label class="fl">NF <span class="req">*</span></label><input type="text" class="eit-nf" data-id="'+it.id+'" value="'+(it.nf||'')+'" placeholder="NF obrigatório"></div>'
+        +'<div class="fg"><label class="fl">NF <span class="req">*</span></label><input type="text" class="eit-nf" data-id="'+it.id+'" value="'+esc(it.nf)+'" placeholder="NF obrigatório"></div>'
         +'<div class="fg"><label class="fl">Quantidade</label><input type="number" class="eit-qtd" data-id="'+it.id+'" value="'+(it.quantidade||0)+'" min="1"></div>'
-        +'<div class="fg"><label class="fl">DUE / RUC</label><input type="text" class="eit-due" data-id="'+it.id+'" value="'+(it.due||'')+'"></div>'
-        +'<div class="fg"><label class="fl">Porto Descarga</label><input type="text" class="eit-porto" data-id="'+it.id+'" value="'+(it.porto_descarga||'')+'"></div>'
+        +'<div class="fg"><label class="fl">DUE / RUC</label><input type="text" class="eit-due" data-id="'+it.id+'" value="'+esc(it.due)+'"></div>'
+        +'<div class="fg"><label class="fl">Porto Descarga</label><input type="text" class="eit-porto" data-id="'+it.id+'" value="'+esc(it.porto_descarga)+'"></div>'
         +'</div></div>';
     }).join('');
 
     body.innerHTML=''
       +'<div class="gr g2" style="gap:10px;">'
-        +'<div class="fg"><label class="fl">Placa</label><input type="text" id="ef-placa" value="'+(tk.placa||'')+'" style="text-transform:uppercase;"></div>'
-        +'<div class="fg"><label class="fl">Motorista</label><input type="text" id="ef-motorista" value="'+(tk.motorista||'')+'"></div>'
+        +'<div class="fg"><label class="fl">Placa</label><input type="text" id="ef-placa" value="'+esc(tk.placa)+'" style="text-transform:uppercase;"></div>'
+        +'<div class="fg"><label class="fl">Motorista</label><input type="text" id="ef-motorista" value="'+esc(tk.motorista)+'"></div>'
       +'</div>'
       +'<div class="gr g3" style="gap:10px;">'
         +'<div class="fg"><label class="fl">Porão</label>'
-          +'<select id="ef-porao">'+poraoOpts.map(function(o){return '<option value="'+o.v+'"'+(o.v===tk.porao?' selected':'')+'>'+o.l+'</option>';}).join('')+'</select>'
+          +'<select id="ef-porao">'+poraoOpts.map(function(o){return '<option value="'+esc(o.v)+'"'+(o.v===tk.porao?' selected':'')+'>'+esc(o.l)+'</option>';}).join('')+'</select>'
         +'</div>'
         +'<div class="fg"><label class="fl">Tier</label>'
           +'<select id="ef-tier">'+tierOpts.map(function(o){return '<option value="'+o.v+'"'+(o.v===String(tk.tier||'')?' selected':'')+'>'+o.l+'</option>';}).join('')+'</select>'
         +'</div>'
-        +'<div class="fg"><label class="fl">Viagem do Tier</label><input type="text" id="ef-viagem" value="'+(tk.viagem||'')+'"></div>'
+        +'<div class="fg"><label class="fl">Viagem do Tier</label><input type="text" id="ef-viagem" value="'+esc(tk.viagem)+'"></div>'
       +'</div>'
-      +'<div class="fg"><label class="fl">Observações</label><textarea id="ef-observacoes" rows="2">'+(tk.observacoes||'')+'</textarea></div>'
+      +'<div class="fg"><label class="fl">Observações</label><textarea id="ef-observacoes" rows="2">'+esc(tk.observacoes)+'</textarea></div>'
       +(itensHtml?'<div style="font-size:12px;font-weight:600;color:var(--ink3);margin-top:4px;">Itens do Ticket</div>'+itensHtml:'');
 
     document.getElementById('edit-save-btn').onclick=function(){
@@ -3869,25 +4102,57 @@ function editTicket(id){
         var qtdEl=body.querySelector('.eit-qtd[data-id="'+iid+'"]');
         var dueEl=body.querySelector('.eit-due[data-id="'+iid+'"]');
         var portoEl=body.querySelector('.eit-porto[data-id="'+iid+'"]');
+        var orig=itens.find(function(x){return x.id===iid;})||{};
         itensPayload.push({
           id:iid,
+          lista_id:orig.lista_id||null,
+          qtdOrig:parseInt(orig.quantidade)||0,
+          cbmOrig:parseFloat(orig.cbm_calculado)||0,
+          pesoOrig:parseFloat(orig.peso_calculado)||0,
           nf:el.value.trim(),
           quantidade:parseInt(qtdEl?qtdEl.value:0)||0,
           due:dueEl?dueEl.value.trim()||null:null,
           porto_descarga:portoEl?portoEl.value.trim()||null:null,
         });
       });
+      if(itensPayload.some(function(it){return it.quantidade<1;})){toast('Quantidade deve ser maior que zero','error');return;}
+      // confere saldo dos lotes cujos itens aumentaram de quantidade
+      var aumento={};
+      itensPayload.forEach(function(it){
+        if(it.lista_id&&it.quantidade>it.qtdOrig)aumento[it.lista_id]=(aumento[it.lista_id]||0)+(it.quantidade-it.qtdOrig);
+      });
+      var idsAum=Object.keys(aumento);
       showLd(true);
-      sb.from('wp_tickets').update({placa,motorista,porao,tier,viagem,observacoes:obs}).eq('id',id).then(function(r){
-        if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
-        // atualiza cada item
-        var updates=itensPayload.map(function(it){
-          var itId=it.id;var payload={nf:it.nf,quantidade:it.quantidade,due:it.due,porto_descarga:it.porto_descarga};
-          return sb.from('wp_ticket_itens').update(payload).eq('id',itId);
+      Promise.all([
+        fetchUsadoPorLista(idsAum),
+        idsAum.length?sb.from('wp_lista_carga').select('id,lote,ref,quantidade').in('id',idsAum):Promise.resolve({data:[]}),
+      ]).then(function(rs){
+        if(rs[0].error||rs[1].error){showLd(false);toast('Erro ao conferir saldo','error');return;}
+        var estouro=[];
+        (rs[1].data||[]).forEach(function(l){
+          var saldo=(parseInt(l.quantidade)||0)-(rs[0].map[l.id]||0);
+          if(aumento[l.id]>saldo)estouro.push('Ref '+(l.ref||'—')+' / '+l.lote+': +'+aumento[l.id]+', saldo '+Math.max(0,saldo));
         });
-        Promise.all(updates).then(function(){
-          showLd(false);toast('Ticket atualizado!','success');
-          closeEdit();loadTickets();loadValidados();
+        if(estouro.length){showLd(false);toast('Saldo insuficiente — '+estouro.join(' · '),'error');return;}
+        sb.from('wp_tickets').update({placa,motorista,porao,tier,viagem,observacoes:obs}).eq('id',id).then(function(r){
+          if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
+          // atualiza cada item
+          var updates=itensPayload.map(function(it){
+            var payload={nf:it.nf,quantidade:it.quantidade,due:it.due,porto_descarga:it.porto_descarga};
+            // quantidade mudou → recalcula CBM e peso proporcionalmente (antes ficavam com o valor antigo)
+            if(it.quantidade!==it.qtdOrig&&it.qtdOrig>0){
+              payload.cbm_calculado=it.cbmOrig/it.qtdOrig*it.quantidade;
+              payload.peso_calculado=it.pesoOrig/it.qtdOrig*it.quantidade;
+            }
+            return sb.from('wp_ticket_itens').update(payload).eq('id',it.id);
+          });
+          Promise.all(updates).then(function(res){
+            showLd(false);
+            var err=res.filter(function(x){return x.error;});
+            if(err.length){toast('Ticket salvo, mas '+err.length+' item(ns) falharam: '+err[0].error.message,'error');}
+            else toast('Ticket atualizado!','success');
+            closeEdit();loadTickets();loadValidados();
+          });
         });
       });
     };
@@ -3897,6 +4162,7 @@ function editTicket(id){
 
 // ── EDITAR LISTA DE CARGA ──
 function editLista(id){
+  if(!isSupOrAdmin()){toast('Apenas supervisores e administradores editam a lista de carga','error');return;}
   var l=listaAll.find(function(x){return x.id===id;});
   if(!l){toast('Lote não encontrado','error');return;}
   openEdit('Editar Lote — Ref '+(l.ref||'?')+' / '+l.lote,[
@@ -4000,10 +4266,10 @@ function deleteSelectedLista(){
   if(!ids.length)return;
   if(!confirm('Excluir '+ids.length+' lote(s) selecionado(s)? Esta ação não pode ser desfeita.'))return;
   showLd(true);
-  sb.from('wp_lista_carga').delete().in('id',ids).then(function(r){
+  sb.from('wp_lista_carga').delete().in('id',ids).select('id').then(function(r){
     showLd(false);
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    toast(ids.length+' lote(s) excluído(s)','success');clearListaSelection();loadLista();
+    avisoExclusao((r.data||[]).length,ids.length,'lote(s)');clearListaSelection();loadLista();
   });
 }
 function deleteAllNavio(){
@@ -4011,11 +4277,11 @@ function deleteAllNavio(){
   if(!navioAtivo){toast('Nenhum navio selecionado','error');return;}
   if(!confirm('⚠ ATENÇÃO: Excluir TODA a lista de carga do navio "'+navioAtivo.nome+'"?\nIsso excluirá todos os '+listaAll.length+' lotes. Esta ação não pode ser desfeita.'))return;
   showLd(true);
-  var query=qAz(sb.from('wp_lista_carga').delete().eq('navio_id',navioAtivo.id),'armazem');
+  var query=qAz(sb.from('wp_lista_carga').delete().eq('navio_id',navioAtivo.id),'armazem').select('id');
   query.then(function(r){
     showLd(false);
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    toast('Lista de carga do navio excluída!','success');loadLista();
+    avisoExclusao((r.data||[]).length,listaAll.length,'lote(s)');loadLista();
   });
 }
 
@@ -4053,10 +4319,10 @@ function deleteSelectedTickets(){
   if(forbidden.length){toast('Sem permissão para excluir '+forbidden.length+' ticket(s)','error');return;}
   if(!confirm('Excluir '+ids.length+' ticket(s) selecionado(s)? Os itens vinculados também serão excluídos.'))return;
   showLd(true);
-  sb.from('wp_tickets').delete().in('id',ids).then(function(r){
+  sb.from('wp_tickets').delete().in('id',ids).select('id').then(function(r){
     showLd(false);
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    toast(ids.length+' ticket(s) excluído(s)','success');clearTicketSelection();loadTickets();
+    avisoExclusao((r.data||[]).length,ids.length,'ticket(s)');clearTicketSelection();loadTickets();
   });
 }
 
@@ -4091,10 +4357,10 @@ function deleteSelectedValidados(){
   if(forbidden.length&&currentUser.perfil!=='admin'){toast('Sem permissão para excluir estes registros','error');return;}
   if(!confirm('Excluir '+ids.length+' embarque(s) validado(s)? Os itens vinculados também serão excluídos. Esta ação não pode ser desfeita.'))return;
   showLd(true);
-  sb.from('wp_tickets').delete().in('id',ids).then(function(r){
+  sb.from('wp_tickets').delete().in('id',ids).select('id').then(function(r){
     showLd(false);
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    toast(ids.length+' embarque(s) excluído(s)','success');clearValSelection();loadValidados();
+    avisoExclusao((r.data||[]).length,ids.length,'embarque(s)');clearValSelection();loadValidados();
   });
 }
 
@@ -4125,6 +4391,13 @@ function canDelete(table, row){
   return false;
 }
 
+// O banco (RLS) ignora sem erro o que o usuário não pode apagar — informa a diferença
+function avisoExclusao(feitos,pedidos,nome){
+  if(feitos>=pedidos)toast(feitos+' '+nome+' excluído(s)','success');
+  else if(feitos>0)toast(feitos+' de '+pedidos+' '+nome+' excluído(s) — os demais são de outro armazém (sem permissão)','error');
+  else toast('Nenhum registro excluído — sem permissão','error');
+}
+
 function confirmDel(table,id,cb){
   if(!canDelete(table,{id:id})){
     toast('Sem permissão para excluir este registro','error');
@@ -4132,9 +4405,14 @@ function confirmDel(table,id,cb){
   }
   document.getElementById('del-ok').onclick=function(){
     showLd(true);
-    sb.from(table).delete().eq('id',id).then(function(r){
+    var op=table==='wp_usuarios'
+      ?sb.rpc('wp_admin_excluir_usuario',{p_id:id}) // apaga também a conta do Auth
+      :sb.from(table).delete().eq('id',id).select('id');
+    op.then(function(r){
       showLd(false);document.getElementById('del-modal').style.display='none';
       if(r.error){toast('Erro: '+r.error.message,'error');return;}
+      // RLS bloqueia em silêncio: delete "ok" sem linha apagada = sem permissão
+      if(table!=='wp_usuarios'&&(!r.data||!r.data.length)){toast('Nada foi excluído — sem permissão para este registro','error');return;}
       toast('Excluído','success');if(cb)cb();
     });
   };
