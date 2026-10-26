@@ -408,6 +408,15 @@ tbody tr:hover{background:#FAFBF9;}
 #sb.collapsed .nv-sub{display:none !important;}
 #sb.collapsed .nv-mod{justify-content:center;padding:10px;margin:1px 4px;width:calc(100% - 8px);}
 #sb.collapsed .nv-mod .chev{display:none;}
+/* autocompletar (motorista, CPF, placas) */
+.ac-dd{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--bdr);border-radius:10px;box-shadow:var(--shlg);z-index:60;max-height:300px;overflow-y:auto;}
+.ac-it{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:50px;padding:9px 12px;border:none;border-bottom:1px solid var(--s3);background:#fff;text-align:left;cursor:pointer;font-family:inherit;}
+.ac-it:last-child{border-bottom:none;}
+.ac-it b{font-size:14px;color:var(--ink);font-weight:600;}
+.ac-it span{font-size:12px;color:var(--ink3);}
+.ac-it.on,.ac-it:hover{background:var(--w50);}
+/* seletor de armador */
+.arm-sel button{font-family:inherit;font-weight:600;min-width:104px;height:44px;}
 /* abas internas (estoque) */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--bds);margin-bottom:16px;overflow-x:auto;}
 .tabs button{height:44px;padding:0 16px;border:none;background:none;border-bottom:3px solid transparent;font-size:14px;font-weight:500;color:var(--ink3);cursor:pointer;white-space:nowrap;}
@@ -564,6 +573,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div class="nv-sub">
         <button class="nv" onclick="go('usuarios')" id="nav-usuarios"><span class="nv-label">Usuários</span></button>
         <button class="nv" onclick="go('navio')"><span class="nv-label">Navios</span></button>
+        <button class="nv" onclick="go('cadastros')"><span class="nv-label">Motoristas e veículos</span></button>
         <button class="nv" onclick="go('backup')"><span class="nv-label">Backup &amp; Restore</span></button>
         <button class="nv" onclick="go('impressoras')"><span class="nv-label">Impressoras</span></button>
         <button class="nv" onclick="go('rel-admin')"><span class="nv-label">Relatórios</span></button>
@@ -856,13 +866,14 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
               <span style="font-size:11px;color:var(--ink4);">Marque apenas os porões que serão utilizados neste navio</span>
             </div>
             <div class="fg"><label class="fl">ETA</label><input type="date" id="nv-eta"></div>
+            <div class="fg"><label class="fl" for="nv-armador">Armador <span class="req">*</span></label><select id="nv-armador"><option>G2 Ocean</option><option>AB</option></select></div>
             <button class="btn bp" onclick="salvarNavio()">💾 Cadastrar</button>
             <p style="font-size:12px;color:var(--ink3);line-height:1.5;">Depois de cadastrar, use <strong>Plano de estiva</strong> na lista ao lado para definir as camadas de cada porão e os portos de cada camada.</p>
           </div>
         </div>
         <div class="card">
           <div class="ch"><div class="ct">Navios Cadastrados</div></div>
-          <div class="tw"><table><thead><tr><th>Nome</th><th>Código</th><th>Viagem</th><th>Porões</th><th>Plano de estiva</th><th>ETA</th><th></th></tr></thead><tbody id="nv-tb"></tbody></table></div>
+          <div class="tw"><table><thead><tr><th>Nome</th><th>Código</th><th>Viagem</th><th>Armador</th><th>Porões</th><th>Plano de estiva</th><th>ETA</th><th></th></tr></thead><tbody id="nv-tb"></tbody></table></div>
           <div id="nv-empty" class="empty" style="display:none;"><div class="ei">⚓</div><h3>Nenhum navio</h3></div>
         </div>
       </div>
@@ -974,12 +985,18 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
           <div class="gr" style="gap:14px;">
             <div class="passo"><i>1</i><b>Caminhão</b></div>
             <div class="gr g2">
-              <div class="fg"><label class="fl" for="tk-placa">Placa <span class="req">*</span></label>
-                <input type="text" id="tk-placa" placeholder="ABC1D23 ou ABC-1234" maxlength="8" oninput="fmtPlaca(this)" style="text-transform:uppercase;letter-spacing:1px;">
+              <div class="fg"><label class="fl" for="tk-placa">Placa do caminhão <span class="req">*</span></label>
+                <input type="text" id="tk-placa" placeholder="ABC1D23 ou ABC-1234" maxlength="8" oninput="fmtPlaca(this);if(nPlaca(this.value).length===7)aoDefinirPlaca()" style="text-transform:uppercase;letter-spacing:1px;">
                 <span id="placa-hint" style="font-size:11px;color:var(--ink4);"></span>
               </div>
-              <div class="fg"><label class="fl">Motorista <span class="req">*</span></label><input type="text" id="tk-motorista" placeholder="Nome completo"></div>
+              <div class="fg"><label class="fl" for="tk-carreta">Placa da carreta</label>
+                <input type="text" id="tk-carreta" placeholder="opcional" maxlength="8" oninput="fmtPlacaSimples(this)" style="text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);"></div>
             </div>
+            <div class="gr g2">
+              <div class="fg"><label class="fl" for="tk-motorista">Motorista <span class="req">*</span></label><input type="text" id="tk-motorista" placeholder="Nome ou CPF para buscar" onchange="aoDefinirMotoristaNome()"></div>
+              <div class="fg"><label class="fl" for="tk-cpf">CPF do motorista <span class="req">*</span></label><input type="text" id="tk-cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="onCpfInput(this)" style="font-family:var(--mono);"></div>
+            </div>
+            <div id="tk-mot-hint" style="font-size:12px;color:var(--ink3);margin-top:-6px;min-height:0;"></div>
             <input type="hidden" id="tk-conf-nome">
             <div class="passo"><i>2</i><b>Destino a bordo</b><span>fica guardado para o próximo caminhão</span></div>
             <div class="fg"><label class="fl" for="tk-porto-desc">Porto de descarga <span class="req">*</span></label>
@@ -1012,6 +1029,11 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
                 <select id="tk-impressora" onchange="salvarImpressoraEscolhida(this.value);atualizarStatusImpressoraForm()" style="width:100%;margin-top:5px;"></select>
                 <span id="tk-imp-status" style="font-size:12px;display:block;margin-top:4px;"></span>
               </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span class="fl" style="color:var(--side-mut);margin:0;">Vias</span>
+                <div class="stepper" style="height:42px;width:140px;"><button type="button" aria-label="Menos vias" onclick="passoVias(-1)">−</button><span id="tk-vias" aria-live="polite">1</span><button type="button" aria-label="Mais vias" onclick="passoVias(1)">+</button></div>
+                <span style="font-size:12px;color:var(--side-mut);">cada via sai com corte</span>
+              </div>
               <button class="btn-emitir" onclick="emitirTicket()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Emitir e imprimir</button>
             </div>
@@ -1025,8 +1047,8 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
           <!-- barra de ações em lote -->
           <div id="tk-batch-bar" style="display:none;background:var(--w50);border:1px solid var(--w200);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
             <span id="tk-sel-count" style="font-size:13px;font-weight:600;color:var(--w700);">0 selecionados</span>
-            <button class="btn bd bsm" onclick="deleteSelectedTickets()">🗑 Excluir selecionados</button>
-            <button class="btn bs bsm" onclick="clearTicketSelection()">✕ Cancelar</button>
+            <button class="btn bd bsm" onclick="cancelarSelecionadosTickets()">⊘ Cancelar tickets selecionados</button>
+            <button class="btn bs bsm" onclick="clearTicketSelection()">Limpar seleção</button>
           </div>
           <div class="tw"><table><thead><tr>
             <th style="width:30px;"><input type="checkbox" id="tk-chk-all" onchange="toggleAllTickets(this)" style="width:auto;cursor:pointer;"></th>
@@ -1060,7 +1082,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
             <div class="fg">
               <label class="fl" for="val-code">Ou digite o número do ticket</label>
               <div style="display:flex;gap:8px;">
-                <input type="text" id="val-code" placeholder="TK-…" autocapitalize="characters" oninput="onValInput(this.value)" style="flex:1;min-width:0;">
+                <input type="text" id="val-code" placeholder="Nº do ticket — ex.: 15 ou KWA2602-015" autocapitalize="characters" oninput="onValInput(this.value)" onkeydown="if(event.key==='Enter')buscarTicketVal()" style="flex:1;min-width:0;">
                 <button class="btn bs" onclick="buscarTicketVal()" style="min-height:52px;">Buscar</button>
               </div>
             </div>
@@ -1093,8 +1115,8 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
           <!-- barra de ações em lote -->
           <div id="val-batch-bar" style="display:none;background:var(--w50);border:1px solid var(--w200);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
             <span id="val-sel-count" style="font-size:13px;font-weight:600;color:var(--w700);">0 selecionados</span>
-            <button class="btn bd bsm" onclick="deleteSelectedValidados()">🗑 Excluir selecionados</button>
-            <button class="btn bs bsm" onclick="clearValSelection()">✕ Cancelar</button>
+            <button class="btn bd bsm" onclick="cancelarSelecionadosValidados()" title="Só administrador: estorna o embarque">⊘ Cancelar embarques (estorno)</button>
+            <button class="btn bs bsm" onclick="clearValSelection()">Limpar seleção</button>
           </div>
           <div class="tw"><table id="val-report-table"><thead><tr>
             <th style="width:30px;"><input type="checkbox" id="val-chk-all" onchange="toggleAllValidados(this)" style="width:auto;cursor:pointer;"></th>
@@ -1164,6 +1186,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div class="sh" style="align-items:flex-end;">
         <div><h2>Estoque</h2><div class="sub">Entra pela descarga · sai pelo embarque validado (primeiro que entra, primeiro que sai)</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <div class="seg arm-sel" role="group" aria-label="Armador"></div>
           <label class="fl" for="est-az" style="margin:0;">Armazém</label>
           <select id="est-az" onchange="estRender()" style="width:auto;min-width:150px;"></select>
           <button class="btn bs" onclick="estAbrir(true)" aria-label="Atualizar estoque">↻</button>
@@ -1204,7 +1227,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div class="est-aba" id="est-descargas" style="display:none;">
         <div class="spl sp2">
           <div class="card">
-            <div class="ch"><div class="ct">Lançar descarga</div></div>
+            <div class="ch"><div><div class="ct">Lançar descarga</div><div class="cs">Armador: <strong class="arm-nome"></strong></div></div></div>
             <div class="gr" style="gap:12px;">
               <div class="gr g2">
                 <div class="fg"><label class="fl" for="ed-data">Data <span class="req">*</span></label><input type="date" id="ed-data"></div>
@@ -1343,9 +1366,9 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
 
     <!-- ARMAZENAGEM -->
     <div class="page" id="page-armazenagem">
-      <div class="sh"><div><h2>Armazenagem</h2><div class="sub">m³ × dias além dos dias livres × tarifa do armazém, por produtor</div></div></div>
+      <div class="sh" style="align-items:flex-end;"><div><h2>Armazenagem</h2><div class="sub">m³ × dias além dos dias livres × tarifa do armador no armazém, por produtor</div></div><div class="seg arm-sel" role="group" aria-label="Armador"></div></div>
       <div class="card" style="margin-bottom:14px;">
-        <div class="ch"><div class="ct">Tarifas por armazém</div></div>
+        <div class="ch"><div class="ct">Tarifas por armazém — <span class="arm-nome"></span></div></div>
         <div class="tw"><table><thead><tr><th>Armazém</th><th>Tarifa (R$ por m³ por dia)</th><th>Dias livres</th><th></th></tr></thead><tbody id="ar-tarifas"></tbody></table></div>
       </div>
       <div class="card" style="margin-bottom:14px;">
@@ -1373,7 +1396,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
 
     <!-- ARMAZÉM › RELATÓRIOS -->
     <div class="page" id="page-rel-armazem">
-      <div class="sh"><div><h2>Relatórios do armazém</h2><div class="sub">Movimentação, entradas por produtor e idade do estoque</div></div></div>
+      <div class="sh" style="align-items:flex-end;"><div><h2>Relatórios do armazém</h2><div class="sub">Movimentação, entradas por produtor e idade do estoque</div></div><div class="seg arm-sel" role="group" aria-label="Armador"></div></div>
       <div class="tabs" role="tablist" id="ra-tabs">
         <button role="tab" data-rel="mov" class="on" onclick="raAba('mov')">Movimentação do período</button>
         <button role="tab" data-rel="prod" onclick="raAba('prod')">Entradas por produtor</button>
@@ -1415,6 +1438,72 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div class="card">
         <div class="ch"><div class="ct" id="rd-titulo">—</div><span class="cs" id="rd-info"></span></div>
         <div class="tw"><table id="rd-tab"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ADMINISTRAÇÃO › MOTORISTAS E VEÍCULOS -->
+    <div class="page" id="page-cadastros">
+      <div class="sh"><div><h2>Motoristas e veículos</h2><div class="sub">Base para preencher sozinho o motorista, o CPF e as placas na emissão do ticket</div></div>
+        <button class="btn bs" onclick="cdAbrir(true)" aria-label="Atualizar">↻</button></div>
+      <div class="tabs" role="tablist" id="cd-tabs">
+        <button role="tab" data-aba="mot" class="on" onclick="cdAba('mot')">Motoristas</button>
+        <button role="tab" data-aba="vei" onclick="cdAba('vei')">Caminhões e carretas</button>
+      </div>
+
+      <div class="cd-aba" id="cd-mot">
+        <div class="spl sp2">
+          <div class="card">
+            <div class="ch"><div class="ct" id="cm-titulo">Novo motorista</div></div>
+            <input type="hidden" id="cm-id">
+            <div class="gr" style="gap:12px;">
+              <div class="fg"><label class="fl" for="cm-nome">Nome completo <span class="req">*</span></label><input id="cm-nome"></div>
+              <div class="fg"><label class="fl" for="cm-cpf">CPF <span class="req">*</span></label><input id="cm-cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" oninput="mascaraCpf(this)" style="font-family:var(--mono);"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn bp" onclick="salvarMotorista()">💾 Salvar</button><button class="btn bs" onclick="limparMotoristaForm()">Limpar</button></div>
+              <hr>
+              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar do Excel — colunas <strong>NOME</strong> e <strong>CPF</strong>. CPF já cadastrado tem o nome atualizado; CPF inválido é apontado e não entra.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn bs" onclick="document.getElementById('cm-file').click()">⬆ Importar motoristas</button>
+                <button class="btn bs bsm" onclick="baixarModeloCad('mot')">⬇ Modelo</button>
+                <input type="file" id="cm-file" accept=".xlsx,.xls,.csv" hidden onchange="importarMotoristas(this)">
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ct">Motoristas <span class="cs" id="cm-count"></span></div>
+              <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="cm-busca" placeholder="Nome ou CPF" oninput="cdRenderMot()"></div></div>
+            <div class="tw"><table><thead><tr><th>Nome</th><th>CPF</th><th>Situação</th><th></th></tr></thead><tbody id="cm-tb"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cd-aba" id="cd-vei" style="display:none;">
+        <div class="spl sp2">
+          <div class="card">
+            <div class="ch"><div class="ct" id="cv-titulo">Novo veículo</div></div>
+            <input type="hidden" id="cv-id">
+            <div class="gr" style="gap:12px;">
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="cv-placa">Placa <span class="req">*</span></label><input id="cv-placa" maxlength="8" oninput="fmtPlacaSimples(this)" style="font-family:var(--mono);text-transform:uppercase;"></div>
+                <div class="fg"><label class="fl" for="cv-tipo">Tipo</label><select id="cv-tipo" onchange="document.getElementById('cv-par-wrap').style.display=this.value==='cavalo'?'':'none'"><option value="cavalo">Caminhão (cavalo)</option><option value="carreta">Carreta</option></select></div>
+              </div>
+              <div class="fg" id="cv-par-wrap"><label class="fl" for="cv-par">Carreta habitual</label><input id="cv-par" maxlength="8" oninput="fmtPlacaSimples(this)" placeholder="opcional" style="font-family:var(--mono);text-transform:uppercase;"></div>
+              <div class="fg"><label class="fl" for="cv-transp">Transportadora</label><input id="cv-transp" placeholder="opcional"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn bp" onclick="salvarVeiculo()">💾 Salvar</button><button class="btn bs" onclick="limparVeiculoForm()">Limpar</button></div>
+              <hr>
+              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar do Excel — colunas <strong>PLACA CAVALO</strong> e <strong>PLACA CARRETA</strong> (um conjunto por linha) e TRANSPORTADORA (opcional). Também aceita uma coluna <strong>PLACA</strong> com <strong>TIPO</strong> (caminhão/carreta).</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn bs" onclick="document.getElementById('cv-file').click()">⬆ Importar placas</button>
+                <button class="btn bs bsm" onclick="baixarModeloCad('vei')">⬇ Modelo</button>
+                <input type="file" id="cv-file" accept=".xlsx,.xls,.csv" hidden onchange="importarVeiculos(this)">
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ct">Caminhões e carretas <span class="cs" id="cv-count"></span></div>
+              <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="cv-busca" placeholder="Placa ou transportadora" oninput="cdRenderVei()"></div></div>
+            <div class="tw"><table><thead><tr><th>Placa</th><th>Tipo</th><th>Carreta habitual</th><th>Transportadora</th><th>Situação</th><th></th></tr></thead><tbody id="cv-tb"></tbody></table></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1471,6 +1560,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
     <div id="tk-print-status" style="margin-bottom:12px;"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
       <select id="tk-reimp-sel" aria-label="Impressora" style="flex:1 1 180px;"></select>
+      <select id="tk-reimp-vias" aria-label="Vias" style="width:auto;"><option value="1">1 via</option><option value="2">2 vias</option><option value="3">3 vias</option><option value="4">4 vias</option><option value="5">5 vias</option></select>
       <button class="btn bs" onclick="imprimirDoModal()">🖨 Imprimir</button>
     </div>
     <div id="ticket-print-wrap"><div class="tkt" id="ticket-content"></div></div>
@@ -1746,9 +1836,10 @@ var MODULOS=[
   {k:'estoque',     l:'Estoque — descargas, marcas e inventário (+ relatórios)', full:true, g:'Armazém'},
   {k:'armazenagem', l:'Armazenagem — tarifas e cobrança (+ relatórios)', full:true, g:'Armazém'},
   {k:'navio',       l:'Navios', g:'Administração'},
+  {k:'cadastros',   l:'Motoristas e veículos (cadastro e importação)', g:'Administração'},
   {k:'usuarios',    l:'Usuários', g:'Administração'},
 ];
-var MODULOS_CURTO={dashboard:'Dash',lista:'Lista',lista_editar:'Lista✎',tickets:'Tickets',validar:'Validar',relatorios:'Relat.',navio:'Navios',usuarios:'Usuários',estoque:'Estoque',armazenagem:'Armaz.'};
+var MODULOS_CURTO={dashboard:'Dash',lista:'Lista',lista_editar:'Lista✎',tickets:'Tickets',validar:'Validar',relatorios:'Relat.',navio:'Navios',usuarios:'Usuários',estoque:'Estoque',armazenagem:'Armaz.',cadastros:'Motor.'};
 // mesmo padrão de wp_priv.modulos_padrao() no banco
 function modulosPadrao(perfil){
   if(perfil==='conferente')return ['dashboard','lista','tickets','validar','relatorios'];
@@ -1927,7 +2018,7 @@ function doLogout(){
 // ══════════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════════
-var titles={dashboard:'Painel do embarque',lista:'Lista de carga',tickets:'Emissão de tickets',validar:'Validação de embarque',relatorios:'Relatórios',estoque:'Estoque',armazenagem:'Armazenagem','rel-armazem':'Relatórios',usuarios:'Usuários',navio:'Navios',backup:'Backup & Restore',impressoras:'Impressoras','rel-admin':'Relatórios',cfg:'Configurar Supabase'};
+var titles={dashboard:'Painel do embarque',lista:'Lista de carga',tickets:'Emissão de tickets',validar:'Validação de embarque',relatorios:'Relatórios',estoque:'Estoque',armazenagem:'Armazenagem','rel-armazem':'Relatórios',usuarios:'Usuários',navio:'Navios',cadastros:'Motoristas e veículos',backup:'Backup & Restore',impressoras:'Impressoras','rel-admin':'Relatórios',cfg:'Configurar Supabase'};
 var currentPage='dashboard';
 function go(page){
   if(!podePagina(page)){toast('Sem permissão para acessar esta área','error');return;}
@@ -1947,7 +2038,7 @@ function go(page){
   if(page==='dashboard')loadDash();
   if(page==='lista')loadLista();
   if(page==='tickets'){
-    initTicketForm();loadTickets();loadImpressoras();
+    initTicketForm();loadTickets();loadImpressoras();iniciarVias();ligarAutoCompletarTicket();
   }
   if(page==='validar'){loadValidados();preloadJsQR();}
   if(page==='relatorios')loadRelatorios();
@@ -1959,6 +2050,7 @@ function go(page){
   if(page==='armazenagem')armAbrir();
   if(page==='rel-armazem')raAbrir();
   if(page==='rel-admin')rdAbrir();
+  if(page==='cadastros')cdAbrir();
 }
 
 // ══════════════════════════════════════════════════
@@ -2041,8 +2133,8 @@ function fetchLista(navioId){
 // (antes buscava os itens de TODOS os navios e cortava em 1000 → saldo errado)
 function fetchUsadoNavio(navioId){
   return supaAll(function(){
-    return sb.from('wp_ticket_itens').select('id,lista_id,quantidade,wp_lista_carga!inner(navio_id)')
-      .eq('wp_lista_carga.navio_id',navioId).order('id');
+    return sb.from('wp_ticket_itens').select('id,lista_id,quantidade,wp_lista_carga!inner(navio_id),wp_tickets!inner(status)')
+      .eq('wp_lista_carga.navio_id',navioId).neq('wp_tickets.status','cancelado').order('id');
   }).then(function(r){
     var m={};(r.data||[]).forEach(function(i){m[i.lista_id]=(m[i.lista_id]||0)+(parseInt(i.quantidade)||0);});
     return {map:m,error:r.error};
@@ -2051,7 +2143,7 @@ function fetchUsadoNavio(navioId){
 // Saldo atual (consulta direta no banco) de um conjunto pequeno de lotes
 function fetchUsadoPorLista(ids){
   if(!ids.length)return Promise.resolve({map:{},error:null});
-  return sb.from('wp_ticket_itens').select('lista_id,quantidade').in('lista_id',ids).then(function(r){
+  return sb.from('wp_ticket_itens').select('lista_id,quantidade,wp_tickets!inner(status)').in('lista_id',ids).neq('wp_tickets.status','cancelado').then(function(r){
     var m={};(r.data||[]).forEach(function(i){m[i.lista_id]=(m[i.lista_id]||0)+(parseInt(i.quantidade)||0);});
     return {map:m,error:r.error};
   });
@@ -2110,7 +2202,7 @@ function salvarNavio(){
   document.querySelectorAll('.nv-porao-cb:checked').forEach(function(cb){ativos.push(cb.value);});
   var poroes_ativos=ativos.join(',');
   showLd(true);
-  sb.from('wp_navios').insert({nome,codigo:v('nv-cod'),viagem:v('nv-viagem'),porto_origem:v('nv-origem'),eta:v('nv-eta')||null,porao_qtd,poroes_ativos}).then(function(r){
+  sb.from('wp_navios').insert({nome,codigo:v('nv-cod'),viagem:v('nv-viagem'),porto_origem:v('nv-origem'),eta:v('nv-eta')||null,porao_qtd,poroes_ativos,armador:document.getElementById('nv-armador').value}).then(function(r){
     showLd(false);if(r.error){toast('Erro: '+r.error.message,'error');return;}
     toast('Navio cadastrado!','success');
     ['nv-nome','nv-cod','nv-viagem','nv-origem','nv-eta'].forEach(function(id){document.getElementById(id).value='';});
@@ -2130,6 +2222,7 @@ function loadNavios(){
         ?n.poroes_ativos.split(',').filter(Boolean).join(', ')
         :(n.porao_qtd?n.porao_qtd+' porão(ões)':'—');
       return '<tr><td><strong>'+esc(n.nome)+'</strong></td><td>'+esc(n.codigo||'—')+'</td><td>'+esc(n.viagem||'—')+'</td>'
+        +'<td>'+(n.armador?esc(n.armador):'<span class="bge warn">definir</span>')+'</td>'
         +'<td>'+esc(poroesLabel)+'</td>'
         +'<td>'+(planoDe(n)?'<span class="bge ok">Definido</span>':'<span class="bge ntrl">Sem plano</span>')+'</td>'
         +'<td>'+(n.eta?fmtD(n.eta):'—')+'</td>'
@@ -2874,6 +2967,11 @@ function emitirTicket(){
   var portoCab=document.getElementById('tk-porto-desc').value.trim()||null;
   if(!placa||!motorista){toast('Preencha Placa e Motorista','error');return;}
   if(!placaValida(placa)){toast('Placa inválida. Use ABC-1234 ou ABC-1D23','error');return;}
+  var cpfMot=soDig(document.getElementById('tk-cpf').value),carreta=document.getElementById('tk-carreta').value.trim();
+  if(!cpfMot){toast('Informe o CPF do motorista','error');document.getElementById('tk-cpf').focus();return;}
+  if(!cpfValido(cpfMot)){toast('CPF do motorista inválido — confira os números','error');document.getElementById('tk-cpf').focus();return;}
+  if(carreta&&!placaFormatoOk(carreta)){toast('Placa da carreta inválida. Use ABC-1234 ou ABC-1D23','error');return;}
+  var extraTk={cpf:cpfMot,carreta:carreta?fmtPlacaTxt(carreta):null};
   if(!porao){toast('Selecione o Porão','error');return;}
   if(!tier){toast('Selecione o Tier','error');return;}
   if(!portoCab){toast('Selecione o Porto de Descarga','error');return;}
@@ -2931,21 +3029,29 @@ function emitirTicket(){
       if(pedidoPorLista[l.id]>saldo)estouro.push('Ref '+(l.ref||'—')+' / '+l.lote+': pedido '+pedidoPorLista[l.id]+', saldo '+Math.max(0,saldo));
     });
     if(estouro.length){showLd(false);toast('Saldo insuficiente — '+estouro.join(' · '),'error');return;}
-    gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData);
+    gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData,extraTk);
   });
 }
 
-function gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData){
-  var num='TK-'+(navio.codigo||'WP')+'-'+Date.now().toString().slice(-7);
+function gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData,extra){
+  extra=extra||{};
+  // o número (ex.: KWA2602-001) é gerado pelo BANCO na gravação: sequência por navio/viagem,
+  // única e nunca reaproveitada (woodport_numeracao.sql)
   sb.from('wp_tickets').insert({
-    numero:num, navio_id:navio.id, placa, motorista,
+    navio_id:navio.id, placa, motorista, motorista_cpf:extra.cpf||null, placa_carreta:extra.carreta||null,
     conferente_id:currentUser.id, conferente_nome:currentUser.nome,
     armazem:currentUser.armazem||'WRC',
     porao, tier, viagem, porto_descarga:portoCab,
     observacoes:document.getElementById('tk-obs').value.trim()||null,
     status:'emitido',
   }).select().single().then(function(r){
-    if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
+    if(r.error){
+      showLd(false);
+      var falta=/numero/.test(r.error.message)&&/null/i.test(r.error.message);
+      var semCol=/motorista_cpf|placa_carreta/.test(r.error.message);
+      toast(falta?'A numeração automática ainda não foi instalada no banco (woodport_numeracao.sql). Avise o administrador.':semCol?'O campo CPF ainda não foi instalado no banco (woodport_motoristas.sql). Avise o administrador.':'Erro: '+r.error.message,'error');
+      return;
+    }
     var tkId=r.data.id;
     var lPayload=lotesData.map(function(l){return Object.assign({},l,{ticket_id:tkId});});
     sb.from('wp_ticket_itens').insert(lPayload).then(function(r2){
@@ -2962,6 +3068,7 @@ function gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData
       document.getElementById('tk-modal-ok').textContent='Próximo caminhão';
       showTicketPrint(r.data,lotesData);
       imprimirAposEmissao(r.data,lotesData);
+      cadAutoCadastrar(placa,extra.carreta,motorista,extra.cpf);
       // porão, tier e porto ficam para o próximo caminhão
       resetTicketForm(true);loadTickets();
     });
@@ -2969,7 +3076,8 @@ function gravarTicket(navio,placa,motorista,porao,tier,viagem,portoCab,lotesData
 }
 
 function resetTicketForm(manterDestino){
-  ['tk-placa','tk-motorista','tk-obs'].forEach(function(id){document.getElementById(id).value='';});
+  ['tk-placa','tk-carreta','tk-motorista','tk-cpf','tk-obs'].forEach(function(id){document.getElementById(id).value='';});
+  if(document.getElementById('tk-mot-hint'))document.getElementById('tk-mot-hint').innerHTML='';
   if(!manterDestino){
     document.getElementById('tk-viagem').value='';
     document.getElementById('tk-porto-desc').value='';
@@ -2997,8 +3105,9 @@ function showTicketPrint(tk,lotes){
   function g3(a,b,c){return '<div class="g3">'+a+b+c+'</div>';}
   function g4(a,b,c,d){return '<div class="g4">'+a+b+c+d+'</div>';}
 
-  var nomeNavio = navioAtivo?navioAtivo.nome:'—';
-  var viagemNavio = navioAtivo&&navioAtivo.viagem?navioAtivo.viagem:'—';
+  var nvTk = navioDoTicket(tk);
+  var nomeNavio = nvTk?nvTk.nome:'—';
+  var viagemNavio = nvTk&&nvTk.viagem?nvTk.viagem:'—';
 
   var linhasLotes='';
   lotes.forEach(function(l,i){
@@ -3015,7 +3124,8 @@ function showTicketPrint(tk,lotes){
     +'<div class="ts"></div>'
     +g2( fi('Navio',nomeNavio,true), fi('Vgm',viagemNavio) )
     +g4( fi('Porão',tk.porao||'—'), fi('Tier',tk.tier||'—'), fi('Vgm Tier',tk.viagem||'—'), fi('Porto',tk.porto_descarga||'—',true) )
-    +g2( fi('Placa',tk.placa), fi('Motorista',tk.motorista,true) )
+    +g2( fi('Placa',tk.placa), fi('Carreta',tk.placa_carreta||'—') )
+    +g2( fi('Motorista',tk.motorista,true), fi('CPF',tk.motorista_cpf?fmtCpf(tk.motorista_cpf):'—') )
     +fl('Conferente', tk.conferente_nome||'—')
     +fl('Emissão', (tk.created_at?new Date(tk.created_at):new Date()).toLocaleString('pt-BR'))
     +'<div class="ts"></div>'
@@ -3098,7 +3208,9 @@ function printTicket(){
   win.document.write('<meta charset="UTF-8"><title>Ticket</title>');
   win.document.write('<style>'+css+'</style>');
   win.document.write('</head><body>');
-  win.document.write('<div class="tkt">'+html+'</div>');
+  var nv=Math.max(1,parseInt(arguments[0])||1),pags=[];
+  for(var iv=1;iv<=nv;iv++)pags.push('<div class="tkt" style="'+(iv<nv?'page-break-after:always;':'')+'">'+html+(nv>1?'<div class="tf">'+iv+'ª VIA de '+nv+'</div>':'')+'</div>');
+  win.document.write(pags.join(''));
   win.document.write('</body></html>');
   win.document.close();
 
@@ -3146,19 +3258,21 @@ function renderTickets(list){
     var totCBM=lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0);
     var totPeso=lts.reduce(function(s,l){return s+parseFloat(l.peso_calculado||0);},0);
     var conf=t.conferente_nome||'—';
-    var st=t.status==='validado'?'<span class="bge ok">Validado</span>':'<span class="bge info">Aguardando</span>';
-    return '<tr>'
-      +'<td><input type="checkbox" class="tk-row-chk" data-id="'+t.id+'" onchange="updateTkBatchBar()" style="width:auto;cursor:pointer;"></td>'
+    var canc=t.status==='cancelado';
+    var st=canc?'<span class="bge dng" title="'+esc('Cancelado em '+(t.cancelado_em?new Date(t.cancelado_em).toLocaleString('pt-BR'):'')+' por '+(t.cancelado_por_nome||'—')+' — '+(t.motivo_cancelamento||''))+'">Cancelado</span>'
+      :t.status==='validado'?'<span class="bge ok">Validado</span>':'<span class="bge info">Aguardando</span>';
+    return '<tr'+(canc?' style="opacity:.55;"':'')+'>'
+      +'<td>'+(podeCancelar(t)?'<input type="checkbox" class="tk-row-chk" data-id="'+t.id+'" onchange="updateTkBatchBar()" style="width:auto;cursor:pointer;" aria-label="Selecionar ticket">':'')+'</td>'
       +'<td><strong>'+esc(t.numero)+'</strong></td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(lotesStr)+'">'+esc(lotesStr)+'</td>'
       +'<td>'+esc(portosStr)+'</td>'
       +'<td>'+totQtd+'</td><td>'+fNum(totCBM,3)+'</td><td>'+fNum(totPeso,0)+'</td>'
       +'<td>'+esc(t.placa)+'</td><td>'+esc(conf)+'</td><td>'+st+'</td>'
       +'<td style="display:flex;gap:4px;">'
-        +'<button class="btn bs bsm" onclick="reimprimirTicket(\''+t.id+'\')" title="Reimprimir">🖨</button>'
-        +'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')" title="Editar">✏</button>'
-        +(t.status!=='validado'&&canDelete('wp_tickets',t)
-          ?'<button class="btn bd bsm" onclick="confirmDel(\'wp_tickets\',\''+t.id+'\',loadTickets)">✕</button>':'')
+        +(canc?'<span style="font-size:12px;color:var(--ink3);max-width:200px;" title="'+esc(t.motivo_cancelamento||'')+'">'+esc(t.motivo_cancelamento||'')+'</span>'
+          :'<button class="btn bs bsm" onclick="reimprimirTicket(\''+t.id+'\')" title="Reimprimir" aria-label="Reimprimir">🖨</button>'
+          +'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')" title="Editar" aria-label="Editar">✏</button>'
+          +(podeCancelar(t)?'<button class="btn bd bsm" onclick="cancelarTicket(\''+t.id+'\')" title="Cancelar ticket" aria-label="Cancelar ticket">⊘</button>':''))
       +'</td></tr>';
   }).join('');
 }
@@ -3166,13 +3280,14 @@ function filterTickets(q){
   var s=(q||'').trim().toLowerCase();
   renderTickets(ticketsAll.filter(function(t){
     if(!s)return true;
-    var campos=[t.numero,t.placa,t.motorista,t.conferente_nome];
+    var campos=[t.numero,t.placa,t.placa_carreta,t.motorista,t.motorista_cpf,t.conferente_nome];
     (t.wp_ticket_itens||[]).forEach(function(i){campos.push(i.marca,i.lote,i.nf,String(i.ref||''));});
     return campos.some(function(c){return String(c||'').toLowerCase().includes(s);});
   }));
 }
 function reimprimirTicket(id){
   var tk=ticketsAll.find(function(t){return t.id===id;});if(!tk)return;
+  if(tk.status==='cancelado'){toast('Ticket cancelado não é reimpresso','error');return;}
   document.getElementById('tk-modal-titulo').textContent='Ticket '+tk.numero;
   document.getElementById('tk-modal-ok').textContent='Fechar';
   showTicketPrint(tk,tk.wp_ticket_itens||[]);
@@ -3241,7 +3356,7 @@ function populateRlPortos(){
 
 function renderRelatorios(){
   var validados  = rlData.filter(function(t){return t.status==='validado';});
-  var emitidos   = rlData;
+  var emitidos   = rlData.filter(function(t){return t.status!=='cancelado';});
   var totalFardos= 0, totalCBM=0;
   validados.forEach(function(t){
     (t.wp_ticket_itens||[]).forEach(function(i){
@@ -4122,13 +4237,26 @@ function _doExportHL(holds){
 }
 
 // ══════════════════════════════════════════════════
-// Pré-carrega jsQR assim que o módulo de validação é aberto
+// Leitor de QR da validação.
+// 1) leitor nativo do aparelho (Chrome/Android), quando ele declara suporte a QR;
+// 2) jsQR (biblioteca) — carregada do jsDelivr, com o unpkg de reserva.
+//    (o endereço antigo do cdnjs deixou de existir e a leitura parava sem aviso)
+var QR_LIBS=['https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js','https://unpkg.com/jsqr@1.4.0/dist/jsQR.js'];
+var _qrDetector=null,_qrLibFalhou=false;
 function preloadJsQR(){
-  if(typeof jsQR==='undefined'&&!document.getElementById('jsqr-script')){
-    var s=document.createElement('script');
-    s.id='jsqr-script';
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js';
-    document.head.appendChild(s);
+  if(typeof jsQR!=='function'&&!document.getElementById('jsqr-script')){
+    (function carregar(i){
+      if(i>=QR_LIBS.length){_qrLibFalhou=true;return;}
+      var s=document.createElement('script');
+      s.id=i===0?'jsqr-script':'jsqr-script-'+i;s.src=QR_LIBS[i];
+      s.onerror=function(){carregar(i+1);};
+      document.head.appendChild(s);
+    })(0);
+  }
+  if(!_qrDetector&&'BarcodeDetector' in window&&BarcodeDetector.getSupportedFormats){
+    BarcodeDetector.getSupportedFormats().then(function(f){
+      if(f&&f.indexOf('qr_code')>=0){try{_qrDetector=new BarcodeDetector({formats:['qr_code']});}catch(e){}}
+    }).catch(function(){});
   }
 }
 
@@ -4139,105 +4267,137 @@ function toggleCamera(){
   var btn=document.getElementById('cam-btn');
   var status=document.getElementById('qr-status');
   preloadJsQR();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    toast('Este navegador não libera a câmera. Abra o WoodPort pelo endereço https e permita o uso da câmera.','error');return;
+  }
   navigator.mediaDevices.getUserMedia({
-    video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
+    video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false
   }).then(function(stream){
     camStream=stream;
+    video.setAttribute('playsinline','true');video.muted=true;
     video.srcObject=stream;
-    video.setAttribute('playsinline','true');
     wrap.style.display='';
-    btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Fechar Câmera';
-    if(status) status.textContent='📷 Aguardando câmera...';
-    video.onloadedmetadata=function(){
-      video.play().then(function(){
-        if(status) status.textContent='🔍 Aponte para o QR Code...';
-        setTimeout(function(){ if(camStream) startQRScan(video); }, 600);
-      }).catch(function(e){ toast('Erro ao iniciar vídeo: '+e.message,'error'); });
-    };
-  }).catch(function(err){ toast('Câmera indisponível: '+err.message,'error'); });
+    btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Fechar câmera';
+    if(status)status.textContent='📷 Abrindo câmera…';
+    var iniciou=false;
+    function comecar(){
+      if(iniciou)return;iniciou=true;
+      video.play().catch(function(){}).then(function(){
+        if(status)status.textContent='🔍 Aponte para o QR Code do ticket';
+        if(camStream)startQRScan(video);
+      });
+    }
+    video.onloadedmetadata=comecar;
+    if(video.readyState>=1)comecar();
+  }).catch(function(err){
+    var m=err&&err.name==='NotAllowedError'?'Permissão da câmera negada. Libere a câmera para o site nas configurações do navegador.'
+      :err&&err.name==='NotFoundError'?'Nenhuma câmera encontrada neste aparelho.':'Câmera indisponível: '+(err&&err.message||err);
+    toast(m,'error');
+  });
 }
 function stopCamera(){
-  if(qrScanInterval){ clearInterval(qrScanInterval); qrScanInterval=null; }
-  if(camStream){ camStream.getTracks().forEach(function(t){t.stop();}); camStream=null; }
+  if(qrScanInterval){clearInterval(qrScanInterval);qrScanInterval=null;}
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
   var video=document.getElementById('qr-video');
-  if(video){ video.onloadedmetadata=null; video.srcObject=null; }
+  if(video){video.onloadedmetadata=null;video.srcObject=null;}
   var wrap=document.getElementById('qr-video-wrap');
-  if(wrap) wrap.style.display='none';
+  if(wrap)wrap.style.display='none';
   var status=document.getElementById('qr-status');
-  if(status) status.textContent='';
+  if(status)status.textContent='';
   var btn=document.getElementById('cam-btn');
-  if(btn) btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir Câmera QR';
+  if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Abrir câmera QR';
 }
 function startQRScan(video){
   var canvas=document.createElement('canvas');
   var ctx=canvas.getContext('2d',{willReadFrequently:true});
-  var scanning=false;
+  var lendo=false,achou=false,quadros=0,falhasNativo=0;
+  var st=document.getElementById('qr-status');
 
   function onQRDetected(val){
+    if(achou)return;achou=true;
+    try{if(navigator.vibrate)navigator.vibrate(80);}catch(e){}
     stopCamera();
-    document.getElementById('val-code').value=val;
+    document.getElementById('val-code').value=String(val).trim();
     buscarTicketVal();
   }
-
+  // recorta o quadrado central (o que aparece na tela) e reduz: leitura mais rápida no celular
+  function quadro(maxLado){
+    var vw=video.videoWidth,vh=video.videoHeight,lado=Math.min(vw,vh);
+    var alvo=Math.min(lado,maxLado);
+    canvas.width=alvo;canvas.height=alvo;
+    ctx.drawImage(video,(vw-lado)/2,(vh-lado)/2,lado,lado,0,0,alvo,alvo);
+    return ctx.getImageData(0,0,alvo,alvo);
+  }
+  function lerComJsQR(){
+    // alterna tamanhos: QR pequeno/longe é lido melhor com mais resolução
+    var img=quadro(quadros%3===2?960:640);
+    var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+    if(code&&code.data)onQRDetected(code.data);
+  }
   function doScan(){
-    if(!camStream){ stopCamera(); return; }
-    if(!video.videoWidth||!video.videoHeight||video.readyState<2) return;
-    if(scanning) return;
-    scanning=true;
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    if(typeof jsQR==='function'){
-      try{
-        var imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-        var code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'attemptBoth'});
-        if(code&&code.data){ onQRDetected(code.data); scanning=false; return; }
-      }catch(e){}
-      scanning=false;
+    if(!camStream||achou)return;
+    if(lendo||video.readyState<2||!video.videoWidth)return;
+    lendo=true;quadros++;
+    var temJs=typeof jsQR==='function';
+    var usarNativo=_qrDetector&&falhasNativo<5&&(!temJs||quadros%2===0);
+    if(usarNativo){
+      _qrDetector.detect(video).then(function(c){
+        if(c&&c.length&&c[0].rawValue)onQRDetected(c[0].rawValue);
+        lendo=false;
+      }).catch(function(){falhasNativo++;lendo=false;});
       return;
     }
-    if('BarcodeDetector' in window){
-      createImageBitmap(canvas).then(function(bmp){
-        new BarcodeDetector({formats:['qr_code']}).detect(bmp).then(function(codes){
-          bmp.close();
-          if(codes.length) onQRDetected(codes[0].rawValue);
-          scanning=false;
-        }).catch(function(){ scanning=false; });
-      }).catch(function(){ scanning=false; });
+    if(temJs){try{lerComJsQR();}catch(e){}}
+    lendo=false;
+  }
+  function aguardarLeitor(n){
+    if(!camStream)return;
+    if(typeof jsQR==='function'||_qrDetector){
+      if(st)st.textContent='🔍 Aponte para o QR Code do ticket';
+      qrScanInterval=setInterval(doScan,180);
       return;
     }
-    scanning=false;
-  }
-
-  function aguardarJsQR(n){
-    n=n||0;
-    if(typeof jsQR==='function'||'BarcodeDetector' in window){
-      qrScanInterval=setInterval(doScan,250);
-    } else if(n<40){
-      var st=document.getElementById('qr-status');
-      if(st) st.textContent='⏳ Carregando leitor... ('+Math.ceil(n*200/1000)+'s)';
-      setTimeout(function(){ aguardarJsQR(n+1); },200);
-    } else {
-      toast('Leitor QR não carregou. Verifique a conexão.','error');
-      stopCamera();
+    if(_qrLibFalhou||n>=50){
+      if(st)st.textContent='';
+      toast('O leitor de QR não carregou (sem internet?). Digite o número do ticket no campo abaixo.','error');
+      stopCamera();return;
     }
+    if(st)st.textContent='⏳ Carregando o leitor de QR…';
+    setTimeout(function(){aguardarLeitor(n+1);},200);
   }
-  aguardarJsQR();
+  aguardarLeitor(0);
 }
 
 // ══════════════════════════════════════════════════
 // VALIDAR EMBARQUE
 // ══════════════════════════════════════════════════
 var valTimeout=null;
-function onValInput(v){clearTimeout(valTimeout);if(v.length>=6)valTimeout=setTimeout(buscarTicketVal,600);}
+function onValInput(v){
+  clearTimeout(valTimeout);v=(v||'').trim();
+  // busca sozinho só quando o número está completo (KWA2602-015 ou o formato antigo TK-XXX-1234567)
+  if(/^[A-Za-z0-9]+-\d{3,}$/.test(v)||/^TK-[A-Za-z0-9]+-\d{7}$/i.test(v))valTimeout=setTimeout(buscarTicketVal,500);
+}
+function navioDoTicket(tk){
+  return (tk&&tk.navio_id&&naviosAll.find(function(n){return n.id===tk.navio_id;}))||navioAtivo;
+}
+var _valTk=null;
+function reimprimirValidacao(){
+  if(!_valTk)return;
+  if(_valTk.status==='cancelado'){toast('Ticket cancelado não é reimpresso','error');return;}
+  loadImpressoras().then(function(){
+    document.getElementById('tk-modal-titulo').textContent='Ticket '+_valTk.numero;
+    document.getElementById('tk-modal-ok').textContent='Fechar';
+    showTicketPrint(_valTk,_valTk.wp_ticket_itens||[]);
+  });
+}
 
 // Colunas explícitas — evita erro de schema cache quando periodo ainda não existe
-var TK_COLS='id,numero,navio_id,placa,motorista,conferente_id,conferente_nome,armazem,porao,tier,viagem,porto_descarga,observacoes,status,validado_em,created_at,wp_ticket_itens(*)';
+var TK_COLS='id,numero,navio_id,placa,placa_carreta,motorista,motorista_cpf,conferente_id,conferente_nome,armazem,porao,tier,viagem,porto_descarga,observacoes,status,validado_em,created_at,wp_ticket_itens(*)';
 
 function buscarTicketVal(){
   var code=document.getElementById('val-code').value.trim();
   if(!code){toast('Informe o número','error');return;}
-  if(/^tk-/i.test(code))code=code.toUpperCase(); // números são gravados em maiúsculas
+  code=code.toUpperCase(); // números são gravados em maiúsculas
   var isUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
   if(!sb){toast('Sem conexão','error');return;}
   showLd(true);
@@ -4254,6 +4414,17 @@ function buscarTicketVal(){
       }
     });
   }
+  // só a sequência (ex.: 15) → ticket 015 do navio ativo
+  if(/^\d{1,5}$/.test(code)){
+    if(!navioAtivo){showLd(false);toast('Selecione o navio no topo para buscar só pela sequência','error');return;}
+    sb.from('wp_tickets').select('numero').eq('navio_id',navioAtivo.id).eq('seq',parseInt(code,10)).maybeSingle().then(function(r0){
+      if(r0.error||!r0.data){showLd(false);toast('Ticket '+String(parseInt(code,10)).padStart(3,'0')+' não encontrado em '+navioAtivo.nome,'error');return;}
+      code=r0.data.numero;document.getElementById('val-code').value=code;buscarNumero();
+    });
+    return;
+  }
+  buscarNumero();
+  function buscarNumero(){
   fetchComPeriodo('numero',code,function(r){
     if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
     if(r.data&&r.data.length){showLd(false);renderValResult(r.data[0]);return;}
@@ -4266,6 +4437,7 @@ function buscarTicketVal(){
       renderValResult(r2.data[0]);
     });
   });
+  }
 }
 // detecta período com base numa data/hora
 function calcPeriodo(dtStr){
@@ -4277,8 +4449,9 @@ function calcPeriodo(dtStr){
 }
 
 function renderValResult(tk){
+  _valTk=tk;
   var lts=tk.wp_ticket_itens||[];
-  var isVal=tk.status==='validado';
+  var isVal=tk.status==='validado',isCanc=tk.status==='cancelado';
   var lotesHtml=lts.map(function(l){
     return '<div style="background:var(--s3);border-radius:var(--rsm);padding:8px 10px;margin-top:6px;font-size:12px;">'
       +'<strong>Ref '+esc(l.ref||'—')+' — '+esc(l.lote)+'</strong>'+(l.marca?' | '+esc(l.marca):'')
@@ -4289,10 +4462,12 @@ function renderValResult(tk){
   document.getElementById('val-card').innerHTML='<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:14px;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
     +'<span style="font-size:15px;font-weight:600;">'+esc(tk.numero)+'</span>'
-    +(isVal?'<span class="bge ok">✓ Validado</span>':'<span class="bge info">Aguardando</span>')+'</div>'
+    +(isCanc?'<span class="bge dng">Cancelado</span>':isVal?'<span class="bge ok">✓ Validado</span>':'<span class="bge info">Aguardando</span>')+'</div>'
+    +(isCanc?'<div class="imp-st err" style="margin-bottom:8px;">⊘<div><strong>Ticket cancelado — não pode ser embarcado</strong>'+esc((tk.cancelado_em?new Date(tk.cancelado_em).toLocaleString('pt-BR'):'')+' por '+(tk.cancelado_por_nome||'—')+' · Motivo: '+(tk.motivo_cancelamento||'—'))+'</div></div>':'')
     +'<div class="gr g2" style="gap:5px;font-size:12px;margin-bottom:8px;">'
     +'<div><span style="color:var(--ink4);">Placa:</span><br><strong class="val-grande">'+esc(tk.placa)+'</strong></div>'
-    +'<div><span style="color:var(--ink4);">Motorista:</span><br><strong>'+esc(tk.motorista)+'</strong></div>'
+    +'<div><span style="color:var(--ink4);">Motorista:</span><br><strong>'+esc(tk.motorista)+'</strong>'+(tk.motorista_cpf?'<br><span class="mono" style="font-size:12px;">CPF '+fmtCpf(tk.motorista_cpf)+'</span>':'')+'</div>'
+    +(tk.placa_carreta?'<div><span style="color:var(--ink4);">Carreta:</span><br><strong class="mono">'+esc(tk.placa_carreta)+'</strong></div>':'')
     +(tk.porto_descarga?'<div><span style="color:var(--ink4);">Porto:</span><br><strong>'+esc(tk.porto_descarga)+'</strong></div>':'')
     +'<div><span style="color:var(--ink4);">CBM Total:</span><br><strong>'+fNum(lts.reduce(function(s,l){return s+parseFloat(l.cbm_calculado||0);},0),4)+' m³</strong></div>'
     +'<div><span style="color:var(--ink4);">Conferente:</span><br><strong>'+esc(tk.conferente_nome||'—')+'</strong></div>'
@@ -4305,7 +4480,7 @@ function renderValResult(tk){
   // seletor de período: se já validado mostra o salvo; senão calcula pelo horário de emissão
   var periodoWrap=document.getElementById('val-periodo-wrap');
   var periodoSel=document.getElementById('val-periodo');
-  if(isVal){
+  if(isVal||isCanc){
     periodoWrap.style.display='none';
   } else {
     periodoWrap.style.display='';
@@ -4315,12 +4490,21 @@ function renderValResult(tk){
   }
 
   var actions=document.getElementById('val-actions');
+  var btCanc=podeCancelar(tk)?'<button class="btn bd bsm" onclick="cancelarTicket(\''+tk.id+'\')">⊘ Cancelar ticket</button>':'';
+  if(isCanc){
+    actions.innerHTML='<button class="btn bs" onclick="document.getElementById(\'val-result\').style.display=\'none\'">Fechar</button>';
+    document.getElementById('val-result').style.display='';
+    return;
+  }
   actions.innerHTML=isVal
-    ?'<button class="btn bs bsm" onclick="editTicket(\''+tk.id+'\')">✏ Editar</button>'
+    ?btCanc+'<button class="btn bs bsm" onclick="reimprimirValidacao()">🖨 Reimprimir</button>'
+     +'<button class="btn bs bsm" onclick="editTicket(\''+tk.id+'\')">✏ Editar</button>'
      +'<button class="btn bs" onclick="document.getElementById(\'val-result\').style.display=\'none\'">Fechar</button>'
     :'<button class="btn bf" style="flex:1;justify-content:center;" onclick="validarTicket(\''+tk.id+'\')">✅ Confirmar Embarque</button>'
+     +'<button class="btn bs bsm" onclick="reimprimirValidacao()">🖨 Reimprimir</button>'
      +'<button class="btn bs bsm" onclick="editTicket(\''+tk.id+'\')">✏ Editar</button>'
-     +'<button class="btn bs" onclick="document.getElementById(\'val-result\').style.display=\'none\'">Cancelar</button>';
+     +btCanc
+     +'<button class="btn bs" onclick="document.getElementById(\'val-result\').style.display=\'none\'">Fechar</button>';
   document.getElementById('val-result').style.display='';
 }
 function validarTicket(id){
@@ -4442,7 +4626,7 @@ function exportValidados(){
             'Ref':'','Lote':'','Marca':'','Shipper':'','Porto Descarga':'',
             'Commodity':'','Armazém':'','DUE':'','NF':'',
             'Qtde':0,'CBM m³':0,'Peso kg':0,
-            'Placa':t.placa,'Motorista':t.motorista,'Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
+            'Placa':t.placa,'Carreta':t.placa_carreta||'','Motorista':t.motorista,'CPF':t.motorista_cpf?fmtCpf(t.motorista_cpf):'','Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
           });
         } else {
           itens.forEach(function(it){
@@ -4456,7 +4640,7 @@ function exportValidados(){
               'Qtde':it.quantidade||0,
               'CBM m³':parseFloat(it.cbm_calculado||0),
               'Peso kg':parseFloat(it.peso_calculado||0),
-              'Placa':t.placa,'Motorista':t.motorista,'Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
+              'Placa':t.placa,'Carreta':t.placa_carreta||'','Motorista':t.motorista,'CPF':t.motorista_cpf?fmtCpf(t.motorista_cpf):'','Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
             });
           });
         }
@@ -4490,7 +4674,7 @@ function loadDash(){
     if(!navioAtivo||navioAtivo.id!==nid)return;
     if(rs[0].error||rs[1].error||rs[2].error){toast('Erro ao carregar dashboard: '+(rs[0].error||rs[1].error||rs[2].error).message,'error');return;}
     var lcarga=rs[0].data||[];
-    var tks=rs[1].data||[];
+    var tks=(rs[1].data||[]).filter(function(t){return t.status!=='cancelado';}); // cancelados não contam
     var itens=rs[2].data||[];
 
     // filtra apenas itens de tickets deste navio
@@ -4913,9 +5097,175 @@ EscPos.prototype={
   base64:function(){var s='';for(var i=0;i<this.b.length;i++)s+=String.fromCharCode(this.b[i]);return btoa(s);}
 };
 
+
+// ══════════════════════════════════════════════════
+// TICKET COMO IMAGEM (mesmo layout do ticket impresso pelo navegador)
+// Desenhado num canvas de 576 pontos (72 mm a 203 dpi) e enviado à
+// impressora como imagem (ESC/POS "GS v 0"). Medidas convertidas do CSS
+// antigo: 1 px do CSS ≈ 2,1 pontos da térmica.
+// ══════════════════════════════════════════════════
+var TK_LARG=576;
+function tkp(css){return Math.round(css*2.12);}
+function canvasTicket(tk,lotes,opt){
+  opt=opt||{};
+  var cv=document.createElement('canvas');cv.width=TK_LARG;cv.height=6000;
+  var c=cv.getContext('2d');
+  c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);
+  c.fillStyle='#000';c.textBaseline='top';
+  var FONTE="'Courier New',Courier,'Liberation Mono',monospace";
+  var X0=10,W=TK_LARG-20,y=8;
+  function fonte(sz,peso){c.font=(peso||'bold')+' '+tkp(sz)+'px '+FONTE;}
+  function barra(x,yy,w,esp){c.fillRect(x,yy,w,esp);}
+  function quebra(t,larg){
+    t=String(t==null||t===''?'—':t);
+    var linhas=[],l='';
+    t.split(' ').forEach(function(p){
+      var tent=l?l+' '+p:p;
+      if(c.measureText(tent).width<=larg){l=tent;return;}
+      if(l)linhas.push(l);
+      l='';
+      for(var i=0;i<p.length;i++){var t2=l+p[i];if(c.measureText(t2).width>larg&&l){linhas.push(l);l=p[i];}else l=t2;}
+    });
+    linhas.push(l);return linhas;
+  }
+  function escreve(t,x,yy,w,alin){
+    c.textAlign=alin||'left';
+    var xx=alin==='center'?x+w/2:alin==='right'?x+w-1:x;
+    c.fillText(t,xx,yy);c.fillText(t,xx+1,yy); // traço dobrado: Courier fino sai fraco na térmica
+    c.textAlign='left';
+  }
+  // campo: rótulo pequeno em cima, valor grande embaixo, linha embaixo (classe .fi)
+  function medeCampo(cel,w){
+    fonte(cel[2]?11:13,'900');
+    return {lin:quebra(cel[1],w),alt:tkp(9)*1.15+quebra(cel[1],w).length*tkp(cel[2]?11:13)*1.2+tkp(1.6)};
+  }
+  function grade(celulas,gap){
+    var n=celulas.length,w=(W-gap*(n-1))/n;
+    var med=celulas.map(function(cel){return medeCampo(cel,w);});
+    var alt=Math.max.apply(null,med.map(function(m){return m.alt;}));
+    celulas.forEach(function(cel,i){
+      var x=X0+i*(w+gap),yy=y+tkp(0.6);
+      fonte(9,'bold');escreve(String(cel[0]).toUpperCase(),x,yy,w);
+      yy+=tkp(9)*1.15;
+      fonte(cel[2]?11:13,'900');
+      med[i].lin.forEach(function(l){escreve(l,x,yy,w);yy+=tkp(cel[2]?11:13)*1.2;});
+      barra(x,y+alt,w,2);
+    });
+    y+=alt+2+tkp(1.9);
+  }
+  // linha rótulo à esquerda / valor à direita (classe .fl)
+  function linhaLV(rot,val){
+    fonte(9,'bold');var h=tkp(12)*1.3;
+    escreve(String(rot).toUpperCase(),X0,y+tkp(2.5),W*0.4);
+    fonte(12,'900');escreve(String(val),X0,y+tkp(1.2),W,'right');
+    y+=h+tkp(1);barra(X0,y,W,2);y+=2+tkp(1.5);
+  }
+  function separador(){y+=tkp(5.5);barra(X0,y,W,3);y+=3+tkp(5.5);}
+
+  var nvT=navioDoTicket(tk),navio=nvT?nvT.nome:'—',vgm=nvT&&nvT.viagem?nvT.viagem:'—';
+  var totQ=0,totC=0,totP=0;
+  lotes.forEach(function(l){totQ+=parseInt(l.quantidade)||0;totC+=parseFloat(l.cbm_calculado)||0;totP+=parseFloat(l.peso_calculado)||0;});
+
+  // cabeçalho
+  fonte(16,'900');escreve('W O O D P O R T',X0,y,W,'center');y+=tkp(16)*1.15+tkp(4);
+  barra(X0,y,W,4);y+=4+tkp(4);
+  fonte(10,'bold');escreve('TICKET DE EMBARQUE',X0,y,W,'center');y+=tkp(10)*1.2+tkp(4);
+  // número em caixa
+  fonte(19,'900');var hn=tkp(19)*1.2+tkp(7.5);
+  barra(X0,y,W,4);barra(X0,y+hn-4,W,4);barra(X0,y,4,hn);barra(X0+W-4,y,4,hn);
+  escreve(tk.numero,X0,y+tkp(4),W,'center');y+=hn+tkp(4);
+  separador();
+  grade([['Navio',navio,true],['Vgm',vgm]],tkp(5.7));
+  grade([['Porão',tk.porao||'—'],['Tier',tk.tier||'—'],['Vgm Tier',tk.viagem||'—'],['Porto',tk.porto_descarga||'—',true]],tkp(3.8));
+  grade([['Placa',tk.placa||'—'],['Carreta',tk.placa_carreta||'—']],tkp(5.7));
+  grade([['Motorista',tk.motorista||'—',true],['CPF',tk.motorista_cpf?fmtCpf(tk.motorista_cpf):'—']],tkp(5.7));
+  linhaLV('Conferente',tk.conferente_nome||'—');
+  linhaLV('Emissão',(tk.created_at?new Date(tk.created_at):new Date()).toLocaleString('pt-BR'));
+  separador();
+  // lotes
+  lotes.forEach(function(l,i){
+    y+=tkp(3);
+    fonte(10,'900');escreve(('LOTE '+(i+1)+(l.lote?' · '+l.lote:'')).toUpperCase(),X0,y,W);
+    y+=tkp(10)*1.2+tkp(1);barra(X0,y,W,3);y+=3+tkp(3.8);
+    grade([['Ref',l.ref||'—'],['Marca',l.marca||'—']],tkp(5.7));
+    grade([['Shipper',l.shipper||'—',true],['DUE/RUC',l.due||'—']],tkp(5.7));
+    grade([['NF',l.nf||'—'],['Qtde',(l.quantidade||0)+' pçs'],['CBM',fNum(l.cbm_calculado,3)+'m³']],tkp(3.8));
+  });
+  separador();
+  // caixa de totais
+  var cw=W/3,ht=tkp(9)*1.2+tkp(13)*1.25+tkp(7.5);
+  barra(X0,y,W,4);barra(X0,y+ht-4,W,4);barra(X0,y,4,ht);barra(X0+W-4,y,4,ht);
+  barra(X0+cw,y,2,ht);barra(X0+2*cw,y,2,ht);
+  [['Qtde',totQ+' pçs'],['CBM',fNum(totC,3)+'m³'],['Peso',fNum(totP,2)+'kg']].forEach(function(t,i){
+    var x=X0+i*cw;
+    fonte(9,'bold');escreve(t[0].toUpperCase(),x,y+tkp(3.8),cw,'center');
+    fonte(13,'900');escreve(t[1],x,y+tkp(3.8)+tkp(9)*1.2,cw,'center');
+  });
+  y+=ht+tkp(7.5);
+  // QR
+  try{
+    var q=qrcode(0,'M');q.addData(tk.numero);q.make();
+    var n=q.getModuleCount(),mod=Math.max(4,Math.floor(tkp(100)/n)),lq=mod*n,xq=Math.round((TK_LARG-lq)/2);
+    y+=mod*3; // margem branca de 4 módulos acima do QR (exigência da leitura)
+    for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))c.fillRect(xq+k*mod,y+r*mod,mod,mod);
+    y+=lq+mod*4; // e abaixo, antes da linha do rodapé
+  }catch(e){}
+  // rodapé
+  barra(X0,y,W,3);y+=3+tkp(4);
+  fonte(8,'bold');
+  var rod=tk.numero+(opt.total>1?' · '+opt.via+'ª VIA de '+opt.total:'');
+  escreve(rod,X0,y,W,'center');y+=tkp(8)*1.3;
+  if(opt.tipo==='reimpressao'){escreve('REIMPRESSÃO '+new Date().toLocaleString('pt-BR'),X0,y,W,'center');y+=tkp(8)*1.3;}
+  y+=10;
+  var out=document.createElement('canvas');out.width=TK_LARG;out.height=Math.ceil(y);
+  out.getContext('2d').drawImage(cv,0,0);
+  return out;
+}
+// canvas → comando de imagem ESC/POS (GS v 0), em faixas de até 255 linhas
+function rasterEscPos(cv,e){
+  var w=cv.width,h=cv.height,bw=w/8,px=cv.getContext('2d').getImageData(0,0,w,h).data;
+  for(var y0=0;y0<h;y0+=255){
+    var hh=Math.min(255,h-y0);
+    e.raw(0x1D,0x76,0x30,0,bw&255,bw>>8,hh&255,hh>>8);
+    for(var y=y0;y<y0+hh;y++){
+      for(var bx=0;bx<bw;bx++){
+        var by=0;
+        for(var bit=0;bit<8;bit++){
+          var i=(y*w+bx*8+bit)*4;
+          if(px[i]*0.3+px[i+1]*0.59+px[i+2]*0.11<160)by|=(0x80>>bit);
+        }
+        e.b.push(by);
+      }
+    }
+  }
+}
+// ticket completo para a fila: N vias, cada uma com corte
+function escposTicketImagem(tk,lotes,tipo,vias){
+  vias=Math.max(1,Math.min(9,parseInt(vias)||1));
+  var e=new EscPos().raw(0x1B,0x40);
+  for(var v=1;v<=vias;v++){
+    rasterEscPos(canvasTicket(tk,lotes,{tipo:tipo,via:v,total:vias}),e);
+    e.corte();
+  }
+  return e.base64();
+}
+// ── Vias ──
+function viasEscolhidas(id){var el=document.getElementById(id);return Math.max(1,Math.min(9,parseInt(el&&(el.value||el.textContent))||1));}
+function passoVias(d){
+  var el=document.getElementById('tk-vias'),n=Math.max(1,Math.min(9,(parseInt(el.textContent)||1)+d));
+  el.textContent=n;lsSet('wp_vias',String(n));
+  var r=document.getElementById('tk-reimp-vias');if(r)r.value=String(n);
+}
+function iniciarVias(){
+  var n=Math.max(1,Math.min(9,parseInt(lsGet('wp_vias'))||1));
+  var el=document.getElementById('tk-vias');if(el)el.textContent=n;
+  var r=document.getElementById('tk-reimp-vias');if(r)r.value=String(n);
+}
+
+// (modo texto — usado só se o desenho do ticket falhar)
 function escposTicket(tk,lotes,tipo){
   var e=new EscPos().raw(0x1B,0x40);
-  var navio=navioAtivo?navioAtivo.nome:'-', vgm=navioAtivo&&navioAtivo.viagem?navioAtivo.viagem:'-';
+  var nvT=navioDoTicket(tk),navio=nvT?nvT.nome:'-', vgm=nvT&&nvT.viagem?nvT.viagem:'-';
   var totQ=0,totC=0,totP=0;
   lotes.forEach(function(l){totQ+=parseInt(l.quantidade)||0;totC+=parseFloat(l.cbm_calculado)||0;totP+=parseFloat(l.peso_calculado)||0;});
   e.al(1).bold(1).tam(2,2).ln('WOODPORT').tam(1,1).ln('TICKET DE EMBARQUE').ln();
@@ -4923,7 +5273,9 @@ function escposTicket(tk,lotes,tipo){
   e.lr('NAVIO',navio).lr('VIAGEM',vgm);
   e.lr('PORAO / TIER',(tk.porao||'-')+' / T'+(tk.tier||'-')).lr('VIAGEM DO TIER',tk.viagem||'-').lr('PORTO',tk.porto_descarga||'-');
   e.bold(1).tam(1,2).lr('PLACA',tk.placa||'-').tam(1,1).bold(0);
-  e.lr('MOTORISTA',tk.motorista||'-').lr('CONFERENTE',tk.conferente_nome||'-');
+  if(tk.placa_carreta)e.lr('CARRETA',tk.placa_carreta);
+  e.lr('MOTORISTA',tk.motorista||'-');if(tk.motorista_cpf)e.lr('CPF',fmtCpf(tk.motorista_cpf));
+  e.lr('CONFERENTE',tk.conferente_nome||'-');
   e.lr('EMISSAO',(tk.created_at?new Date(tk.created_at):new Date()).toLocaleString('pt-BR'));
   e.linha('=');
   lotes.forEach(function(l,i){
@@ -5017,10 +5369,13 @@ function enfileirar(impId,bytes,tk,tipo){
     bytes_b64:bytes, status:'pendente', pedido_por:currentUser.id, pedido_por_nome:currentUser.nome,
   }).select('id').single();
 }
-function imprimirTicketNaFila(impId,tk,lotes,tipo){
+function imprimirTicketNaFila(impId,tk,lotes,tipo,vias){
   var imp=impressorasAll.find(function(i){return i.id===impId;});
   renderStatusFila({status:'enviando'},imp);
-  enfileirar(impId,escposTicket(tk,lotes,tipo),tk,tipo).then(function(r){
+  var bytes;
+  try{bytes=escposTicketImagem(tk,lotes,tipo,vias);}
+  catch(e){console.error(e);bytes=escposTicket(tk,lotes,tipo);} // reserva: modo texto
+  enfileirar(impId,bytes,tk,tipo).then(function(r){
     if(r.error){renderStatusFila({status:'erro',erro:'Não foi possível colocar na fila: '+r.error.message},imp);return;}
     acompanharFila(r.data.id,imp);
   });
@@ -5065,9 +5420,9 @@ function imprimirDoModal(){
   if(!_tkAtual)return;
   var v=document.getElementById('tk-reimp-sel').value;
   salvarImpressoraEscolhida(v);
-  if(v==='navegador'){printTicket();return;}
+  if(v==='navegador'){printTicket(viasEscolhidas('tk-reimp-vias'));return;}
   if(v==='nenhuma'){document.getElementById('tk-print-status').innerHTML='';return;}
-  imprimirTicketNaFila(v,_tkAtual.tk,_tkAtual.lotes,'reimpressao');
+  imprimirTicketNaFila(v,_tkAtual.tk,_tkAtual.lotes,'reimpressao',viasEscolhidas('tk-reimp-vias'));
 }
 function fecharTicketModal(){
   clearInterval(_filaPoll);
@@ -5077,12 +5432,12 @@ function fecharTicketModal(){
 function imprimirAposEmissao(tk,lotes){
   var v=(document.getElementById('tk-impressora')||{}).value||'nenhuma';
   document.getElementById('tk-reimp-sel').value=v;
-  if(v==='navegador'){printTicket();return;}
+  if(v==='navegador'){printTicket(viasEscolhidas('tk-vias'));return;}
   if(v==='nenhuma')return;
-  imprimirTicketNaFila(v,tk,lotes,'emissao');
+  imprimirTicketNaFila(v,tk,lotes,'emissao',viasEscolhidas('tk-vias'));
 }
 function qrDataUrl(texto){
-  try{var q=qrcode(0,'M');q.addData(texto);q.make();return q.createDataURL(5,2);}catch(e){return '';}
+  try{var q=qrcode(0,'M');q.addData(texto);q.make();return q.createDataURL(5,20);}catch(e){return '';}
 }
 
 // ── Tela Impressoras (admin) ──
@@ -5186,7 +5541,14 @@ function excluirImpressora(id){
 }
 function testarImpressora(id){
   var i=impressorasAll.find(function(x){return x.id===id;});if(!i)return;
-  enfileirar(id,escposTeste(i),null,'teste').then(function(r){
+  // folha de teste em texto + um ticket de exemplo como imagem (confirma que a impressora aceita o layout novo)
+  var bytes=escposTeste(i);
+  try{
+    var exemplo={numero:'TK-TESTE-0000001',porao:'#01',tier:1,viagem:'V01',porto_descarga:'PORTO',placa:'ABC-1D23',motorista:'MOTORISTA TESTE',conferente_nome:currentUser.nome,created_at:new Date().toISOString()};
+    var lt=[{lote:'LOTE TESTE',ref:1,marca:'MARCA',shipper:'SHIPPER',due:'DUE',nf:'000000',quantidade:10,cbm_calculado:8.5,peso_calculado:4250}];
+    bytes=btoa(atob(bytes)+atob(escposTicketImagem(exemplo,lt,'teste',1)));
+  }catch(e){console.error(e);}
+  enfileirar(id,bytes,null,'teste').then(function(r){
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
     toast('Teste enviado para '+i.armazem+' · '+i.nome+(agenteOnline(i.armazem)?'':' — o computador do armazém está offline, imprime quando voltar'),'success');
     setTimeout(loadFila,500);setTimeout(function(){loadImpressorasPage(true);},6000);
@@ -5228,7 +5590,24 @@ function baixarCfgAgente(){
 // Baixa: primeiro que entra, primeiro que sai — define de qual produtor saiu
 // e quantos dias cada fardo ficou (base da cobrança de armazenagem).
 // ══════════════════════════════════════════════════
-var est={marcas:[],movs:[],saidas:[],tarifas:[],carregado:false,aba:'saldo',grupos:null,armRes:null};
+var est={marcas:[],movs:[],saidas:[],tarifas:[],navArm:{},carregado:false,aba:'saldo',grupos:null,armRes:null};
+// ── Armador: cada estoque é de um armador (entradas pelo lançamento, saídas pelo navio do ticket) ──
+var ARMADORES=['G2 Ocean','AB'];
+var armadorAtual=(function(){var a=lsGet('wp_armador');return ARMADORES.indexOf(a)>=0?a:ARMADORES[0];})();
+function mesmoArmador(a){return normAz(a)===normAz(armadorAtual);}
+function renderSeletoresArmador(){
+  document.querySelectorAll('.arm-sel').forEach(function(box){
+    box.innerHTML=ARMADORES.map(function(a){var on=a===armadorAtual;
+      return '<button type="button" class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="escolherArmador(\''+esc(a)+'\')">'+esc(a)+'</button>';}).join('');
+  });
+  document.querySelectorAll('.arm-nome').forEach(function(e){e.textContent=armadorAtual;});
+}
+function escolherArmador(a){
+  armadorAtual=a;lsSet('wp_armador',a);renderSeletoresArmador();
+  if(currentPage==='estoque')estRender();
+  if(currentPage==='armazenagem'){armRenderTarifas();est.armRes=null;['ar-tb','ar-det'].forEach(function(i){document.getElementById(i).innerHTML='';});document.getElementById('ar-total').textContent='';}
+  if(currentPage==='rel-armazem')raGerar();
+}
 
 function nmMarca(s){return String(s||'').toUpperCase().replace(/\s+/g,'');}
 function diaN(iso){var p=String(iso).slice(0,10).split('-');return Date.UTC(+p[0],+p[1]-1,+p[2])/864e5;}
@@ -5259,11 +5638,13 @@ function estCarregar(forcar){
       .select('id,marca,armazem,quantidade,wp_tickets!inner(numero,status,validado_em,armazem,navio_id)')
       .eq('wp_tickets.status','validado').order('id');}),
     sb.from('wp_armazenagem_tarifa').select('*'),
+    sb.from('wp_navios').select('id,nome,armador'),
   ]).then(function(rs){
     showLd(false);
     var err=rs[0].error||rs[1].error||rs[2].error;
     if(err){toast('Erro ao carregar estoque: '+err.message,'error');return;}
     est.marcas=rs[0].data||[];est.movs=rs[1].data||[];est.saidas=rs[2].data||[];est.tarifas=(rs[3].data||[]);
+    est.navArm={};(rs[4].data||[]).forEach(function(n){est.navArm[n.id]=n.armador||'';});
     est.carregado=true;est.grupos=null;
     // listas de apoio para digitação
     document.getElementById('dl-marcas').innerHTML=est.marcas.map(function(m){return '<option value="'+esc(m.marca)+'">';}).join('');
@@ -5277,13 +5658,14 @@ function estCalcular(ateIso){
   ateIso=ateIso||localISODate();
   var ateN=diaN(ateIso);
   var corte={}; // data do inventário de abertura de cada armazém
-  est.movs.forEach(function(m){if(m.tipo==='inventario'){var k=normAz(m.armazem);if(!corte[k]||m.data<corte[k])corte[k]=m.data;}});
-  var G={},avisos={semArmazem:0,semEstoque:[]};
+  est.movs.forEach(function(m){if(m.tipo==='inventario'&&mesmoArmador(m.armador)){var k=normAz(m.armazem);if(!corte[k]||m.data<corte[k])corte[k]=m.data;}});
+  var G={},avisos={semArmazem:0,semEstoque:[],semArmadorNavio:0};
   function g(az,marca){
     var k=normAz(az)+'|'+nmMarca(marca);
     return G[k]||(G[k]={az:azDoMov(az),marca:String(marca||'').trim().toUpperCase(),ent:[],sai:[],totEnt:0,totSai:0});
   }
   est.movs.forEach(function(m){
+    if(!mesmoArmador(m.armador))return;
     if(diaN(m.data)>ateN)return;
     var q=parseInt(m.quantidade)||0,gr=g(m.armazem,m.marca);
     if(q>0){gr.ent.push({id:m.id,n:diaN(m.data),data:m.data,qtd:q,resto:q,produtor:(m.produtor||'').trim()||'(sem produtor)',nf:m.nf||'',tipo:m.tipo,criado:m.created_at||''});gr.totEnt+=q;}
@@ -5292,6 +5674,9 @@ function estCalcular(ateIso){
   est.saidas.forEach(function(it){
     var tk=it.wp_tickets||{};
     if(!tk.validado_em)return;
+    var armNav=est.navArm[tk.navio_id];
+    if(!armNav){avisos.semArmadorNavio++;return;}
+    if(!mesmoArmador(armNav))return; // embarque de navio de outro armador
     var az=it.armazem||'';
     if(!az||az.indexOf(',')>=0){avisos.semArmazem++;return;}
     var d=localISODate(new Date(tk.validado_em)),n=diaN(d);
@@ -5338,6 +5723,7 @@ function estAbrir(forcar){
     document.getElementById('em-de').value=localISODate(d);
     document.getElementById('em-ate').value=localISODate();
   }
+  renderSeletoresArmador();
   estCarregar(forcar).then(estRender);
 }
 function estAba(a){
@@ -5401,6 +5787,7 @@ function estRenderSaldo(){
   if(a.semEstoque.length)av.push('<strong>Embarcado mais do que entrou</strong> (falta lançar descarga ou inventário): '+esc(a.semEstoque.slice(0,8).join(' · '))+(a.semEstoque.length>8?' …':''));
   if(semParam.length)av.push('<strong>Marcas sem parâmetro</strong> (m³ e peso não calculados, nem a armazenagem): '+esc([...new Set(semParam)].slice(0,12).join(', ')));
   if(a.semArmazem)av.push(a.semArmazem+' item(ns) de ticket validado sem armazém definido no lote — não baixaram estoque.');
+  if(a.semArmadorNavio)av.push(a.semArmadorNavio+' item(ns) embarcado(s) em navio <strong>sem armador</strong> — defina o armador em Administração › Navios para baixar do estoque certo.');
   if(!Object.keys(est.corte).length&&est.movs.length)av.push('Nenhum <strong>inventário de abertura</strong> lançado: todos os embarques validados estão sendo descontados.');
   document.getElementById('es-alertas').innerHTML=av.map(function(t){return '<div class="imp-st err" style="margin-bottom:10px;">⚠<div>'+t+'</div></div>';}).join('');
 }
@@ -5410,7 +5797,7 @@ function estExportSaldo(){
     return {'Armazém':g.az,'Marca':g.marca,'Produtores':produtoresEmEstoque(g).join(', '),'Entradas':g.totEnt,'Saídas':g.totSai,'Saldo (fd)':g.saldo,
       'm³':mi?+(g.saldo*mi.cbm).toFixed(3):'','t':mi?+(g.saldo*mi.peso_t).toFixed(3):'','Embarcado sem entrada':g.deficit||''};
   });
-  xlsxBaixar(rows,'Saldo','estoque_saldo_'+localISODate()+'.xlsx');
+  xlsxBaixar(rows,'Saldo','estoque_saldo_'+armadorAtual.replace(/\s+/g,'_')+'_'+localISODate()+'.xlsx');
 }
 function xlsxBaixar(rows,aba,nome){
   if(!rows.length){toast('Nada para exportar','error');return;}
@@ -5427,12 +5814,12 @@ function edMarcaInfo(){
     :'<span style="color:#B45309;">Marca sem parâmetro — cadastre em Marcas para calcular m³ e armazenagem.</span>';
 }
 function lancarDescarga(){
-  var reg={armazem:document.getElementById('ed-az').value,data:document.getElementById('ed-data').value,tipo:document.getElementById('ed-tipo').value,
+  var reg={armador:armadorAtual,armazem:document.getElementById('ed-az').value,data:document.getElementById('ed-data').value,tipo:document.getElementById('ed-tipo').value,
     nf:v('ed-nf'),produtor:v('ed-prod'),marca:(v('ed-marca')||'').toUpperCase(),quantidade:parseInt(document.getElementById('ed-qtd').value)||0,obs:v('ed-obs'),
     criado_por:currentUser.id,criado_por_nome:currentUser.nome};
   if(!reg.data||!reg.armazem||!reg.marca||!reg.produtor){toast('Preencha data, armazém, produtor e marca','error');return;}
   if(reg.quantidade<=0){toast('Quantidade de fardos deve ser maior que zero','error');return;}
-  var dup=est.movs.find(function(m){return normAz(m.armazem)===normAz(reg.armazem)&&m.data===reg.data&&(m.nf||'')===(reg.nf||'')&&nmMarca(m.marca)===nmMarca(reg.marca)&&+m.quantidade===reg.quantidade;});
+  var dup=est.movs.find(function(m){return mesmoArmador(m.armador)&&normAz(m.armazem)===normAz(reg.armazem)&&m.data===reg.data&&(m.nf||'')===(reg.nf||'')&&nmMarca(m.marca)===nmMarca(reg.marca)&&+m.quantidade===reg.quantidade;});
   if(dup&&!confirm('Já existe um lançamento igual (mesma data, NF, marca e quantidade). Lançar de novo?'))return;
   showLd(true);
   sb.from('wp_estoque_mov').insert(reg).select('*').single().then(function(r){
@@ -5450,6 +5837,7 @@ function estRenderMovs(){
   var de=document.getElementById('em-de').value,ate=document.getElementById('em-ate').value;
   var b=(document.getElementById('em-busca').value||'').trim().toLowerCase(),az=document.getElementById('est-az').value;
   var lin=est.movs.filter(function(m){
+    if(!mesmoArmador(m.armador))return false;
     if(az&&normAz(m.armazem)!==normAz(az))return false;
     if(de&&m.data<de)return false;if(ate&&m.data>ate)return false;
     return !b||[m.nf,m.produtor,m.marca].join(' ').toLowerCase().indexOf(b)>=0;
@@ -5543,7 +5931,7 @@ function importarMovExcel(input){
         if(q<=0){if(cSai>=0&&(numBR(L[cSai])||0)>0)ignorados.saida++;else ignorados.semQtd++;continue;}
         var d=tipo==='inventario'?dataCorte:(cData>=0?dataPlanilha(L[cData],LT[cData]):null);
         if(!d){ignorados.semData++;continue;}
-        regs.push({armazem:cAz>=0&&String(L[cAz]).trim()?azDoMov(L[cAz]):azPadrao,data:d,tipo:tipo,
+        regs.push({armador:armadorAtual,armazem:cAz>=0&&String(L[cAz]).trim()?azDoMov(L[cAz]):azPadrao,data:d,tipo:tipo,
           nf:cNf>=0?String(LT[cNf]||L[cNf]||'').trim()||null:(tipo==='inventario'?'INV':null),
           produtor:cProd>=0?String(LT[cProd]||L[cProd]||'').trim()||null:null,
           marca:marca,quantidade:q,obs:cObs>=0?String(LT[cObs]||'').trim()||null:null,
@@ -5556,7 +5944,7 @@ function importarMovExcel(input){
     var fora=regs.filter(function(x){return azs.indexOf(normAz(x.armazem))<0;});
     regs=regs.filter(function(x){return azs.indexOf(normAz(x.armazem))>=0;});
     // duplicados (já lançados)
-    var ja={};est.movs.forEach(function(m){ja[[normAz(m.armazem),m.data,m.nf||'',nmMarca(m.marca),m.quantidade].join('|')]=1;});
+    var ja={};est.movs.forEach(function(m){if(mesmoArmador(m.armador))ja[[normAz(m.armazem),m.data,m.nf||'',nmMarca(m.marca),m.quantidade].join('|')]=1;});
     var dups=0;regs=regs.filter(function(x){var k=[normAz(x.armazem),x.data,x.nf||'',nmMarca(x.marca),x.quantidade].join('|');if(ja[k]){dups++;return false;}return true;});
     if(!regs.length){toast('Nada novo para importar ('+dups+' já lançados).','error');return;}
     var semParam=[...new Set(regs.filter(function(x){return !marcaInfo(x.marca);}).map(function(x){return x.marca;}))];
@@ -5564,7 +5952,7 @@ function importarMovExcel(input){
     var fd=regs.reduce(function(a,x){return a+x.quantidade;},0);
     var semProd=regs.filter(function(x){return !x.produtor;}).length;
     var msg=(tipo==='inventario'?'INVENTÁRIO DE ABERTURA em '+fmtIso(dataCorte):'DESCARGAS de '+fmtIso(datas[0])+' a '+fmtIso(datas[datas.length-1]))
-      +'\nAba: '+abaUsada+'\n\n• '+regs.length+' lançamento(s) · '+fd.toLocaleString('pt-BR')+' fardos'
+      +'\nArmador: '+armadorAtual+'\nAba: '+abaUsada+'\n\n• '+regs.length+' lançamento(s) · '+fd.toLocaleString('pt-BR')+' fardos'
       +'\n• Armazém: '+[...new Set(regs.map(function(x){return x.armazem;}))].join(', ')
       +(dups?'\n• '+dups+' já lançado(s) antes — ignorados':'')
       +(ignorados.saida?'\n• '+ignorados.saida+' linha(s) de SAÍDA ignoradas (saídas vêm dos embarques)':'')
@@ -5705,7 +6093,9 @@ var _lcRows=[];
 function estRenderComparar(){
   var tb=document.getElementById('lc-tb'),emp=document.getElementById('lc-empty');
   if(!navioAtivo){tb.innerHTML='';emp.style.display='';return;}
-  document.getElementById('lc-navio').textContent=navioAtivo.nome+(navioAtivo.viagem?' · '+navioAtivo.viagem:'');
+  var armNav=est.navArm[navioAtivo.id]||navioAtivo.armador||'';
+  document.getElementById('lc-navio').innerHTML=esc(navioAtivo.nome+(navioAtivo.viagem?' · '+navioAtivo.viagem:''))+' · armador '+esc(armNav||'não definido')
+    +(armNav&&!mesmoArmador(armNav)?' — <strong style="color:#B42318;">você está vendo o estoque de '+esc(armadorAtual)+'</strong> <a href="#" onclick="escolherArmador(\''+esc(armNav)+'\');return false;">trocar para '+esc(armNav)+'</a>':'');
   var nid=navioAtivo.id;
   Promise.all([fetchLista(nid),fetchUsadoNavio(nid)]).then(function(rs){
     if(!navioAtivo||navioAtivo.id!==nid)return;
@@ -5786,11 +6176,11 @@ function lancarAjustesInventario(){
     var marca=tr.getAttribute('data-k');
     // sobra: atribui ao último produtor que descarregou a marca nesse armazém
     var ult=est.movs.filter(function(m){return normAz(m.armazem)===normAz(az)&&nmMarca(m.marca)===nmMarca(marca)&&m.produtor;}).pop();
-    regs.push({armazem:az,data:data,tipo:'ajuste',nf:'CONTAGEM',produtor:d>0&&ult?ult.produtor:null,marca:marca,quantidade:d,
+    regs.push({armador:armadorAtual,armazem:az,data:data,tipo:'ajuste',nf:'CONTAGEM',produtor:d>0&&ult?ult.produtor:null,marca:marca,quantidade:d,
       obs:'Contagem física de '+fmtIso(data),criado_por:currentUser.id,criado_por_nome:currentUser.nome});
   });
   if(!regs.length){toast('Nenhuma diferença para lançar','error');return;}
-  if(!confirm('Lançar '+regs.length+' ajuste(s) de estoque no armazém '+az+' em '+fmtIso(data)+'?'))return;
+  if(!confirm('Lançar '+regs.length+' ajuste(s) de estoque — '+armadorAtual+' · armazém '+az+' — em '+fmtIso(data)+'?'))return;
   showLd(true);
   sb.from('wp_estoque_mov').insert(regs).then(function(r){
     showLd(false);
@@ -5815,9 +6205,10 @@ function armAbrir(){
     document.getElementById('ar-de').value=localISODate(ini);
     document.getElementById('ar-ate').value=localISODate(h);
   }
+  renderSeletoresArmador();
   estCarregar().then(armRenderTarifas);
 }
-function tarifaDe(az){return est.tarifas.find(function(t){return normAz(t.armazem)===normAz(az);})||{tarifa_m3_dia:0,dias_livres:0};}
+function tarifaDe(az){return est.tarifas.find(function(t){return normAz(t.armazem)===normAz(az)&&mesmoArmador(t.armador);})||{tarifa_m3_dia:0,dias_livres:0};}
 function armRenderTarifas(){
   var pode=temModulo('armazenagem');
   document.getElementById('ar-tarifas').innerHTML=armazensUsuario().map(function(az){
@@ -5831,9 +6222,9 @@ function armRenderTarifas(){
 function salvarTarifa(az){
   var tar=numBR(document.querySelector('.ar-tar[data-az="'+az+'"]').value),liv=parseInt(document.querySelector('.ar-liv[data-az="'+az+'"]').value)||0;
   if(tar===null||tar<0){toast('Tarifa inválida','error');return;}
-  sb.from('wp_armazenagem_tarifa').upsert({armazem:az,tarifa_m3_dia:tar,dias_livres:liv,updated_at:new Date().toISOString()},{onConflict:'armazem'}).then(function(r){
+  sb.from('wp_armazenagem_tarifa').upsert({armador:armadorAtual,armazem:az,tarifa_m3_dia:tar,dias_livres:liv,updated_at:new Date().toISOString()},{onConflict:'armador,armazem'}).then(function(r){
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    toast('Tarifa de '+az+' salva','success');est.carregado=false;estCarregar().then(armRenderTarifas);
+    toast('Tarifa de '+armadorAtual+' · '+az+' salva','success');est.carregado=false;estCarregar().then(armRenderTarifas);
   });
 }
 // Cobrança: para cada parcela de uma descarga (o que saiu em cada embarque e o que ainda está no armazém),
@@ -5896,7 +6287,7 @@ function exportArmazenagem(){
   if(!res.length){toast('Nada a exportar','error');return;}
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(res),'Por produtor');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'Detalhe');
-  XLSX.writeFile(wb,'armazenagem_'+r.de+'_a_'+r.ate+'.xlsx');
+  XLSX.writeFile(wb,'armazenagem_'+armadorAtual.replace(/\s+/g,'_')+'_'+r.de+'_a_'+r.ate+'.xlsx');
 }
 
 
@@ -5905,7 +6296,7 @@ function exportArmazenagem(){
 // ══════════════════════════════════════════════════
 var MOD_DE_PAGINA={dashboard:'embarque',lista:'embarque',tickets:'embarque',validar:'embarque',relatorios:'embarque',
   estoque:'armazem',armazenagem:'armazem','rel-armazem':'armazem',
-  usuarios:'admin',navio:'admin',backup:'admin',impressoras:'admin','rel-admin':'admin',cfg:'admin'};
+  usuarios:'admin',navio:'admin',cadastros:'admin',backup:'admin',impressoras:'admin','rel-admin':'admin',cfg:'admin'};
 var MOD_NOME={embarque:'Embarque',armazem:'Armazém',admin:'Administração'};
 function abrirMod(mod,abrir){
   var el=document.querySelector('.nav-mod[data-mod="'+mod+'"]');if(!el)return;
@@ -5978,6 +6369,7 @@ function raAbrir(){
     sel.innerHTML=(azs.length>1?'<option value="">Todos</option>':'')+azs.map(function(a){return '<option>'+esc(a)+'</option>';}).join('');
     var h=new Date();document.getElementById('ra-de').value=localISODate(new Date(h.getFullYear(),h.getMonth(),1));document.getElementById('ra-ate').value=localISODate(h);
   }
+  renderSeletoresArmador();
   raAba(raAtual);
 }
 function raAba(a){
@@ -6007,12 +6399,12 @@ function raGerar(){
     rows.sort(function(a,b){return a.az.localeCompare(b.az)||a.marca.localeCompare(b.marca);});
     var cols=[{t:'Armazém',k:'az'},{t:'Marca',k:'marca',mono:true},{t:'Saldo inicial',k:'ini',tipo:'num'},{t:'Entradas',k:'ent',tipo:'num'},
       {t:'Saídas (embarque)',k:'sai',tipo:'num'},{t:'Ajustes',k:'aj',tipo:'num'},{t:'Saldo final',k:'fim',tipo:'num'},{t:'m³ final',k:'m3',tipo:'num',dec:3}];
-    rep={titulo:'Movimentação '+fmtIso(de)+' a '+fmtIso(ate),cols:cols,rows:rows,total:somaTotal(rows,cols,'az'),arquivo:'movimentacao_'+de+'_a_'+ate+'.xlsx'};
+    rep={titulo:armadorAtual+' — Movimentação '+fmtIso(de)+' a '+fmtIso(ate),cols:cols,rows:rows,total:somaTotal(rows,cols,'az'),arquivo:'movimentacao_'+de+'_a_'+ate+'.xlsx'};
   }
   if(raAtual==='prod'){
     var G={};
     est.movs.forEach(function(m){
-      if(m.tipo==='ajuste'||!okAz(m.armazem))return;
+      if(m.tipo==='ajuste'||!okAz(m.armazem)||!mesmoArmador(m.armador))return;
       var n=diaN(m.data);if(n<deN||n>ateN)return;
       var prod=(m.produtor||'').trim()||'(sem produtor)',k=prod+'|'+nmMarca(m.marca)+'|'+normAz(m.armazem);
       var r=G[k]||(G[k]={prod:prod,marca:String(m.marca).toUpperCase(),az:azDoMov(m.armazem),desc:0,fd:0,m3:0,t:0,primeira:m.data,ultima:m.data});
@@ -6023,7 +6415,7 @@ function raGerar(){
     var rows2=Object.values(G).sort(function(a,b){return a.prod.localeCompare(b.prod)||a.marca.localeCompare(b.marca);});
     var cols2=[{t:'Produtor',k:'prod'},{t:'Marca',k:'marca',mono:true},{t:'Armazém',k:'az'},{t:'Lançamentos',k:'desc',tipo:'num'},{t:'Fardos',k:'fd',tipo:'num'},
       {t:'m³',k:'m3',tipo:'num',dec:3},{t:'t',k:'t',tipo:'num',dec:3},{t:'Primeira',k:'primeira',tipo:'data'},{t:'Última',k:'ultima',tipo:'data'}];
-    rep={titulo:'Entradas por produtor '+fmtIso(de)+' a '+fmtIso(ate),cols:cols2,rows:rows2,total:somaTotal(rows2,cols2,'prod'),arquivo:'entradas_por_produtor_'+de+'_a_'+ate+'.xlsx'};
+    rep={titulo:armadorAtual+' — Entradas por produtor '+fmtIso(de)+' a '+fmtIso(ate),cols:cols2,rows:rows2,total:somaTotal(rows2,cols2,'prod'),arquivo:'entradas_por_produtor_'+de+'_a_'+ate+'.xlsx'};
   }
   if(raAtual==='idade'){
     var G3={},res=estCalcular(ate).G;
@@ -6043,7 +6435,7 @@ function raGerar(){
       .sort(function(a,b){return b.medio-a.medio;});
     var cols3=[{t:'Produtor',k:'prod'},{t:'Marca',k:'marca',mono:true},{t:'Armazém',k:'az'},{t:'Fardos',k:'fd',tipo:'num'},{t:'m³',k:'m3',tipo:'num',dec:3},
       {t:'Até 30 dias',k:'a30',tipo:'num'},{t:'31–60',k:'a60',tipo:'num'},{t:'61–90',k:'a90',tipo:'num'},{t:'Mais de 90',k:'mais',tipo:'num'},{t:'Idade média (dias)',k:'medio',tipo:'num',semTotal:true}];
-    rep={titulo:'Posição e idade do estoque em '+fmtIso(ate),cols:cols3,rows:rows3,total:somaTotal(rows3,cols3,'prod'),arquivo:'idade_estoque_'+ate+'.xlsx'};
+    rep={titulo:armadorAtual+' — Posição e idade do estoque em '+fmtIso(ate),cols:cols3,rows:rows3,total:somaTotal(rows3,cols3,'prod'),arquivo:'idade_estoque_'+ate+'.xlsx'};
   }
   relRender('ra',rep);
 }
@@ -6094,15 +6486,15 @@ function rdGerar(){
     ]).then(function(rs){
       fim();var err=rs.find(function(x){return x.error;});if(err){toast('Erro: '+err.error.message,'error');return;}
       var N={};
-      rs[0].data.forEach(function(n){N[n.id]={nome:n.nome,vgm:n.viagem||'',eta:n.eta,lotes:0,fdLista:0,m3Lista:0,tks:0,val:0,fdEmb:0,m3Emb:0,ini:null,fim:null};});
+      rs[0].data.forEach(function(n){N[n.id]={nome:n.nome,vgm:n.viagem||'',eta:n.eta,lotes:0,fdLista:0,m3Lista:0,tks:0,val:0,canc:0,fdEmb:0,m3Emb:0,ini:null,fim:null};});
       rs[1].data.forEach(function(l){var n=N[l.navio_id];if(!n)return;n.lotes++;n.fdLista+=+l.quantidade||0;n.m3Lista+=+l.cbm_total||0;});
       var tk={};
-      rs[2].data.forEach(function(t){var n=N[t.navio_id];if(!n)return;n.tks++;tk[t.id]=t;
+      rs[2].data.forEach(function(t){var n=N[t.navio_id];if(!n)return;if(t.status==='cancelado'){n.canc++;return;}n.tks++;tk[t.id]=t;
         if(t.status==='validado'){n.val++;var d=t.validado_em?localISODate(new Date(t.validado_em)):null;if(d){if(!n.ini||d<n.ini)n.ini=d;if(!n.fim||d>n.fim)n.fim=d;}}});
       rs[3].data.forEach(function(i){var t=tk[i.ticket_id];if(!t||t.status!=='validado')return;var n=N[t.navio_id];n.fdEmb+=+i.quantidade||0;n.m3Emb+=+i.cbm_calculado||0;});
       var rows=Object.values(N).map(function(n){n.pct=n.fdLista?Math.round(n.fdEmb/n.fdLista*100):0;return n;}).reverse();
       var cols=[{t:'Navio',k:'nome'},{t:'Viagem',k:'vgm',mono:true},{t:'ETA',k:'eta',tipo:'data'},{t:'Lotes',k:'lotes',tipo:'num'},{t:'Fardos na lista',k:'fdLista',tipo:'num'},
-        {t:'m³ na lista',k:'m3Lista',tipo:'num',dec:1},{t:'Tickets',k:'tks',tipo:'num'},{t:'Validados',k:'val',tipo:'num'},{t:'Fardos embarcados',k:'fdEmb',tipo:'num'},
+        {t:'m³ na lista',k:'m3Lista',tipo:'num',dec:1},{t:'Tickets',k:'tks',tipo:'num'},{t:'Validados',k:'val',tipo:'num'},{t:'Cancelados',k:'canc',tipo:'num'},{t:'Fardos embarcados',k:'fdEmb',tipo:'num'},
         {t:'m³ embarcados',k:'m3Emb',tipo:'num',dec:1},{t:'% embarcado',k:'pct',tipo:'num',semTotal:true},{t:'1º embarque',k:'ini',tipo:'data'},{t:'Último embarque',k:'fim',tipo:'data'}];
       relRender('rd',{titulo:'Resumo por navio',cols:cols,rows:rows,total:somaTotal(rows,cols,'nome'),arquivo:'resumo_por_navio_'+localISODate()+'.xlsx'});
     });
@@ -6131,6 +6523,360 @@ function rdGerar(){
       relRender('rd',{titulo:'Impressões '+fmtIso(de)+' a '+fmtIso(ate),cols:cols,rows:rows,total:somaTotal(rows,cols,'az'),arquivo:'impressoes_'+de+'_a_'+ate+'.xlsx'});
     });
   }
+}
+
+
+// ══════════════════════════════════════════════════
+// MOTORISTAS E VEÍCULOS — cadastro + autocompletar na emissão
+// ══════════════════════════════════════════════════
+function soDig(s){return String(s==null?'':s).replace(/\D/g,'');}
+function cpfValido(c){
+  c=soDig(c);
+  if(c.length!==11||/^(\d)\1{10}$/.test(c))return false;
+  for(var t=9;t<11;t++){
+    var s=0;for(var i=0;i<t;i++)s+=(+c[i])*(t+1-i);
+    if(+c[t]!==((s*10)%11)%10)return false;
+  }
+  return true;
+}
+function fmtCpf(c){c=soDig(c);return c.length===11?c.slice(0,3)+'.'+c.slice(3,6)+'.'+c.slice(6,9)+'-'+c.slice(9):(c||'—');}
+function mascaraCpf(inp){
+  var d=soDig(inp.value).slice(0,11),r=d;
+  if(d.length>9)r=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+  else if(d.length>6)r=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
+  else if(d.length>3)r=d.slice(0,3)+'.'+d.slice(3);
+  inp.value=r;
+}
+function nPlaca(p){return String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function fmtPlacaTxt(p){p=nPlaca(p);return p.length>3?p.slice(0,3)+'-'+p.slice(3,7):p;}
+function fmtPlacaSimples(inp){inp.value=fmtPlacaTxt(inp.value);}
+function placaFormatoOk(p){return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(nPlaca(p));}
+
+var cad={motoristas:[],veiculos:[],hist:[],carregado:false,indisponivel:false};
+function cadCarregar(forcar){
+  if(cad.carregado&&!forcar)return Promise.resolve();
+  return Promise.all([
+    supaAll(function(){return sb.from('wp_motoristas').select('id,nome,cpf,ativo').order('nome').order('id');}),
+    supaAll(function(){return sb.from('wp_veiculos').select('id,placa,tipo,placa_par,transportadora,ativo').order('placa').order('id');}),
+    sb.from('wp_tickets').select('placa,placa_carreta,motorista,motorista_cpf,created_at').neq('status','cancelado').order('created_at',{ascending:false}).limit(1000),
+  ]).then(function(rs){
+    cad.indisponivel=!!(rs[0].error&&rs[1].error);
+    cad.motoristas=rs[0].data||[];cad.veiculos=rs[1].data||[];
+    // histórico: se as colunas novas ainda não existem, usa só placa/motorista
+    if(rs[2].error){return sb.from('wp_tickets').select('placa,motorista,created_at').order('created_at',{ascending:false}).limit(1000).then(function(r){cad.hist=r.data||[];});}
+    cad.hist=rs[2].data||[];
+  }).then(function(){cad.carregado=true;});
+}
+function motoristaPorCpf(c){c=soDig(c);return cad.motoristas.find(function(m){return m.cpf===c;});}
+function veiculoPorPlaca(p){p=nPlaca(p);return cad.veiculos.find(function(v){return v.placa===p;});}
+function ultimoTicketDaPlaca(p){p=nPlaca(p);return cad.hist.find(function(h){return nPlaca(h.placa)===p;});}
+
+// ── autocompletar genérico: lista sob o campo, setas/Enter/Esc, toque ──
+function autoCompletar(input,buscar){
+  if(!input||input._ac)return;input._ac=true;
+  var wrap=input.parentNode;wrap.style.position='relative';
+  var dd=document.createElement('div');dd.className='ac-dd';dd.setAttribute('role','listbox');wrap.appendChild(dd);
+  input.setAttribute('autocomplete','off');
+  var itens=[],sel=-1;
+  function fecha(){dd.style.display='none';sel=-1;}
+  function desenha(){
+    dd.innerHTML=itens.map(function(it,i){
+      return '<button type="button" role="option" class="ac-it'+(i===sel?' on':'')+'" data-i="'+i+'"><b>'+esc(it.titulo)+'</b>'+(it.sub?'<span>'+esc(it.sub)+'</span>':'')+'</button>';
+    }).join('');
+  }
+  function abre(){
+    var q=input.value.trim();
+    itens=q.length>=2?buscar(q).slice(0,8):[];
+    if(!itens.length){fecha();return;}
+    sel=-1;desenha();dd.style.display='block';
+  }
+  function escolhe(i){var it=itens[i];fecha();if(it)it.pick();}
+  input.addEventListener('input',abre);
+  input.addEventListener('keydown',function(e){
+    if(dd.style.display!=='block')return;
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(itens.length-1,sel+1);desenha();}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(0,sel-1);desenha();}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();escolhe(sel);}
+    else if(e.key==='Escape')fecha();
+  });
+  dd.addEventListener('mousedown',function(e){e.preventDefault();});
+  dd.addEventListener('click',function(e){var b=e.target.closest('.ac-it');if(b)escolhe(+b.getAttribute('data-i'));});
+  input.addEventListener('blur',function(){setTimeout(fecha,150);});
+}
+
+// ── fontes de sugestão ──
+function sugerePlacas(q,tipo){
+  var n=nPlaca(q),vistos={},out=[];
+  cad.veiculos.forEach(function(v){
+    if(!v.ativo||v.tipo!==tipo||v.placa.indexOf(n)<0||vistos[v.placa])return;vistos[v.placa]=1;
+    var h=tipo==='cavalo'?ultimoTicketDaPlaca(v.placa):null;
+    out.push({placa:v.placa,sub:[v.placa_par?'carreta '+fmtPlacaTxt(v.placa_par):'',h&&h.motorista?'último motorista: '+h.motorista:'',v.transportadora||''].filter(Boolean).join(' · ')});
+  });
+  cad.hist.forEach(function(h){
+    var p=nPlaca(tipo==='cavalo'?h.placa:h.placa_carreta);
+    if(!p||p.indexOf(n)<0||vistos[p])return;vistos[p]=1;
+    out.push({placa:p,sub:tipo==='cavalo'&&h.motorista?'último motorista: '+h.motorista:'usada em ticket'});
+  });
+  return out;
+}
+function sugereMotoristas(q){
+  var d=soDig(q),t=normAz(q),out=[];
+  cad.motoristas.forEach(function(m){
+    if(!m.ativo)return;
+    if((d.length>=3&&m.cpf.indexOf(d)===0)||(t.length>=2&&!/^\d/.test(q.trim())&&normAz(m.nome).indexOf(t)>=0))out.push(m);
+  });
+  return out.slice(0,8).map(function(m){return {titulo:m.nome,sub:'CPF '+fmtCpf(m.cpf),pick:function(){aplicarMotorista(m.nome,m.cpf,'');}};});
+}
+
+// ── emissão: ligar campos ──
+function ligarAutoCompletarTicket(){
+  cadCarregar().then(function(){
+    autoCompletar(document.getElementById('tk-placa'),function(q){
+      return sugerePlacas(q,'cavalo').map(function(s){return {titulo:fmtPlacaTxt(s.placa),sub:s.sub,pick:function(){
+        var el=document.getElementById('tk-placa');el.value=fmtPlacaTxt(s.placa);fmtPlaca(el);aoDefinirPlaca(true);}};});
+    });
+    autoCompletar(document.getElementById('tk-carreta'),function(q){
+      return sugerePlacas(q,'carreta').map(function(s){return {titulo:fmtPlacaTxt(s.placa),sub:s.sub,pick:function(){document.getElementById('tk-carreta').value=fmtPlacaTxt(s.placa);}};});
+    });
+    autoCompletar(document.getElementById('tk-motorista'),sugereMotoristas);
+    autoCompletar(document.getElementById('tk-cpf'),sugereMotoristas);
+    if(cad.indisponivel)document.getElementById('tk-mot-hint').textContent='Cadastro de motoristas indisponível (rode woodport_motoristas.sql) — preencha à mão.';
+  });
+}
+function hintMot(html,cor){var el=document.getElementById('tk-mot-hint');if(el){el.innerHTML=html||'';el.style.color=cor||'var(--ink3)';}}
+function aplicarMotorista(nome,cpf,aviso){
+  document.getElementById('tk-motorista').value=nome||'';
+  var c=document.getElementById('tk-cpf');c.value=soDig(cpf);mascaraCpf(c);
+  hintMot(aviso||'');
+}
+// placa definida: completa carreta e motorista (último ticket desta placa / cadastro)
+function aoDefinirPlaca(){
+  var p=nPlaca(document.getElementById('tk-placa').value);
+  if(p.length!==7)return;
+  var v=veiculoPorPlaca(p),h=ultimoTicketDaPlaca(p);
+  var car=document.getElementById('tk-carreta');
+  if(!car.value.trim()){var par=(v&&v.placa_par)||(h&&h.placa_carreta);if(par)car.value=fmtPlacaTxt(par);}
+  var nome=document.getElementById('tk-motorista'),cpf=document.getElementById('tk-cpf');
+  if(!nome.value.trim()&&!cpf.value.trim()&&h&&h.motorista){
+    aplicarMotorista(h.motorista,h.motorista_cpf||'','Motorista do último ticket desta placa — confira se é o mesmo.');
+    if(h.motorista_cpf)onCpfInput(cpf,true);
+  }
+}
+// nome digitado igual a um do cadastro: completa o CPF
+function aoDefinirMotoristaNome(){
+  var nome=document.getElementById('tk-motorista').value.trim(),cpf=document.getElementById('tk-cpf');
+  if(!nome||cpf.value.trim())return;
+  var achados=cad.motoristas.filter(function(m){return m.ativo&&normAz(m.nome)===normAz(nome);});
+  if(achados.length===1){cpf.value=achados[0].cpf;mascaraCpf(cpf);hintMot('CPF preenchido pelo cadastro.');}
+  else if(achados.length>1)hintMot('Há '+achados.length+' motoristas com esse nome no cadastro — digite o CPF.','#B45309');
+}
+function onCpfInput(inp,silencioso){
+  mascaraCpf(inp);
+  var d=soDig(inp.value);
+  inp.classList.remove('invalid');
+  if(d.length<11){if(!silencioso)hintMot('');return;}
+  if(!cpfValido(d)){inp.classList.add('invalid');hintMot('CPF inválido — confira os números.','#B42318');return;}
+  var m=motoristaPorCpf(d),nome=document.getElementById('tk-motorista');
+  if(!m){if(!silencioso)hintMot('CPF novo — o motorista entra no cadastro ao emitir o ticket.');return;}
+  if(!nome.value.trim()){nome.value=m.nome;hintMot('Nome preenchido pelo cadastro.');}
+  else if(normAz(nome.value)!==normAz(m.nome)){
+    hintMot('No cadastro este CPF é de <strong>'+esc(m.nome)+'</strong> — <a href="#" onclick="document.getElementById(\'tk-motorista\').value='+esc(JSON.stringify(m.nome))+';hintMot(\'\');return false;">usar este nome</a>','#B45309');
+  }
+}
+// depois de emitir: motorista/placas novos entram no cadastro (só inclusão)
+function cadAutoCadastrar(placa,carreta,nome,cpf){
+  if(cad.indisponivel)return;
+  var regs=[];
+  if(cpf&&cpfValido(cpf)&&nome&&!motoristaPorCpf(cpf)){
+    var m={nome:nome,cpf:soDig(cpf),criado_por_nome:currentUser.nome};cad.motoristas.push(Object.assign({ativo:true},m));
+    regs.push(sb.from('wp_motoristas').insert(m));
+  }
+  var pc=nPlaca(placa),pk=nPlaca(carreta);
+  if(placaFormatoOk(pc)&&!veiculoPorPlaca(pc)){
+    var v={placa:pc,tipo:'cavalo',placa_par:placaFormatoOk(pk)?pk:null,criado_por_nome:currentUser.nome};cad.veiculos.push(Object.assign({ativo:true},v));
+    regs.push(sb.from('wp_veiculos').insert(v));
+  }
+  if(placaFormatoOk(pk)&&!veiculoPorPlaca(pk)){
+    var k={placa:pk,tipo:'carreta',criado_por_nome:currentUser.nome};cad.veiculos.push(Object.assign({ativo:true},k));
+    regs.push(sb.from('wp_veiculos').insert(k));
+  }
+  cad.hist.unshift({placa:placa,placa_carreta:carreta,motorista:nome,motorista_cpf:soDig(cpf),created_at:new Date().toISOString()});
+  Promise.all(regs).catch(function(){});
+}
+
+// ── Administração › Motoristas e veículos ──
+var cdAtual='mot';
+function cdAbrir(forcar){cadCarregar(forcar).then(function(){cdAba(cdAtual);});}
+function cdAba(a){
+  cdAtual=a;
+  document.querySelectorAll('#cd-tabs button').forEach(function(b){var on=b.getAttribute('data-aba')===a;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  document.querySelectorAll('.cd-aba').forEach(function(d){d.style.display=d.id==='cd-'+a?'':'none';});
+  if(a==='mot')cdRenderMot();else cdRenderVei();
+}
+function cdBotoes(tabela,x){
+  return '<td style="white-space:nowrap;">'
+    +'<button class="btn bs bsm" aria-label="Editar" onclick="'+(tabela==='wp_motoristas'?'editarMotorista':'editarVeiculo')+'(\''+x.id+'\')">✏</button> '
+    +'<button class="btn bs bsm" onclick="alternarAtivoCad(\''+tabela+'\',\''+x.id+'\','+(!x.ativo)+')">'+(x.ativo?'Inativar':'Ativar')+'</button>'
+    +(isAdmin()?' <button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\''+tabela+'\',\''+x.id+'\',function(){cdAbrir(true);})">✕</button>':'')
+    +'</td>';
+}
+function cdRenderMot(){
+  var b=(document.getElementById('cm-busca').value||'').trim(),d=soDig(b),t=normAz(b);
+  var lin=cad.motoristas.filter(function(m){return !b||(d.length>=2&&m.cpf.indexOf(d)>=0)||normAz(m.nome).indexOf(t)>=0;});
+  document.getElementById('cm-count').textContent=cad.motoristas.length+' cadastrados';
+  document.getElementById('cm-tb').innerHTML=lin.slice(0,600).map(function(m){
+    return '<tr'+(m.ativo?'':' style="opacity:.55;"')+'><td><strong>'+esc(m.nome)+'</strong></td><td class="mono">'+fmtCpf(m.cpf)+'</td>'
+      +'<td>'+(m.ativo?'<span class="bge ok">Ativo</span>':'<span class="bge ntrl">Inativo</span>')+'</td>'+cdBotoes('wp_motoristas',m)+'</tr>';
+  }).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--ink3);padding:20px;">Nenhum motorista. Cadastre ao lado ou importe a planilha.</td></tr>';
+}
+function cdRenderVei(){
+  var b=nPlaca(document.getElementById('cv-busca').value),t=normAz(document.getElementById('cv-busca').value);
+  var lin=cad.veiculos.filter(function(v){return !t||v.placa.indexOf(b)>=0||normAz(v.transportadora).indexOf(t)>=0;});
+  document.getElementById('cv-count').textContent=cad.veiculos.length+' cadastrados';
+  document.getElementById('cv-tb').innerHTML=lin.slice(0,600).map(function(v){
+    return '<tr'+(v.ativo?'':' style="opacity:.55;"')+'><td class="mono"><strong>'+fmtPlacaTxt(v.placa)+'</strong></td><td>'+(v.tipo==='cavalo'?'Caminhão':'Carreta')+'</td>'
+      +'<td class="mono">'+(v.placa_par?fmtPlacaTxt(v.placa_par):'—')+'</td><td>'+esc(v.transportadora||'—')+'</td>'
+      +'<td>'+(v.ativo?'<span class="bge ok">Ativo</span>':'<span class="bge ntrl">Inativo</span>')+'</td>'+cdBotoes('wp_veiculos',v)+'</tr>';
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:20px;">Nenhum veículo. Cadastre ao lado ou importe a planilha.</td></tr>';
+}
+function limparMotoristaForm(){['cm-id','cm-nome','cm-cpf'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('cm-titulo').textContent='Novo motorista';}
+function editarMotorista(id){
+  var m=cad.motoristas.find(function(x){return x.id===id;});if(!m)return;
+  document.getElementById('cm-id').value=m.id;document.getElementById('cm-nome').value=m.nome;
+  var c=document.getElementById('cm-cpf');c.value=m.cpf;mascaraCpf(c);
+  document.getElementById('cm-titulo').textContent='Editar motorista';document.getElementById('cm-nome').focus();
+}
+function salvarMotorista(){
+  var id=document.getElementById('cm-id').value,nome=v('cm-nome'),cpf=soDig(document.getElementById('cm-cpf').value);
+  if(!nome){toast('Informe o nome','error');return;}
+  if(!cpfValido(cpf)){toast('CPF inválido','error');return;}
+  var outro=cad.motoristas.find(function(m){return m.cpf===cpf&&m.id!==id;});
+  if(outro){toast('Este CPF já está cadastrado para '+outro.nome,'error');return;}
+  var reg={nome:nome,cpf:cpf,updated_at:new Date().toISOString()};
+  (id?sb.from('wp_motoristas').update(reg).eq('id',id):sb.from('wp_motoristas').insert(Object.assign({criado_por_nome:currentUser.nome},reg))).then(function(r){
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Motorista salvo','success');limparMotoristaForm();cdAbrir(true);
+  });
+}
+function limparVeiculoForm(){['cv-id','cv-placa','cv-par','cv-transp'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('cv-tipo').value='cavalo';document.getElementById('cv-par-wrap').style.display='';document.getElementById('cv-titulo').textContent='Novo veículo';}
+function editarVeiculo(id){
+  var x=cad.veiculos.find(function(y){return y.id===id;});if(!x)return;
+  document.getElementById('cv-id').value=x.id;document.getElementById('cv-placa').value=fmtPlacaTxt(x.placa);
+  document.getElementById('cv-tipo').value=x.tipo;document.getElementById('cv-par-wrap').style.display=x.tipo==='cavalo'?'':'none';
+  document.getElementById('cv-par').value=x.placa_par?fmtPlacaTxt(x.placa_par):'';document.getElementById('cv-transp').value=x.transportadora||'';
+  document.getElementById('cv-titulo').textContent='Editar veículo';
+}
+function salvarVeiculo(){
+  var id=document.getElementById('cv-id').value,placa=nPlaca(v('cv-placa')),tipo=document.getElementById('cv-tipo').value,par=nPlaca(v('cv-par'));
+  if(!placaFormatoOk(placa)){toast('Placa inválida (ABC-1234 ou ABC-1D23)','error');return;}
+  if(par&&!placaFormatoOk(par)){toast('Placa da carreta habitual inválida','error');return;}
+  var outro=cad.veiculos.find(function(x){return x.placa===placa&&x.id!==id;});
+  if(outro){toast('Placa já cadastrada','error');return;}
+  var reg={placa:placa,tipo:tipo,placa_par:tipo==='cavalo'&&par?par:null,transportadora:v('cv-transp'),updated_at:new Date().toISOString()};
+  (id?sb.from('wp_veiculos').update(reg).eq('id',id):sb.from('wp_veiculos').insert(Object.assign({criado_por_nome:currentUser.nome},reg))).then(function(r){
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Veículo salvo','success');limparVeiculoForm();cdAbrir(true);
+  });
+}
+function alternarAtivoCad(tabela,id,ativo){
+  sb.from(tabela).update({ativo:ativo,updated_at:new Date().toISOString()}).eq('id',id).select('id').then(function(r){
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(!r.data||!r.data.length){toast('Sem permissão','error');return;}
+    cdAbrir(true);
+  });
+}
+function upsertLotes(tabela,regs,conflito){
+  var p=Promise.resolve(),feitos=0;
+  for(var i=0;i<regs.length;i+=400)(function(b){p=p.then(function(){return sb.from(tabela).upsert(b,{onConflict:conflito}).then(function(r){if(r.error)throw r.error;feitos+=b.length;});});})(regs.slice(i,i+400));
+  return p.then(function(){return feitos;});
+}
+function importarMotoristas(input){
+  var file=input.files[0];input.value='';if(!file)return;
+  lerPlanilha(file,function(abas){
+    var porCpf={},invalidos=[],aba=null;
+    abas.forEach(function(a){
+      if(aba)return;
+      var R=a.raw,T=a.txt,h=-1;
+      for(var i=0;i<Math.min(R.length,30);i++){var l=R[i].map(hdr);if(l.some(function(c){return c.indexOf('CPF')>=0;})&&l.some(function(c){return c.indexOf('NOME')>=0||c.indexOf('MOTORISTA')>=0;})){h=i;break;}}
+      if(h<0)return;aba=a.nome;
+      var H=R[h].map(hdr),cN=H.findIndex(function(c){return c.indexOf('NOME')>=0||c.indexOf('MOTORISTA')>=0;}),cC=H.findIndex(function(c){return c.indexOf('CPF')>=0;});
+      for(var r=h+1;r<R.length;r++){
+        var nome=String((T[r]||[])[cN]||R[r][cN]||'').trim(),bruto=String((T[r]||[])[cC]||R[r][cC]||'').trim();
+        if(!nome&&!bruto)continue;
+        var cpf=soDig(bruto);if(cpf.length>=8&&cpf.length<11)cpf=cpf.padStart(11,'0'); // Excel come o zero à esquerda
+        if(!nome||!cpfValido(cpf)){invalidos.push((nome||'(sem nome)')+' — '+(bruto||'sem CPF'));continue;}
+        porCpf[cpf]={nome:nome.replace(/\s+/g,' '),cpf:cpf,ativo:true,updated_at:new Date().toISOString(),criado_por_nome:currentUser.nome};
+      }
+    });
+    var regs=Object.values(porCpf);
+    if(!aba){toast('Não encontrei as colunas NOME e CPF','error');return;}
+    if(!regs.length){toast('Nenhum motorista válido no arquivo','error');return;}
+    var novos=regs.filter(function(x){return !motoristaPorCpf(x.cpf);}).length;
+    if(!confirm('Motoristas (aba '+aba+'):\n\n• '+novos+' novo(s)\n• '+(regs.length-novos)+' já cadastrado(s) — nome atualizado'
+      +(invalidos.length?'\n• '+invalidos.length+' linha(s) com CPF inválido NÃO entram:\n   '+invalidos.slice(0,8).join('\n   ')+(invalidos.length>8?'\n   …':''):'')+'\n\nConfirmar?'))return;
+    showLd(true);
+    upsertLotes('wp_motoristas',regs,'cpf').then(function(n){showLd(false);toast(n+' motorista(s) importado(s)','success');cdAbrir(true);})
+      .catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');cdAbrir(true);});
+  });
+}
+function importarVeiculos(input){
+  var file=input.files[0];input.value='';if(!file)return;
+  lerPlanilha(file,function(abas){
+    var porPlaca={},invalidos=[],aba=null;
+    function add(placa,tipo,par,transp){
+      var p=nPlaca(placa);if(!p)return;
+      if(!placaFormatoOk(p)){invalidos.push(String(placa));return;}
+      var ex=porPlaca[p]||{placa:p,tipo:tipo,placa_par:null,transportadora:null,ativo:true,updated_at:new Date().toISOString(),criado_por_nome:currentUser.nome};
+      if(tipo==='cavalo')ex.tipo='cavalo';
+      if(par&&placaFormatoOk(par))ex.placa_par=nPlaca(par);
+      if(transp)ex.transportadora=transp;
+      porPlaca[p]=ex;
+    }
+    abas.forEach(function(a){
+      if(aba)return;
+      var R=a.raw,T=a.txt,h=-1;
+      for(var i=0;i<Math.min(R.length,30);i++){var l=R[i].map(hdr);if(l.some(function(c){return c.indexOf('PLACA')>=0||c.indexOf('CAVALO')>=0||c.indexOf('CARRETA')>=0;})){h=i;break;}}
+      if(h<0)return;aba=a.nome;
+      var H=R[h].map(hdr);
+      var cCav=H.findIndex(function(c){return c.indexOf('CAVALO')>=0||c.indexOf('CAMINHAO')>=0||c.indexOf('TRATOR')>=0;}),
+          cCar=H.findIndex(function(c){return c.indexOf('CARRETA')>=0||c.indexOf('REBOQUE')>=0;}),
+          cPla=H.findIndex(function(c){return c==='PLACA'||c==='PLACAS';}),
+          cTip=H.findIndex(function(c){return c.indexOf('TIPO')===0;}),
+          cTr=H.findIndex(function(c){return c.indexOf('TRANSPORT')>=0;});
+      for(var r=h+1;r<R.length;r++){
+        var L=T[r]||[],tr=cTr>=0?String(L[cTr]||'').trim()||null:null;
+        if(cCav>=0||cCar>=0){
+          var cav=cCav>=0?L[cCav]:'',car=cCar>=0?L[cCar]:'';
+          if(cav)add(cav,'cavalo',car,tr);
+          if(car)add(car,'carreta',null,tr);
+        } else if(cPla>=0){
+          var tp=cTip>=0&&/CARRETA|REBOQUE|SEMI/.test(hdr(L[cTip]))?'carreta':'cavalo';
+          add(L[cPla],tp,null,tr);
+        }
+      }
+    });
+    var regs=Object.values(porPlaca);
+    if(!aba){toast('Não encontrei as colunas de placa (PLACA CAVALO / PLACA CARRETA ou PLACA)','error');return;}
+    if(!regs.length){toast('Nenhuma placa válida no arquivo','error');return;}
+    var novos=regs.filter(function(x){return !veiculoPorPlaca(x.placa);}).length;
+    if(!confirm('Placas (aba '+aba+'):\n\n• '+regs.filter(function(x){return x.tipo==='cavalo';}).length+' caminhão(ões) · '+regs.filter(function(x){return x.tipo==='carreta';}).length+' carreta(s)\n• '+novos+' nova(s), '+(regs.length-novos)+' já cadastrada(s) (atualizadas)'
+      +(invalidos.length?'\n• '+invalidos.length+' placa(s) inválida(s) NÃO entram: '+invalidos.slice(0,10).join(', '):'')+'\n\nConfirmar?'))return;
+    showLd(true);
+    upsertLotes('wp_veiculos',regs,'placa').then(function(n){showLd(false);toast(n+' placa(s) importada(s)','success');cdAbrir(true);})
+      .catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');cdAbrir(true);});
+  });
+}
+function baixarModeloCad(tipo){
+  var mot=tipo==='mot',cab=mot?['NOME','CPF']:['PLACA CAVALO','PLACA CARRETA','TRANSPORTADORA'];
+  var ws=XLSX.utils.aoa_to_sheet([cab]);
+  for(var r=1;r<=1000;r++)cab.forEach(function(_,c){ws[XLSX.utils.encode_cell({r:r,c:c})]={t:'s',v:'',z:'@'};}); // texto: não perde zero do CPF
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:1000,c:cab.length-1}});
+  ws['!cols']=cab.map(function(h){return {wch:h==='NOME'||h==='TRANSPORTADORA'?36:18};});
+  var wi=XLSX.utils.aoa_to_sheet(mot?[['Modelo — MOTORISTAS'],[''],['Uma linha por motorista. NOME e CPF obrigatórios (CPF com ou sem pontos).'],['CPF já cadastrado tem o nome atualizado. CPF inválido é apontado e não entra.'],[''],['Exemplo: JOÃO DA SILVA | 123.456.789-09']]
+    :[['Modelo — CAMINHÕES E CARRETAS'],[''],['Um conjunto por linha: placa do caminhão (cavalo) e da carreta que costuma puxar.'],['A carreta fica como "carreta habitual" do caminhão e é sugerida na emissão.'],['Placa no formato ABC-1234 ou ABC-1D23 (com ou sem traço).'],[''],['Exemplo: ABC-1D23 | XYZ-9A87 | Transportadora Exemplo']]);
+  wi['!cols']=[{wch:100}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,mot?'Motoristas':'Veiculos');XLSX.utils.book_append_sheet(wb,wi,'Como preencher');
+  XLSX.writeFile(wb,mot?'WoodPort - modelo de motoristas.xlsx':'WoodPort - modelo de caminhoes e carretas.xlsx');
 }
 
 // ══════════════════════════════════════════════════
@@ -6225,6 +6971,7 @@ function editNavio(id){
     +'</div>'
     +'<div class="gr g2" style="gap:10px;">'
       +'<div class="fg"><label class="fl">ETA</label><input type="date" id="en-eta" value="'+(n.eta||'')+'"></div>'
+      +'<div class="fg"><label class="fl">Armador</label><select id="en-armador">'+['G2 Ocean','AB'].map(function(a){return '<option'+(a===n.armador?' selected':'')+'>'+a+'</option>';}).join('')+'</select></div>'
       +'<div class="fg"><label class="fl">Total de Porões do Navio</label>'
         +'<select id="en-porao-qtd">'
         +[0,1,2,3,4,5,6,7,8,9,10].map(function(v){return '<option value="'+v+'"'+(v===(n.porao_qtd||0)?' selected':'')+'>'+( v===0?'Sem porões':v)+' </option>';}).join('')
@@ -6242,6 +6989,7 @@ function editNavio(id){
       viagem:document.getElementById('en-viagem').value.trim()||null,
       porto_origem:document.getElementById('en-origem').value.trim()||null,
       eta:document.getElementById('en-eta').value||null,
+      armador:document.getElementById('en-armador').value,
       porao_qtd:parseInt(document.getElementById('en-porao-qtd').value)||0,
     };
     var ativos=[];
@@ -6347,6 +7095,7 @@ function editTicket(id){
     showLd(false);
     if(r.error||!r.data){toast('Ticket não encontrado','error');return;}
     var tk=r.data;
+    if(tk.status==='cancelado'){toast('Ticket cancelado não pode ser editado','error');return;}
     var itens=tk.wp_ticket_itens||[];
 
     // atualiza cache
@@ -6390,6 +7139,8 @@ function editTicket(id){
       +'<div class="gr g2" style="gap:10px;">'
         +'<div class="fg"><label class="fl">Placa</label><input type="text" id="ef-placa" value="'+esc(tk.placa)+'" style="text-transform:uppercase;"></div>'
         +'<div class="fg"><label class="fl">Motorista</label><input type="text" id="ef-motorista" value="'+esc(tk.motorista)+'"></div>'
+        +'<div class="fg"><label class="fl">Placa da carreta</label><input type="text" id="ef-carreta" maxlength="8" oninput="fmtPlacaSimples(this)" value="'+esc(tk.placa_carreta||'')+'" style="text-transform:uppercase;"></div>'
+        +'<div class="fg"><label class="fl">CPF do motorista</label><input type="text" id="ef-cpf" inputmode="numeric" maxlength="14" oninput="mascaraCpf(this)" value="'+esc(tk.motorista_cpf?fmtCpf(tk.motorista_cpf):'')+'"></div>'
       +'</div>'
       +'<div class="gr g3" style="gap:10px;">'
         +'<div class="fg"><label class="fl">Porão</label>'
@@ -6411,6 +7162,9 @@ function editTicket(id){
       var viagem=document.getElementById('ef-viagem').value.trim()||null;
       var obs=document.getElementById('ef-observacoes').value.trim()||null;
       if(!placa||!motorista){toast('Placa e Motorista são obrigatórios','error');return;}
+      var efCpf=soDig(document.getElementById('ef-cpf').value),efCar=document.getElementById('ef-carreta').value.trim();
+      if(efCpf&&!cpfValido(efCpf)){toast('CPF do motorista inválido','error');return;}
+      if(efCar&&!placaFormatoOk(efCar)){toast('Placa da carreta inválida','error');return;}
       // valida NF em todos os itens
       var itensPayload=[];
       var nfErr=false;
@@ -6456,7 +7210,7 @@ function editTicket(id){
           if(aumento[l.id]>saldo)estouro.push('Ref '+(l.ref||'—')+' / '+l.lote+': +'+aumento[l.id]+', saldo '+Math.max(0,saldo));
         });
         if(estouro.length){showLd(false);toast('Saldo insuficiente — '+estouro.join(' · '),'error');return;}
-        sb.from('wp_tickets').update({placa,motorista,porao,tier,viagem,observacoes:obs}).eq('id',id).then(function(r){
+        sb.from('wp_tickets').update({placa,motorista,motorista_cpf:efCpf||null,placa_carreta:efCar?fmtPlacaTxt(efCar):null,porao,tier,viagem,observacoes:obs}).eq('id',id).then(function(r){
           if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
           // atualiza cada item
           var updates=itensPayload.map(function(it){
@@ -6630,24 +7384,57 @@ function clearTicketSelection(){
   if(allChk){allChk.checked=false;allChk.indeterminate=false;}
   document.getElementById('tk-batch-bar').style.display='none';
 }
-function deleteSelectedTickets(){
-  var ids=[].slice.call(document.querySelectorAll('.tk-row-chk:checked')).map(function(c){return c.dataset.id;});
-  if(!ids.length)return;
-  // verifica permissão para cada ticket selecionado
-  var forbidden=ids.filter(function(id){
-    var tk=ticketsAll.find(function(t){return t.id===id;});
-    return !canDelete('wp_tickets',tk||{});
-  });
-  if(forbidden.length){toast('Sem permissão para excluir '+forbidden.length+' ticket(s)','error');return;}
-  if(!confirm('Excluir '+ids.length+' ticket(s) selecionado(s)? Os itens vinculados também serão excluídos.'))return;
+// ══════════════════════════════════════════════════
+// CANCELAMENTO DE TICKETS (não se exclui: fica gravado como cancelado)
+// supervisor: não embarcados do seu armazém · admin: qualquer um (estorno)
+// ══════════════════════════════════════════════════
+function podeCancelar(tk){
+  if(!currentUser||!tk||tk.status==='cancelado')return false;
+  if(currentUser.perfil==='admin')return true;
+  if(currentUser.perfil!=='supervisor'||tk.status==='validado')return false;
+  var azs=userArmazens();
+  return !azs||!tk.armazem||String(tk.armazem).split(',').some(function(a){return azs.some(function(b){return normAz(a)===normAz(b);});});
+}
+function cancelarTickets(lista,depois){
+  if(!lista.length)return;
+  var nums=lista.map(function(t){return t.numero;}).join(', ');
+  var temValidado=lista.some(function(t){return t.status==='validado';});
+  var motivo=prompt('Cancelar '+(lista.length>1?lista.length+' tickets':'o ticket '+nums)+'?\n'
+    +(temValidado?'ATENÇÃO: há ticket já EMBARCADO — o cancelamento estorna o embarque e os fardos voltam ao estoque.\n':'')
+    +'O ticket continua gravado como CANCELADO e o número não é reaproveitado.\n\nMotivo do cancelamento:','');
+  if(motivo===null)return;
+  if(!motivo.trim()){toast('Informe o motivo do cancelamento','error');return;}
   showLd(true);
-  sb.from('wp_tickets').delete().in('id',ids).select('id').then(function(r){
+  var ok=0,erros=[],p=Promise.resolve();
+  lista.forEach(function(t){
+    p=p.then(function(){return sb.rpc('wp_cancelar_ticket',{p_id:t.id,p_motivo:motivo.trim()}).then(function(r){
+      if(r.error)erros.push(t.numero+': '+r.error.message);else ok++;
+    });});
+  });
+  p.then(function(){
     showLd(false);
-    if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    avisoExclusao((r.data||[]).length,ids.length,'ticket(s)');clearTicketSelection();loadTickets();
+    if(ok)toast(ok+' ticket(s) cancelado(s)','success');
+    if(erros.length)toast('Não cancelado(s): '+erros.join(' · '),'error');
+    if(depois)depois();
   });
 }
-
+function cancelarTicket(id){
+  var tk=ticketsAll.find(function(t){return t.id===id;})||(_valTk&&_valTk.id===id?_valTk:null);
+  if(!tk)return;
+  if(!podeCancelar(tk)){toast('Sem permissão para cancelar este ticket','error');return;}
+  cancelarTickets([tk],function(){
+    loadTickets();loadValidados();
+    if(_valTk&&_valTk.id===id)document.getElementById('val-result').style.display='none';
+  });
+}
+function cancelarSelecionadosTickets(){
+  var ids=[].slice.call(document.querySelectorAll('.tk-row-chk:checked')).map(function(c){return c.dataset.id;});
+  var lista=ids.map(function(id){return ticketsAll.find(function(t){return t.id===id;});}).filter(Boolean);
+  var sem=lista.filter(function(t){return !podeCancelar(t);});
+  if(sem.length){toast('Sem permissão para cancelar: '+sem.map(function(t){return t.numero;}).join(', '),'error');return;}
+  cancelarTickets(lista,function(){clearTicketSelection();loadTickets();});
+}
+function deleteSelectedTickets(){cancelarSelecionadosTickets();} // nome antigo
 // ══════════════════════════════════════════════════
 // SELEÇÃO EM LOTE — VALIDADOS
 // ══════════════════════════════════════════════════
@@ -6671,21 +7458,16 @@ function clearValSelection(){
   if(allChk){allChk.checked=false;allChk.indeterminate=false;}
   document.getElementById('val-batch-bar').style.display='none';
 }
-function deleteSelectedValidados(){
+function cancelarSelecionadosValidados(){
+  if(!isAdmin()){toast('Só o administrador cancela (estorna) embarques já validados','error');return;}
   var ids=[...new Set([].slice.call(document.querySelectorAll('.val-row-chk:checked')).map(function(c){return c.dataset.id;}))];
   if(!ids.length)return;
-  // verifica permissão
-  var forbidden=ids.filter(function(id){return !canDelete('wp_tickets',{armazem:currentUser&&currentUser.armazem!=='*'?currentUser.armazem:null});});
-  if(forbidden.length&&currentUser.perfil!=='admin'){toast('Sem permissão para excluir estes registros','error');return;}
-  if(!confirm('Excluir '+ids.length+' embarque(s) validado(s)? Os itens vinculados também serão excluídos. Esta ação não pode ser desfeita.'))return;
-  showLd(true);
-  sb.from('wp_tickets').delete().in('id',ids).select('id').then(function(r){
-    showLd(false);
+  sb.from('wp_tickets').select('id,numero,status,armazem').in('id',ids).then(function(r){
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    avisoExclusao((r.data||[]).length,ids.length,'embarque(s)');clearValSelection();loadValidados();
+    cancelarTickets(r.data||[],function(){clearValSelection();loadValidados();loadTickets();});
   });
 }
-
+function deleteSelectedValidados(){cancelarSelecionadosValidados();} // nome antigo
 // PERMISSÕES DE EXCLUSÃO
 // ══════════════════════════════════════════════════
 // Regras:
