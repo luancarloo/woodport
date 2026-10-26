@@ -392,6 +392,26 @@ tbody tr:hover{background:#FAFBF9;}
 .lote-blk{background:#fff;border:1px solid var(--bds);border-radius:12px;}
 .lote-blk-n{color:#6B3410;}
 
+/* menu em módulos */
+.nav-mod{margin-bottom:2px;}
+.nv-mod{display:flex;align-items:center;gap:11px;width:calc(100% - 16px);margin:1px 8px;padding:10px 12px;border:none;background:none;border-radius:8px;color:#E6ECE8;font-size:14px;font-weight:600;cursor:pointer;text-align:left;font-family:inherit;white-space:nowrap;}
+.nv-mod:hover{background:#1F3229;}
+.nv-mod .ico{width:18px;height:18px;flex-shrink:0;opacity:.9;}
+.nv-mod .chev{margin-left:auto;width:14px;height:14px;transition:transform .2s;opacity:.6;flex-shrink:0;}
+.nav-mod.open>.nv-mod .chev{transform:rotate(90deg);}
+.nav-mod.ativo>.nv-mod .ico{color:var(--acc2);opacity:1;}
+.nv-sub{display:none;padding:0 0 6px;}
+.nav-mod.open>.nv-sub{display:block;}
+.nv-sub .nv{padding:8px 12px 8px 41px;font-size:13.5px;}
+.nv-sub .nv.on{background:var(--side2);}
+.nav-mod:not(:first-child){border-top:1px solid rgba(255,255,255,.06);padding-top:4px;margin-top:4px;}
+#sb.collapsed .nv-sub{display:none !important;}
+#sb.collapsed .nv-mod{justify-content:center;padding:10px;margin:1px 4px;width:calc(100% - 8px);}
+#sb.collapsed .nv-mod .chev{display:none;}
+/* abas internas (estoque) */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--bds);margin-bottom:16px;overflow-x:auto;}
+.tabs button{height:44px;padding:0 16px;border:none;background:none;border-bottom:3px solid transparent;font-size:14px;font-weight:500;color:var(--ink3);cursor:pointer;white-space:nowrap;}
+.tabs button.on{border-bottom-color:var(--acc);color:var(--ink);font-weight:600;}
 /* plano de estiva */
 .pl-portos{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
 .pl-porto{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:20px;border:2px solid transparent;background:var(--s3);font-size:13px;font-weight:600;cursor:pointer;color:var(--ink);}
@@ -508,19 +528,47 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <svg id="sb-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
   </div>
-  <nav class="sb-nav">
-    <div class="nav-sec">Operações</div>
-    <button class="nv on" onclick="go('dashboard')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nv-label">Painel</span></button>
-    <button class="nv" onclick="go('lista')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="nv-label">Lista de Carga</span></button>
-    <button class="nv" onclick="go('tickets')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg><span class="nv-label">Emissão de Tickets</span></button>
-    <button class="nv" onclick="go('validar')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span class="nv-label">Validar Embarque</span></button>
-    <button class="nv" onclick="go('relatorios')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg><span class="nv-label">Relatórios</span></button>
-    <div class="nav-sec nv-adm">Administração</div>
-    <button class="nv nv-adm nv-sup" onclick="go('usuarios')" id="nav-usuarios"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nv-label">Usuários</span></button>
-    <button class="nv nv-adm nv-sup" onclick="go('navio')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2"/><path d="M12 2 4 12h16L12 2z"/><path d="M12 12v8"/></svg><span class="nv-label">Navios</span></button>
-    <button class="nv nv-adm" onclick="go('backup')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="nv-label">Backup & Restore</span></button>
-    <button class="nv nv-adm" onclick="go('impressoras')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nv-label">Impressoras</span></button>
-    <button class="nv nv-adm" onclick="go('cfg')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span class="nv-label">Configurar Supabase</span></button>
+  <nav class="sb-nav" aria-label="Menu principal">
+    <div class="nav-mod" data-mod="embarque">
+      <button class="nv-mod" onclick="toggleMod('embarque')" aria-expanded="false">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0"/><path d="M4 15l1-6h14l1 6"/><path d="M12 9V4h4"/></svg>
+        <span class="nv-label">Embarque</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="nv-sub">
+        <button class="nv" onclick="go('dashboard')"><span class="nv-label">Painel do embarque</span></button>
+        <button class="nv" onclick="go('lista')"><span class="nv-label">Lista de carga</span></button>
+        <button class="nv" onclick="go('tickets')"><span class="nv-label">Emissão de tickets</span></button>
+        <button class="nv" onclick="go('validar')"><span class="nv-label">Validação de embarque</span></button>
+        <button class="nv" onclick="go('relatorios')"><span class="nv-label">Relatórios</span></button>
+      </div>
+    </div>
+    <div class="nav-mod" data-mod="armazem">
+      <button class="nv-mod" onclick="toggleMod('armazem')" aria-expanded="false">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M7 21v-8h10v8"/><path d="M7 17h10"/></svg>
+        <span class="nv-label">Armazém</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="nv-sub">
+        <button class="nv" onclick="go('estoque')"><span class="nv-label">Estoque</span></button>
+        <button class="nv" onclick="go('armazenagem')"><span class="nv-label">Armazenagem</span></button>
+        <button class="nv" onclick="go('rel-armazem')"><span class="nv-label">Relatórios</span></button>
+      </div>
+    </div>
+    <div class="nav-mod" data-mod="admin">
+      <button class="nv-mod" onclick="toggleMod('admin')" aria-expanded="false">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span class="nv-label">Administração</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="nv-sub">
+        <button class="nv" onclick="go('usuarios')" id="nav-usuarios"><span class="nv-label">Usuários</span></button>
+        <button class="nv" onclick="go('navio')"><span class="nv-label">Navios</span></button>
+        <button class="nv" onclick="go('backup')"><span class="nv-label">Backup &amp; Restore</span></button>
+        <button class="nv" onclick="go('impressoras')"><span class="nv-label">Impressoras</span></button>
+        <button class="nv" onclick="go('rel-admin')"><span class="nv-label">Relatórios</span></button>
+      </div>
+    </div>
   </nav>
   <div class="sb-foot">
     <div id="conn-lbl" class="sb-foot-text">⬤ Não conectado</div>
@@ -1073,7 +1121,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
                 <select id="imp-az"><option>WRC</option><option>Pratico</option><option>Global</option></select></div>
               <div class="fg"><label class="fl" for="imp-nome">Nome <span class="req">*</span></label><input id="imp-nome" placeholder="Impressora 1"></div>
               <div class="gr g2">
-                <div class="fg"><label class="fl" for="imp-ip">IP fixo <span class="req">*</span></label><input id="imp-ip" placeholder="192.168.0.50" inputmode="decimal"></div>
+                <div class="fg"><label class="fl" for="imp-ip">IP fixo (rede) ou nome no Windows (USB) <span class="req">*</span></label><input id="imp-ip" placeholder="192.168.0.224  ou  Print iD"></div>
                 <div class="fg"><label class="fl" for="imp-porta">Porta</label><input id="imp-porta" value="9100" inputmode="numeric"></div>
               </div>
               <button class="btn bp" onclick="salvarImpressora()">💾 Cadastrar</button>
@@ -1093,7 +1141,8 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
               <select id="imp-agente-az" style="flex:1 1 120px;"><option>WRC</option><option>Pratico</option><option>Global</option></select>
               <button class="btn bs" onclick="gerarConfigAgente()">⬇ Gerar agente.config.json</button>
             </div>
-            <p style="font-size:11px;color:var(--ink4);margin-top:8px;line-height:1.5;">O arquivo contém a senha de acesso do computador. Gerar de novo invalida o arquivo anterior.</p>
+            <p style="font-size:11px;color:var(--ink4);margin-top:8px;line-height:1.5;">O arquivo contém a senha de acesso do computador. <strong>Gerar de novo invalida o arquivo anterior</strong> — gere uma vez só e, se o download falhar, use "Baixar o mesmo arquivo de novo".</p>
+            <div id="imp-cfg-ok" style="display:none;"></div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:14px;min-width:0;">
@@ -1107,6 +1156,265 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
             <div id="fila-empty" class="empty" style="display:none;padding:24px;"><p>Nada na fila hoje.</p></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ESTOQUE -->
+    <div class="page" id="page-estoque">
+      <div class="sh" style="align-items:flex-end;">
+        <div><h2>Estoque</h2><div class="sub">Entra pela descarga · sai pelo embarque validado (primeiro que entra, primeiro que sai)</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <label class="fl" for="est-az" style="margin:0;">Armazém</label>
+          <select id="est-az" onchange="estRender()" style="width:auto;min-width:150px;"></select>
+          <button class="btn bs" onclick="estAbrir(true)" aria-label="Atualizar estoque">↻</button>
+        </div>
+      </div>
+      <div class="tabs" role="tablist" id="est-tabs">
+        <button role="tab" data-aba="saldo" class="on" onclick="estAba('saldo')">Saldo</button>
+        <button role="tab" data-aba="descargas" onclick="estAba('descargas')">Descargas</button>
+        <button role="tab" data-aba="marcas" onclick="estAba('marcas')">Marcas</button>
+        <button role="tab" data-aba="comparar" onclick="estAba('comparar')">Lista × Estoque</button>
+        <button role="tab" data-aba="inventario" onclick="estAba('inventario')">Inventário</button>
+      </div>
+
+      <!-- SALDO -->
+      <div class="est-aba" id="est-saldo">
+        <div class="sr" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px;">
+          <div class="sc"><div class="sl">Fardos em estoque</div><div class="sv" id="es-fd">—</div></div>
+          <div class="sc"><div class="sl">Volume</div><div class="sv" id="es-m3">—</div></div>
+          <div class="sc"><div class="sl">Peso</div><div class="sv" id="es-t">—</div></div>
+          <div class="sc"><div class="sl">Marcas com saldo</div><div class="sv" id="es-marcas">—</div></div>
+        </div>
+        <div id="es-alertas"></div>
+        <div class="card">
+          <div class="ch">
+            <div class="ct">Saldo por marca</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="es-busca" placeholder="Marca ou produtor" oninput="estRenderSaldo()"></div>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="es-zerados" onchange="estRenderSaldo()"> Mostrar zerados</label>
+              <button class="btn bs bsm" onclick="estExportSaldo()">⬇ Excel</button>
+            </div>
+          </div>
+          <div class="tw"><table><thead><tr><th>Armazém</th><th>Marca</th><th>Produtor(es) em estoque</th><th style="text-align:right">Entradas</th><th style="text-align:right">Saídas</th><th style="text-align:right">Saldo (fd)</th><th style="text-align:right">m³</th><th style="text-align:right">t</th><th>Entrada mais antiga</th></tr></thead><tbody id="es-tb"></tbody></table></div>
+          <div id="es-empty" class="empty" style="display:none;"><p>Nada em estoque. Lance as descargas ou importe o inventário de abertura.</p></div>
+        </div>
+      </div>
+
+      <!-- DESCARGAS -->
+      <div class="est-aba" id="est-descargas" style="display:none;">
+        <div class="spl sp2">
+          <div class="card">
+            <div class="ch"><div class="ct">Lançar descarga</div></div>
+            <div class="gr" style="gap:12px;">
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="ed-data">Data <span class="req">*</span></label><input type="date" id="ed-data"></div>
+                <div class="fg"><label class="fl" for="ed-tipo">Tipo</label>
+                  <select id="ed-tipo"><option value="descarga">Descarga</option><option value="inventario">Inventário de abertura</option></select></div>
+              </div>
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="ed-az">Armazém <span class="req">*</span></label><select id="ed-az"></select></div>
+                <div class="fg"><label class="fl" for="ed-nf">NF / Minuta</label><input id="ed-nf" inputmode="numeric"></div>
+              </div>
+              <div class="fg"><label class="fl" for="ed-prod">Produtor <span class="req">*</span></label><input id="ed-prod" list="dl-produtores" autocomplete="off"></div>
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="ed-marca">Marca <span class="req">*</span></label><input id="ed-marca" list="dl-marcas" autocomplete="off" oninput="edMarcaInfo()" style="font-family:var(--mono);text-transform:uppercase;"></div>
+                <div class="fg"><label class="fl" for="ed-qtd">Fardos <span class="req">*</span></label><input id="ed-qtd" type="number" min="1" inputmode="numeric" oninput="edMarcaInfo()" style="font-family:var(--mono);"></div>
+              </div>
+              <div id="ed-info" style="font-size:12px;color:var(--ink3);min-height:16px;"></div>
+              <div class="fg"><label class="fl" for="ed-obs">Observação</label><input id="ed-obs"></div>
+              <button class="btn bp" onclick="lancarDescarga()">💾 Lançar</button>
+              <hr>
+              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar do Excel — colunas <strong>Data, NF, Produtor, Marca, Quantidade</strong> (e Armazém, opcional). Na planilha de entrada e saída, só a coluna ENTRADA é usada; as saídas vêm dos embarques.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn bs" onclick="document.getElementById('ed-file').dataset.tipo='descarga';document.getElementById('ed-file').click()">⬆ Importar descargas</button>
+                <button class="btn bs" onclick="document.getElementById('ed-file').dataset.tipo='inventario';document.getElementById('ed-file').click()">⬆ Importar inventário de abertura</button>
+                <input type="file" id="ed-file" accept=".xlsx,.xls,.csv" hidden onchange="importarMovExcel(this)">
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:13px;">
+                <span style="color:var(--ink3);align-self:center;">Modelos em Excel:</span>
+                <button class="btn bs bsm" onclick="baixarModeloEstoque('descarga')">⬇ Entradas</button>
+                <button class="btn bs bsm" onclick="baixarModeloEstoque('inventario')">⬇ Inventário de abertura</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch">
+              <div class="ct">Movimentos lançados</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <input type="date" id="em-de" onchange="estRenderMovs()" aria-label="De" style="width:auto;">
+                <input type="date" id="em-ate" onchange="estRenderMovs()" aria-label="Até" style="width:auto;">
+                <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="em-busca" placeholder="NF, produtor, marca" oninput="estRenderMovs()"></div>
+              </div>
+            </div>
+            <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Armazém</th><th>NF</th><th>Produtor</th><th>Marca</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th>Lançado por</th><th></th></tr></thead><tbody id="em-tb"></tbody></table></div>
+            <div id="em-info" style="font-size:12px;color:var(--ink3);margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MARCAS -->
+      <div class="est-aba" id="est-marcas" style="display:none;">
+        <div class="spl sp2">
+          <div class="card">
+            <div class="ch"><div class="ct" id="mc-titulo">Nova marca</div></div>
+            <input type="hidden" id="mc-id">
+            <div class="gr" style="gap:12px;">
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="mc-marca">Marca <span class="req">*</span></label><input id="mc-marca" style="font-family:var(--mono);text-transform:uppercase;"></div>
+                <div class="fg"><label class="fl" for="mc-comm">Commodity</label><input id="mc-comm" placeholder="SLBRC"></div>
+              </div>
+              <div class="gr g3">
+                <div class="fg"><label class="fl" for="mc-comp">Compr. (m)</label><input id="mc-comp" inputmode="decimal"></div>
+                <div class="fg"><label class="fl" for="mc-larg">Larg. (m)</label><input id="mc-larg" inputmode="decimal"></div>
+                <div class="fg"><label class="fl" for="mc-alt">Alt. (m)</label><input id="mc-alt" inputmode="decimal"></div>
+              </div>
+              <div class="gr g3">
+                <div class="fg"><label class="fl" for="mc-fl">F/L</label><input id="mc-fl" inputmode="decimal"></div>
+                <div class="fg"><label class="fl" for="mc-mm">MM</label><input id="mc-mm" inputmode="decimal"></div>
+                <div class="fg"><label class="fl" for="mc-exp">Exportador</label><input id="mc-exp"></div>
+              </div>
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="mc-cbm">CBM por fardo (m³) <span class="req">*</span></label><input id="mc-cbm" inputmode="decimal" style="font-family:var(--mono);"></div>
+                <div class="fg"><label class="fl" for="mc-peso">Peso por fardo (t)</label><input id="mc-peso" inputmode="decimal" style="font-family:var(--mono);"></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn bp" onclick="salvarMarca()">💾 Salvar marca</button>
+                <button class="btn bs" onclick="limparMarcaForm()">Limpar</button>
+              </div>
+              <hr>
+              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar a tabela de marcas do Excel — colunas <strong>COMM, MARKS, COMPR, LARG, ALT., F/L, CBM, WEIGHT, MM, EXPORTADOR</strong>. Marcas que já existem são atualizadas.</div>
+              <button class="btn bs" onclick="document.getElementById('mc-file').click()">⬆ Importar marcas (Excel)</button>
+              <input type="file" id="mc-file" accept=".xlsx,.xls,.csv" hidden onchange="importarMarcasExcel(this)">
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch">
+              <div class="ct">Marcas cadastradas <span class="cs" id="mc-count"></span></div>
+              <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="mc-busca" placeholder="Marca ou exportador" oninput="estRenderMarcas()"></div>
+            </div>
+            <div class="tw"><table><thead><tr><th>Marca</th><th>Comm.</th><th style="text-align:right">Compr.</th><th style="text-align:right">Larg.</th><th style="text-align:right">Alt.</th><th style="text-align:right">F/L</th><th style="text-align:right">CBM</th><th style="text-align:right">Peso (t)</th><th>Exportador</th><th></th></tr></thead><tbody id="mc-tb"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTA × ESTOQUE -->
+      <div class="est-aba" id="est-comparar" style="display:none;">
+        <div class="sr" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px;">
+          <div class="sc"><div class="sl">Marcas na lista</div><div class="sv" id="lc-n">—</div></div>
+          <div class="sc"><div class="sl">Com estoque suficiente</div><div class="sv" id="lc-ok" style="color:var(--f400);">—</div></div>
+          <div class="sc"><div class="sl">Faltando no estoque</div><div class="sv" id="lc-falta" style="color:#B42318;">—</div></div>
+          <div class="sc"><div class="sl">Fardos faltando</div><div class="sv" id="lc-fd">—</div></div>
+        </div>
+        <div class="card">
+          <div class="ch">
+            <div><div class="ct">Lista de carga × estoque</div><div class="cs" id="lc-navio">Navio ativo</div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="lc-so-falta" onchange="estRenderComparar()"> Só o que falta</label>
+              <button class="btn bs bsm" onclick="estExportComparar()">⬇ Excel</button>
+            </div>
+          </div>
+          <div class="tw"><table><thead><tr><th>Armazém</th><th>Marca</th><th style="text-align:right">Na lista</th><th style="text-align:right">Embarcado</th><th style="text-align:right">A embarcar</th><th style="text-align:right">Em estoque</th><th style="text-align:right">Diferença</th><th>Situação</th></tr></thead><tbody id="lc-tb"></tbody></table></div>
+          <div id="lc-empty" class="empty" style="display:none;"><p>Selecione um navio com lista de carga importada.</p></div>
+        </div>
+      </div>
+
+      <!-- INVENTÁRIO (contagem física) -->
+      <div class="est-aba" id="est-inventario" style="display:none;">
+        <div class="card">
+          <div class="ch">
+            <div><div class="ct">Contagem física</div><div class="cs">Digite o que foi contado; as diferenças viram ajustes de estoque.</div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <label class="fl" for="iv-data" style="margin:0;">Data da contagem</label>
+              <input type="date" id="iv-data" style="width:auto;">
+              <button class="btn bs bsm" onclick="estExportInventario()">⬇ Planilha de contagem</button>
+            </div>
+          </div>
+          <div id="iv-aviso"></div>
+          <div class="tw"><table><thead><tr><th>Marca</th><th>Produtor(es)</th><th style="text-align:right">Sistema (fd)</th><th style="width:130px;">Contado</th><th style="text-align:right">Diferença</th></tr></thead><tbody id="iv-tb"></tbody></table></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;">
+            <span id="iv-resumo" style="font-size:13px;color:var(--ink3);align-self:center;"></span>
+            <button class="btn bp" onclick="lancarAjustesInventario()">Lançar ajustes</button>
+          </div>
+        </div>
+      </div>
+      <datalist id="dl-marcas"></datalist>
+      <datalist id="dl-produtores"></datalist>
+    </div>
+
+    <!-- ARMAZENAGEM -->
+    <div class="page" id="page-armazenagem">
+      <div class="sh"><div><h2>Armazenagem</h2><div class="sub">m³ × dias além dos dias livres × tarifa do armazém, por produtor</div></div></div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="ch"><div class="ct">Tarifas por armazém</div></div>
+        <div class="tw"><table><thead><tr><th>Armazém</th><th>Tarifa (R$ por m³ por dia)</th><th>Dias livres</th><th></th></tr></thead><tbody id="ar-tarifas"></tbody></table></div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="ch"><div class="ct">Cobrança do período</div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="fg"><label class="fl" for="ar-de">De</label><input type="date" id="ar-de" style="width:auto;"></div>
+          <div class="fg"><label class="fl" for="ar-ate">Até</label><input type="date" id="ar-ate" style="width:auto;"></div>
+          <div class="fg"><label class="fl" for="ar-az">Armazém</label><select id="ar-az" style="width:auto;min-width:150px;"></select></div>
+          <button class="btn bp" onclick="calcularArmazenagem()">Calcular</button>
+          <button class="btn bs" onclick="exportArmazenagem()">⬇ Excel</button>
+        </div>
+        <div id="ar-aviso" style="margin-top:12px;"></div>
+      </div>
+      <div class="spl sp2">
+        <div class="card">
+          <div class="ch"><div class="ct">Por produtor</div><span class="cs" id="ar-total"></span></div>
+          <div class="tw"><table><thead><tr><th>Produtor</th><th style="text-align:right">m³·dia</th><th style="text-align:right">Valor</th></tr></thead><tbody id="ar-tb"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Detalhe <span class="cs" id="ar-det-tit">— toque num produtor</span></div></div>
+          <div class="tw"><table><thead><tr><th>Entrada</th><th>NF</th><th>Marca</th><th>Armazém</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th>Saída</th><th style="text-align:right">Dias cobrados</th><th style="text-align:right">Valor</th></tr></thead><tbody id="ar-det"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARMAZÉM › RELATÓRIOS -->
+    <div class="page" id="page-rel-armazem">
+      <div class="sh"><div><h2>Relatórios do armazém</h2><div class="sub">Movimentação, entradas por produtor e idade do estoque</div></div></div>
+      <div class="tabs" role="tablist" id="ra-tabs">
+        <button role="tab" data-rel="mov" class="on" onclick="raAba('mov')">Movimentação do período</button>
+        <button role="tab" data-rel="prod" onclick="raAba('prod')">Entradas por produtor</button>
+        <button role="tab" data-rel="idade" onclick="raAba('idade')">Posição e idade do estoque</button>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="fg" id="ra-de-wrap"><label class="fl" for="ra-de">De</label><input type="date" id="ra-de" style="width:auto;"></div>
+          <div class="fg"><label class="fl" for="ra-ate" id="ra-ate-lbl">Até</label><input type="date" id="ra-ate" style="width:auto;"></div>
+          <div class="fg"><label class="fl" for="ra-az">Armazém</label><select id="ra-az" style="width:auto;min-width:150px;"></select></div>
+          <button class="btn bp" onclick="raGerar()">Gerar</button>
+          <button class="btn bs" onclick="relExportar('ra')">⬇ Excel</button>
+        </div>
+        <div id="ra-desc" style="font-size:12px;color:var(--ink3);margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct" id="ra-titulo">—</div><span class="cs" id="ra-info"></span></div>
+        <div class="tw"><table id="ra-tab"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ADMINISTRAÇÃO › RELATÓRIOS -->
+    <div class="page" id="page-rel-admin">
+      <div class="sh"><div><h2>Relatórios da administração</h2><div class="sub">Usuários e acessos, resumo por navio e impressões</div></div></div>
+      <div class="tabs" role="tablist" id="rd-tabs">
+        <button role="tab" data-rel="usuarios" class="on" onclick="rdAba('usuarios')">Usuários e acessos</button>
+        <button role="tab" data-rel="navios" onclick="rdAba('navios')">Resumo por navio</button>
+        <button role="tab" data-rel="impressoes" onclick="rdAba('impressoes')">Impressões</button>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="fg rd-periodo"><label class="fl" for="rd-de">De</label><input type="date" id="rd-de" style="width:auto;"></div>
+          <div class="fg rd-periodo"><label class="fl" for="rd-ate">Até</label><input type="date" id="rd-ate" style="width:auto;"></div>
+          <button class="btn bp" onclick="rdGerar()">Gerar</button>
+          <button class="btn bs" onclick="relExportar('rd')">⬇ Excel</button>
+        </div>
+        <div id="rd-desc" style="font-size:12px;color:var(--ink3);margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct" id="rd-titulo">—</div><span class="cs" id="rd-info"></span></div>
+        <div class="tw"><table id="rd-tab"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
 
@@ -1429,16 +1737,18 @@ function localISODate(d){
 
 // ── Módulos de acesso (definidos por usuário; o banco aplica as mesmas regras) ──
 var MODULOS=[
-  {k:'dashboard',   l:'Dashboard'},
-  {k:'relatorios',  l:'Relatórios'},
-  {k:'lista',       l:'Lista de Carga — consultar', full:true},
-  {k:'lista_editar',l:'Lista de Carga — importar / editar / excluir', sub:true, full:true},
-  {k:'tickets',     l:'Emissão de Tickets'},
-  {k:'validar',     l:'Validar Embarque'},
-  {k:'navio',       l:'Navios'},
-  {k:'usuarios',    l:'Usuários'},
+  {k:'dashboard',   l:'Painel do embarque', g:'Embarque'},
+  {k:'relatorios',  l:'Relatórios do embarque', g:'Embarque'},
+  {k:'lista',       l:'Lista de carga — consultar', full:true, g:'Embarque'},
+  {k:'lista_editar',l:'Lista de carga — importar / editar / excluir', sub:true, full:true, g:'Embarque'},
+  {k:'tickets',     l:'Emissão de tickets', g:'Embarque'},
+  {k:'validar',     l:'Validação de embarque', g:'Embarque'},
+  {k:'estoque',     l:'Estoque — descargas, marcas e inventário (+ relatórios)', full:true, g:'Armazém'},
+  {k:'armazenagem', l:'Armazenagem — tarifas e cobrança (+ relatórios)', full:true, g:'Armazém'},
+  {k:'navio',       l:'Navios', g:'Administração'},
+  {k:'usuarios',    l:'Usuários', g:'Administração'},
 ];
-var MODULOS_CURTO={dashboard:'Dash',lista:'Lista',lista_editar:'Lista✎',tickets:'Tickets',validar:'Validar',relatorios:'Relat.',navio:'Navios',usuarios:'Usuários'};
+var MODULOS_CURTO={dashboard:'Dash',lista:'Lista',lista_editar:'Lista✎',tickets:'Tickets',validar:'Validar',relatorios:'Relat.',navio:'Navios',usuarios:'Usuários',estoque:'Estoque',armazenagem:'Armaz.'};
 // mesmo padrão de wp_priv.modulos_padrao() no banco
 function modulosPadrao(perfil){
   if(perfil==='conferente')return ['dashboard','lista','tickets','validar','relatorios'];
@@ -1452,15 +1762,19 @@ function modulosEfetivos(u){
 function temModulo(k){return modulosEfetivos(currentUser).indexOf(k)>=0;}
 // página → permissão
 function podePagina(page){
-  if(page==='backup'||page==='cfg'||page==='impressoras')return isAdmin();
+  if(page==='backup'||page==='cfg'||page==='impressoras'||page==='rel-admin')return isAdmin();
+  if(page==='rel-armazem')return temModulo('estoque')||temModulo('armazenagem');
   return temModulo(page==='navio'?'navio':page);
 }
 // checkboxes de módulos
 function renderModChecks(wrapId,selecionados,todos){
   var w=document.getElementById(wrapId);if(!w)return;
+  var grupo='';
   w.innerHTML=MODULOS.map(function(m){
     var on=todos||selecionados.indexOf(m.k)>=0;
-    return '<label class="'+(m.sub?'sub':'')+'"'+(m.full?' style="grid-column:1 / -1;"':'')+'><input type="checkbox" class="mod-chk" value="'+m.k+'"'
+    var tit=m.g!==grupo?'<div style="grid-column:1 / -1;font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--ink3);margin-top:'+(grupo?'8':'0')+'px;">'+esc(m.g.toUpperCase())+'</div>':'';
+    grupo=m.g;
+    return tit+'<label class="'+(m.sub?'sub':'')+'"'+(m.full?' style="grid-column:1 / -1;"':'')+'><input type="checkbox" class="mod-chk" value="'+m.k+'"'
       +(on?' checked':'')+(todos?' disabled':'')+' onchange="modChkChange(this)">'+esc(m.l)+'</label>';
   }).join('');
 }
@@ -1574,16 +1888,16 @@ function showApp(){
   // Menu pelos módulos liberados ao usuário
   var primeira=null;
   document.querySelectorAll('.sb-nav .nv').forEach(function(el){
-    var m=(el.getAttribute('onclick')||'').match(/go\('(\w+)'\)/);
+    var m=(el.getAttribute('onclick')||'').match(/go\('([\w-]+)'\)/);
     var ok=m&&podePagina(m[1]);
     el.style.display=ok?'':'none';
     if(ok&&!primeira)primeira=m[1];
   });
-  // cabeçalho de seção só aparece se tiver algum item visível
-  document.querySelectorAll('.sb-nav .nav-sec').forEach(function(sec){
-    var vis=false,el=sec.nextElementSibling;
-    while(el&&!el.classList.contains('nav-sec')){if(el.style.display!=='none')vis=true;el=el.nextElementSibling;}
-    sec.style.display=vis?'':'none';
+  // módulo só aparece se tiver algum submódulo liberado; volta aberto/fechado como o usuário deixou
+  document.querySelectorAll('.sb-nav .nav-mod').forEach(function(m){
+    var vis=[].some.call(m.querySelectorAll('.nv'),function(b){return b.style.display!=='none';});
+    m.style.display=vis?'':'none';
+    if(lsGet('wp_mod_'+m.getAttribute('data-mod'))==='1')m.classList.add('open');
   });
   document.querySelectorAll('#bnav button[data-pg]').forEach(function(b){
     var pg=b.getAttribute('data-pg');
@@ -1613,7 +1927,7 @@ function doLogout(){
 // ══════════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════════
-var titles={impressoras:'Impressoras',cfg:'Configurar Supabase',dashboard:'Painel',lista:'Lista de Carga',tickets:'Emissão de Tickets',validar:'Validar Embarque',relatorios:'Relatórios',backup:'Backup & Restore',usuarios:'Usuários',navio:'Navios'};
+var titles={dashboard:'Painel do embarque',lista:'Lista de carga',tickets:'Emissão de tickets',validar:'Validação de embarque',relatorios:'Relatórios',estoque:'Estoque',armazenagem:'Armazenagem','rel-armazem':'Relatórios',usuarios:'Usuários',navio:'Navios',backup:'Backup & Restore',impressoras:'Impressoras','rel-admin':'Relatórios',cfg:'Configurar Supabase'};
 var currentPage='dashboard';
 function go(page){
   if(!podePagina(page)){toast('Sem permissão para acessar esta área','error');return;}
@@ -1622,7 +1936,10 @@ function go(page){
   document.querySelectorAll('.nv').forEach(function(n){n.classList.remove('on');});
   var el=document.getElementById('page-'+page);if(el)el.classList.add('on');
   document.querySelectorAll('.nv').forEach(function(n){if((n.getAttribute('onclick')||'').includes("'"+page+"'"))n.classList.add('on');});
-  document.getElementById('pg-title').textContent=titles[page]||page;
+  var modAtual=MOD_DE_PAGINA[page];
+  document.getElementById('pg-title').textContent=(MOD_NOME[modAtual]?MOD_NOME[modAtual]+' › ':'')+(titles[page]||page);
+  document.querySelectorAll('.sb-nav .nav-mod').forEach(function(m){m.classList.toggle('ativo',m.getAttribute('data-mod')===modAtual);});
+  if(modAtual){var mEl=document.querySelector('.nav-mod[data-mod="'+modAtual+'"]');if(mEl&&!mEl.classList.contains('open'))abrirMod(modAtual,true);}
   document.querySelectorAll('#bnav button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-pg')===page);});
   try{window.scrollTo(0,0);}catch(e){}
   closeMobileMenu();
@@ -1638,6 +1955,10 @@ function go(page){
   if(page==='usuarios')loadUsers();
   if(page==='navio')loadNavios();
   if(page==='impressoras')loadImpressorasPage();
+  if(page==='estoque')estAbrir();
+  if(page==='armazenagem')armAbrir();
+  if(page==='rel-armazem')raAbrir();
+  if(page==='rel-admin')rdAbrir();
 }
 
 // ══════════════════════════════════════════════════
@@ -4781,7 +5102,7 @@ function loadImpressorasPage(silencioso){
           var st=statusImpressora(i);
           return '<div class="imp-row">'
             +'<div style="flex:1;min-width:160px;"><strong style="font-size:13px;">'+esc(i.nome)+'</strong>'
-            +'<div style="font-size:12px;color:var(--ink3);"><code>'+esc(i.ip)+':'+esc(i.porta)+'</code> · <span class="imp-dot" style="background:'+st.cor+'"></span>'+esc(st.txt)
+            +'<div style="font-size:12px;color:var(--ink3);">'+(/^\d{1,3}(\.\d{1,3}){3}$/.test(i.ip)?'<code>'+esc(i.ip)+':'+esc(i.porta)+'</code>':'USB/Windows: <code>'+esc(i.ip)+'</code>')+' ·<span class="imp-dot" style="background:'+st.cor+'"></span>'+esc(st.txt)
             +(i.status_msg&&!st.ok?' <span style="color:var(--ink4);">('+esc(i.status_msg)+')</span>':'')+'</div></div>'
             +'<button class="btn bs bsm" onclick="testarImpressora(\''+i.id+'\')">Testar</button>'
             +'<button class="btn bs bsm" onclick="editarImpressora(\''+i.id+'\')">✏</button>'
@@ -4833,7 +5154,9 @@ function reenviarFila(id){
 function salvarImpressora(){
   var nome=v('imp-nome'),ip=v('imp-ip'),porta=parseInt(v('imp-porta'))||9100,az=v('imp-az');
   if(!nome||!ip){toast('Informe nome e IP','error');return;}
-  if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){toast('IP inválido (ex.: 192.168.0.50)','error');return;}
+  // rede: IP fixo; USB: nome exato da impressora no Windows do computador do armazém
+  if(/^[\d.]+$/.test(ip)&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){toast('IP inválido (ex.: 192.168.0.224)','error');return;}
+  if(ip.length<2){toast('Informe o IP ou o nome da impressora no Windows','error');return;}
   sb.from('wp_impressoras').insert({armazem:az,nome:nome,ip:ip,porta:porta}).then(function(r){
     if(r.error){toast('Erro: '+(r.error.code==='23505'?'Já existe uma impressora com esse nome neste armazém':r.error.message),'error');return;}
     toast('Impressora cadastrada','success');
@@ -4845,7 +5168,7 @@ function editarImpressora(id){
   var i=impressorasAll.find(function(x){return x.id===id;});if(!i)return;
   openEdit('Editar impressora',[
     {key:'nome',label:'Nome',val:i.nome},
-    {key:'ip',label:'IP fixo',val:i.ip},
+    {key:'ip',label:'IP fixo (rede) ou nome no Windows (USB)',val:i.ip},
     {key:'porta',label:'Porta',val:i.porta},
     {key:'armazem',label:'Armazém',type:'select',val:i.armazem,options:ARMAZENS.map(function(a){return {v:a,l:a};})},
   ],'wp_impressoras',id,loadImpressorasPage);
@@ -4878,10 +5201,936 @@ function gerarConfigAgente(){
   sb.rpc('wp_admin_agente',{p_armazem:az,p_senha:senha}).then(function(r){
     showLd(false);
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    var cfg={url:WP_SB_URL,anon_key:WP_SB_KEY,email:loginParaEmail(r.data),senha:senha,armazem:az};
-    downloadBlob(new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'}),'agente.config.json');
-    toast('Arquivo gerado para '+az+'. Salve-o na pasta do agente no computador do armazém.','success');
+    var cfg={url:WP_SB_URL,anon_key:WP_SB_KEY,email:loginParaEmail(r.data),senha:senha,armazem:az,gerado_em:new Date().toISOString()};
+    _ultimoCfgAgente=cfg;
+    baixarCfgAgente();
+    var box=document.getElementById('imp-cfg-ok');
+    box.style.display='';
+    box.innerHTML='<div class="imp-st ok" style="margin-top:10px;">✓<div><strong>Arquivo gerado para '+esc(az)+' às '+new Date().toLocaleTimeString('pt-BR')+'</strong>'
+      +'O arquivo anterior deste armazém deixou de funcionar. Substitua o agente.config.json na pasta do agente e reinicie o agente (reiniciar-agente.bat).'
+      +'<div style="margin-top:8px;"><button class="btn bs bsm" onclick="baixarCfgAgente()">⬇ Baixar o mesmo arquivo de novo</button></div></div></div>';
+    toast('Arquivo gerado para '+az+'. Se o download não apareceu, use "Baixar o mesmo arquivo de novo" — não gere outro.','success');
   });
+}
+// guarda o último arquivo gerado nesta tela: baixar de novo NÃO troca a senha
+var _ultimoCfgAgente=null;
+function baixarCfgAgente(){
+  if(!_ultimoCfgAgente)return;
+  downloadBlob(new Blob([JSON.stringify(_ultimoCfgAgente,null,2)],{type:'application/json'}),'agente.config.json');
+}
+
+
+// ══════════════════════════════════════════════════
+// ESTOQUE E ARMAZENAGEM
+// Entradas: wp_estoque_mov (descarga, inventário de abertura, ajuste).
+// Saídas: itens de tickets VALIDADOS (por armazém + marca), a partir da data
+// do inventário de abertura de cada armazém.
+// Baixa: primeiro que entra, primeiro que sai — define de qual produtor saiu
+// e quantos dias cada fardo ficou (base da cobrança de armazenagem).
+// ══════════════════════════════════════════════════
+var est={marcas:[],movs:[],saidas:[],tarifas:[],carregado:false,aba:'saldo',grupos:null,armRes:null};
+
+function nmMarca(s){return String(s||'').toUpperCase().replace(/\s+/g,'');}
+function diaN(iso){var p=String(iso).slice(0,10).split('-');return Date.UTC(+p[0],+p[1]-1,+p[2])/864e5;}
+function isoDeN(n){return new Date(n*864e5).toISOString().slice(0,10);}
+function fmtIso(iso){if(!iso)return '—';var p=String(iso).slice(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function brl(v){return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function numBR(s){ // aceita 0,757 e 0.757
+  if(s===null||s===undefined||s==='')return null;
+  if(typeof s==='number')return s;
+  var t=String(s).trim().replace(/\s/g,'');
+  if(t.indexOf(',')>=0)t=t.replace(/\./g,'').replace(',','.');
+  var n=parseFloat(t);return isNaN(n)?null:n;
+}
+function marcaInfo(m){return est.marcas.find(function(x){return nmMarca(x.marca)===nmMarca(m);})||null;}
+function armazensUsuario(){var a=userArmazens();return a||ARMAZENS.slice();}
+function azDoMov(s){ // nome canônico do armazém (como está em ARMAZENS)
+  var a=ARMAZENS.find(function(x){return normAz(x)===normAz(s);});return a||String(s||'').trim();
+}
+
+// ── carga dos dados ──
+function estCarregar(forcar){
+  if(est.carregado&&!forcar)return Promise.resolve();
+  showLd(true);
+  return Promise.all([
+    supaAll(function(){return sb.from('wp_marcas').select('*').order('marca').order('id');}),
+    supaAll(function(){return sb.from('wp_estoque_mov').select('*').order('data').order('created_at').order('id');}),
+    supaAll(function(){return sb.from('wp_ticket_itens')
+      .select('id,marca,armazem,quantidade,wp_tickets!inner(numero,status,validado_em,armazem,navio_id)')
+      .eq('wp_tickets.status','validado').order('id');}),
+    sb.from('wp_armazenagem_tarifa').select('*'),
+  ]).then(function(rs){
+    showLd(false);
+    var err=rs[0].error||rs[1].error||rs[2].error;
+    if(err){toast('Erro ao carregar estoque: '+err.message,'error');return;}
+    est.marcas=rs[0].data||[];est.movs=rs[1].data||[];est.saidas=rs[2].data||[];est.tarifas=(rs[3].data||[]);
+    est.carregado=true;est.grupos=null;
+    // listas de apoio para digitação
+    document.getElementById('dl-marcas').innerHTML=est.marcas.map(function(m){return '<option value="'+esc(m.marca)+'">';}).join('');
+    var prods=[...new Set(est.movs.map(function(m){return (m.produtor||'').trim();}).filter(Boolean))].sort();
+    document.getElementById('dl-produtores').innerHTML=prods.map(function(p){return '<option value="'+esc(p)+'">';}).join('');
+  });
+}
+
+// ── motor: saldo e alocações por armazém + marca até uma data ──
+function estCalcular(ateIso){
+  ateIso=ateIso||localISODate();
+  var ateN=diaN(ateIso);
+  var corte={}; // data do inventário de abertura de cada armazém
+  est.movs.forEach(function(m){if(m.tipo==='inventario'){var k=normAz(m.armazem);if(!corte[k]||m.data<corte[k])corte[k]=m.data;}});
+  var G={},avisos={semArmazem:0,semEstoque:[]};
+  function g(az,marca){
+    var k=normAz(az)+'|'+nmMarca(marca);
+    return G[k]||(G[k]={az:azDoMov(az),marca:String(marca||'').trim().toUpperCase(),ent:[],sai:[],totEnt:0,totSai:0});
+  }
+  est.movs.forEach(function(m){
+    if(diaN(m.data)>ateN)return;
+    var q=parseInt(m.quantidade)||0,gr=g(m.armazem,m.marca);
+    if(q>0){gr.ent.push({id:m.id,n:diaN(m.data),data:m.data,qtd:q,resto:q,produtor:(m.produtor||'').trim()||'(sem produtor)',nf:m.nf||'',tipo:m.tipo,criado:m.created_at||''});gr.totEnt+=q;}
+    else if(q<0){gr.sai.push({n:diaN(m.data),data:m.data,qtd:-q,ref:'Ajuste de inventário'});gr.totSai+=-q;}
+  });
+  est.saidas.forEach(function(it){
+    var tk=it.wp_tickets||{};
+    if(!tk.validado_em)return;
+    var az=it.armazem||'';
+    if(!az||az.indexOf(',')>=0){avisos.semArmazem++;return;}
+    var d=localISODate(new Date(tk.validado_em)),n=diaN(d);
+    if(n>ateN)return;
+    var c=corte[normAz(az)];
+    if(c&&d<c)return; // embarcado antes do inventário de abertura: já não estava no saldo
+    var q=parseInt(it.quantidade)||0;if(q<=0)return;
+    var gr=g(az,it.marca);
+    gr.sai.push({n:n,data:d,qtd:q,ref:tk.numero||'ticket'});gr.totSai+=q;
+  });
+  Object.keys(G).forEach(function(k){
+    var gr=G[k];
+    gr.ent.sort(function(a,b){return a.n-b.n||(a.criado<b.criado?-1:1);});
+    gr.sai.sort(function(a,b){return a.n-b.n;});
+    gr.aloc=[];gr.deficit=0;
+    var i=0;
+    gr.sai.forEach(function(s){
+      var q=s.qtd;
+      while(q>0&&i<gr.ent.length){
+        var e=gr.ent[i];
+        if(e.resto<=0){i++;continue;}
+        var t=Math.min(q,e.resto);e.resto-=t;q-=t;
+        gr.aloc.push({ent:e,qtd:t,saiN:s.n,saiData:s.data,ref:s.ref});
+        if(e.resto<=0)i++;
+      }
+      if(q>0)gr.deficit+=q;
+    });
+    gr.saldo=gr.ent.reduce(function(a,e){return a+e.resto;},0);
+    if(gr.deficit>0)avisos.semEstoque.push(gr.az+' · '+gr.marca+': '+gr.deficit+' fd');
+  });
+  est.corte=corte;
+  return {G:G,avisos:avisos};
+}
+
+// ── navegação ──
+function estAbrir(forcar){
+  var sel=document.getElementById('est-az'),azs=armazensUsuario();
+  if(!sel.options.length){
+    sel.innerHTML=(azs.length>1?'<option value="">Todos os armazéns</option>':'')+azs.map(function(a){return '<option>'+esc(a)+'</option>';}).join('');
+    document.getElementById('ed-az').innerHTML=azs.map(function(a){return '<option>'+esc(a)+'</option>';}).join('');
+    document.getElementById('ed-data').value=localISODate();
+    document.getElementById('iv-data').value=localISODate();
+    var d=new Date();d.setDate(d.getDate()-30);
+    document.getElementById('em-de').value=localISODate(d);
+    document.getElementById('em-ate').value=localISODate();
+  }
+  estCarregar(forcar).then(estRender);
+}
+function estAba(a){
+  est.aba=a;
+  document.querySelectorAll('#est-tabs button').forEach(function(b){var on=b.getAttribute('data-aba')===a;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  document.querySelectorAll('.est-aba').forEach(function(d){d.style.display=d.id==='est-'+a?'':'none';});
+  estRender();
+}
+function estRender(){
+  if(!est.carregado)return;
+  est.grupos=estCalcular();
+  var az=document.getElementById('est-az').value;
+  if(az)document.getElementById('ed-az').value=az;
+  if(est.aba==='saldo')estRenderSaldo();
+  if(est.aba==='descargas')estRenderMovs();
+  if(est.aba==='marcas')estRenderMarcas();
+  if(est.aba==='comparar')estRenderComparar();
+  if(est.aba==='inventario')estRenderInventario();
+}
+function gruposFiltrados(){
+  var az=document.getElementById('est-az').value;
+  return Object.values(est.grupos.G).filter(function(g){return !az||normAz(g.az)===normAz(az);});
+}
+function produtoresEmEstoque(g){
+  var p={};g.ent.forEach(function(e){if(e.resto>0)p[e.produtor]=(p[e.produtor]||0)+e.resto;});
+  return Object.keys(p).sort(function(a,b){return p[b]-p[a];}).map(function(k){return k+' ('+p[k]+')';});
+}
+
+// ── SALDO ──
+function estRenderSaldo(){
+  var busca=(document.getElementById('es-busca').value||'').trim().toLowerCase();
+  var zer=document.getElementById('es-zerados').checked;
+  var lin=gruposFiltrados().filter(function(g){
+    if(!zer&&g.saldo<=0&&!g.deficit)return false;
+    if(!busca)return true;
+    return g.marca.toLowerCase().indexOf(busca)>=0||produtoresEmEstoque(g).join(' ').toLowerCase().indexOf(busca)>=0;
+  }).sort(function(a,b){return a.az.localeCompare(b.az)||a.marca.localeCompare(b.marca);});
+  var tFd=0,tM3=0,tT=0,nM=0,semParam=[];
+  var html=lin.map(function(g){
+    var mi=marcaInfo(g.marca),m3=mi?g.saldo*mi.cbm:null,t=mi?g.saldo*mi.peso_t:null;
+    if(!mi&&g.saldo>0)semParam.push(g.marca);
+    tFd+=g.saldo;tM3+=m3||0;tT+=t||0;if(g.saldo>0)nM++;
+    var antigo=g.ent.find(function(e){return e.resto>0;});
+    var dias=antigo?(diaN(localISODate())-antigo.n):null;
+    return '<tr><td>'+esc(g.az)+'</td><td><strong class="mono">'+esc(g.marca)+'</strong>'+(mi?'':' <span class="bge warn" title="Cadastre em Marcas">sem parâmetro</span>')+'</td>'
+      +'<td style="font-size:12px;color:var(--ink3);max-width:260px;">'+esc(produtoresEmEstoque(g).join(', ')||'—')+'</td>'
+      +'<td class="mono" style="text-align:right">'+g.totEnt.toLocaleString('pt-BR')+'</td>'
+      +'<td class="mono" style="text-align:right">'+g.totSai.toLocaleString('pt-BR')+'</td>'
+      +'<td class="mono" style="text-align:right;font-weight:600;">'+g.saldo.toLocaleString('pt-BR')+(g.deficit?' <span class="bge dng" title="Embarcado sem entrada lançada">−'+g.deficit+'</span>':'')+'</td>'
+      +'<td class="mono" style="text-align:right">'+(m3===null?'—':fNum(m3,3))+'</td>'
+      +'<td class="mono" style="text-align:right">'+(t===null?'—':fNum(t,3))+'</td>'
+      +'<td>'+(antigo?fmtIso(antigo.data)+' <span style="color:var(--ink3);font-size:12px;">('+dias+' dias)</span>':'—')+'</td></tr>';
+  }).join('');
+  document.getElementById('es-tb').innerHTML=html;
+  document.getElementById('es-empty').style.display=lin.length?'none':'';
+  document.getElementById('es-fd').textContent=tFd.toLocaleString('pt-BR');
+  document.getElementById('es-m3').innerHTML=fNum(tM3,1)+' <small>m³</small>';
+  document.getElementById('es-t').innerHTML=fNum(tT,1)+' <small>t</small>';
+  document.getElementById('es-marcas').textContent=nM;
+  var av=[],a=est.grupos.avisos;
+  if(a.semEstoque.length)av.push('<strong>Embarcado mais do que entrou</strong> (falta lançar descarga ou inventário): '+esc(a.semEstoque.slice(0,8).join(' · '))+(a.semEstoque.length>8?' …':''));
+  if(semParam.length)av.push('<strong>Marcas sem parâmetro</strong> (m³ e peso não calculados, nem a armazenagem): '+esc([...new Set(semParam)].slice(0,12).join(', ')));
+  if(a.semArmazem)av.push(a.semArmazem+' item(ns) de ticket validado sem armazém definido no lote — não baixaram estoque.');
+  if(!Object.keys(est.corte).length&&est.movs.length)av.push('Nenhum <strong>inventário de abertura</strong> lançado: todos os embarques validados estão sendo descontados.');
+  document.getElementById('es-alertas').innerHTML=av.map(function(t){return '<div class="imp-st err" style="margin-bottom:10px;">⚠<div>'+t+'</div></div>';}).join('');
+}
+function estExportSaldo(){
+  var rows=gruposFiltrados().filter(function(g){return g.saldo>0||g.deficit;}).map(function(g){
+    var mi=marcaInfo(g.marca);
+    return {'Armazém':g.az,'Marca':g.marca,'Produtores':produtoresEmEstoque(g).join(', '),'Entradas':g.totEnt,'Saídas':g.totSai,'Saldo (fd)':g.saldo,
+      'm³':mi?+(g.saldo*mi.cbm).toFixed(3):'','t':mi?+(g.saldo*mi.peso_t).toFixed(3):'','Embarcado sem entrada':g.deficit||''};
+  });
+  xlsxBaixar(rows,'Saldo','estoque_saldo_'+localISODate()+'.xlsx');
+}
+function xlsxBaixar(rows,aba,nome){
+  if(!rows.length){toast('Nada para exportar','error');return;}
+  var ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=Object.keys(rows[0]).map(function(k){return {wch:Math.max(10,k.length+2)};});
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,aba);XLSX.writeFile(wb,nome);
+}
+
+// ── DESCARGAS ──
+function edMarcaInfo(){
+  var mi=marcaInfo(document.getElementById('ed-marca').value),q=parseInt(document.getElementById('ed-qtd').value)||0,el=document.getElementById('ed-info');
+  if(!document.getElementById('ed-marca').value){el.textContent='';return;}
+  el.innerHTML=mi?('CBM '+fNum(mi.cbm,3)+' m³ · '+fNum(mi.peso_t,3)+' t por fardo'+(q?' → <strong>'+fNum(q*mi.cbm,3)+' m³ · '+fNum(q*mi.peso_t,3)+' t</strong>':''))
+    :'<span style="color:#B45309;">Marca sem parâmetro — cadastre em Marcas para calcular m³ e armazenagem.</span>';
+}
+function lancarDescarga(){
+  var reg={armazem:document.getElementById('ed-az').value,data:document.getElementById('ed-data').value,tipo:document.getElementById('ed-tipo').value,
+    nf:v('ed-nf'),produtor:v('ed-prod'),marca:(v('ed-marca')||'').toUpperCase(),quantidade:parseInt(document.getElementById('ed-qtd').value)||0,obs:v('ed-obs'),
+    criado_por:currentUser.id,criado_por_nome:currentUser.nome};
+  if(!reg.data||!reg.armazem||!reg.marca||!reg.produtor){toast('Preencha data, armazém, produtor e marca','error');return;}
+  if(reg.quantidade<=0){toast('Quantidade de fardos deve ser maior que zero','error');return;}
+  var dup=est.movs.find(function(m){return normAz(m.armazem)===normAz(reg.armazem)&&m.data===reg.data&&(m.nf||'')===(reg.nf||'')&&nmMarca(m.marca)===nmMarca(reg.marca)&&+m.quantidade===reg.quantidade;});
+  if(dup&&!confirm('Já existe um lançamento igual (mesma data, NF, marca e quantidade). Lançar de novo?'))return;
+  showLd(true);
+  sb.from('wp_estoque_mov').insert(reg).select('*').single().then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    est.movs.push(r.data);
+    toast('Descarga lançada: '+reg.quantidade+' fd '+reg.marca,'success');
+    ['ed-nf','ed-marca','ed-qtd','ed-obs'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('ed-info').textContent='';
+    document.getElementById('ed-marca').focus();
+    estRender();
+  });
+}
+function estRenderMovs(){
+  var de=document.getElementById('em-de').value,ate=document.getElementById('em-ate').value;
+  var b=(document.getElementById('em-busca').value||'').trim().toLowerCase(),az=document.getElementById('est-az').value;
+  var lin=est.movs.filter(function(m){
+    if(az&&normAz(m.armazem)!==normAz(az))return false;
+    if(de&&m.data<de)return false;if(ate&&m.data>ate)return false;
+    return !b||[m.nf,m.produtor,m.marca].join(' ').toLowerCase().indexOf(b)>=0;
+  }).slice().reverse();
+  var tipos={descarga:'Descarga',inventario:'<span class="bge info">Inventário</span>',ajuste:'<span class="bge warn">Ajuste</span>'};
+  var tot=0,totM3=0;
+  var mostra=lin.slice(0,500);
+  document.getElementById('em-tb').innerHTML=mostra.map(function(m){
+    var mi=marcaInfo(m.marca),q=+m.quantidade;tot+=q;if(mi)totM3+=q*mi.cbm;
+    return '<tr><td>'+fmtIso(m.data)+'</td><td>'+(tipos[m.tipo]||esc(m.tipo))+'</td><td>'+esc(m.armazem)+'</td><td class="mono">'+esc(m.nf||'—')+'</td><td>'+esc(m.produtor||'—')+'</td>'
+      +'<td class="mono"><strong>'+esc(m.marca)+'</strong></td><td class="mono" style="text-align:right">'+q+'</td><td class="mono" style="text-align:right">'+(mi?fNum(q*mi.cbm,3):'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--ink3);">'+esc(m.criado_por_nome||'—')+'</td>'
+      +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="editarMov(\''+m.id+'\')">✏</button> '
+      +'<button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_estoque_mov\',\''+m.id+'\',function(){estAbrir(true);})">✕</button></td></tr>';
+  }).join('')||'<tr><td colspan="10" style="color:var(--ink3);text-align:center;padding:20px;">Nenhum lançamento no período.</td></tr>';
+  document.getElementById('em-info').textContent=lin.length+' lançamento(s) no período'+(lin.length>500?' (mostrando os 500 mais recentes)':'')+' · '+tot.toLocaleString('pt-BR')+' fardos · '+fNum(totM3,1)+' m³';
+}
+function editarMov(id){
+  var m=est.movs.find(function(x){return x.id===id;});if(!m)return;
+  openEdit('Editar lançamento',[
+    {key:'data',label:'Data',type:'date',val:m.data},
+    {key:'nf',label:'NF / Minuta',val:m.nf},
+    {key:'produtor',label:'Produtor',val:m.produtor},
+    {key:'marca',label:'Marca',val:m.marca},
+    {key:'quantidade',label:'Fardos',type:'number',val:m.quantidade},
+    {key:'obs',label:'Observação',val:m.obs},
+  ],'wp_estoque_mov',id,function(){estAbrir(true);});
+}
+
+// ── importação de planilhas ──
+function lerPlanilha(file,cb){
+  var rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'array'});
+      cb(wb.SheetNames.map(function(sn){
+        var ws=wb.Sheets[sn];
+        return {nome:sn,raw:XLSX.utils.sheet_to_json(ws,{header:1,defval:''}),txt:XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false})};
+      }));
+    }catch(err){toast('Não foi possível ler o arquivo: '+err.message,'error');}
+  };
+  rd.readAsArrayBuffer(file);
+}
+function hdr(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();}
+function dataPlanilha(v,txt){
+  if(typeof v==='number'&&v>20000&&v<80000)return isoDeN(Math.floor(v)-25569);
+  var t=String(txt||v||'').trim(),m=t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if(m){var a=+m[3];if(a<100)a+=2000;return a+'-'+String(+m[2]).padStart(2,'0')+'-'+String(+m[1]).padStart(2,'0');}
+  m=t.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];
+  return null;
+}
+function importarMovExcel(input){
+  var file=input.files[0];input.value='';if(!file)return;
+  var tipo=input.dataset.tipo||'descarga';
+  var azPadrao=document.getElementById('ed-az').value;
+  var dataCorte=null;
+  if(tipo==='inventario'){
+    dataCorte=prompt('Data do inventário de abertura (dd/mm/aaaa).\nOs embarques validados a partir desta data passam a baixar o estoque.',fmtIso(localISODate()));
+    if(!dataCorte)return;
+    dataCorte=dataPlanilha(dataCorte,dataCorte);
+    if(!dataCorte){toast('Data inválida','error');return;}
+  }
+  lerPlanilha(file,function(abas){
+    var regs=[],ignorados={semMarca:0,semQtd:0,semData:0,saida:0},abaUsada=null;
+    abas.forEach(function(a){
+      if(abaUsada)return;
+      var R=a.raw,T=a.txt,h=-1;
+      for(var i=0;i<Math.min(R.length,40);i++){
+        var l=R[i].map(hdr);
+        if(l.some(function(c){return c==='MARCA'||c==='MARCAS'||c==='MARKS';})&&(tipo==='inventario'||l.some(function(c){return c.indexOf('DATA')===0;}))){h=i;break;}
+      }
+      if(h<0)return;
+      abaUsada=a.nome;
+      var H=R[h].map(hdr),H2=(R[h+1]||[]).map(hdr);
+      function col(test){for(var c=0;c<H.length;c++)if(test(H[c]))return c;return -1;}
+      var cData=col(function(c){return c.indexOf('DATA')===0;}),
+          cNf=col(function(c){return c.indexOf('NF')===0||c.indexOf('MINUTA')>=0||c.indexOf('NOTA')>=0;}),
+          cProd=col(function(c){return c.indexOf('PRODUTOR')>=0||c.indexOf('EXPORTADOR')>=0||c==='CLIENTE';}),
+          cMarca=col(function(c){return c==='MARCA'||c==='MARCAS'||c==='MARKS';}),
+          cAz=col(function(c){return c.indexOf('ARMAZ')===0||c==='AZ';}),
+          cObs=col(function(c){return c.indexOf('OBS')===0;});
+      // quantidade: coluna "ENTRADA" na linha de baixo (planilha de entrada e saída) ou QUANTIDADE/QTD/SALDO
+      var cQtd=H2.indexOf('ENTRADA'),cSai=H2.indexOf('SAIDA'),ini=h+1;
+      if(cQtd>=0)ini=h+2;
+      else cQtd=col(function(c){return c.indexOf('QUANT')===0||c.indexOf('QTD')===0||c==='FARDOS'||c==='ENTRADA'||c==='SALDO';});
+      for(var r=ini;r<R.length;r++){
+        var L=R[r],LT=T[r]||[];
+        var marca=String(LT[cMarca]||L[cMarca]||'').trim().toUpperCase();
+        var q=cQtd>=0?Math.round(numBR(L[cQtd])||0):0;
+        if(!marca){ignorados.semMarca++;continue;}
+        if(q<=0){if(cSai>=0&&(numBR(L[cSai])||0)>0)ignorados.saida++;else ignorados.semQtd++;continue;}
+        var d=tipo==='inventario'?dataCorte:(cData>=0?dataPlanilha(L[cData],LT[cData]):null);
+        if(!d){ignorados.semData++;continue;}
+        regs.push({armazem:cAz>=0&&String(L[cAz]).trim()?azDoMov(L[cAz]):azPadrao,data:d,tipo:tipo,
+          nf:cNf>=0?String(LT[cNf]||L[cNf]||'').trim()||null:(tipo==='inventario'?'INV':null),
+          produtor:cProd>=0?String(LT[cProd]||L[cProd]||'').trim()||null:null,
+          marca:marca,quantidade:q,obs:cObs>=0?String(LT[cObs]||'').trim()||null:null,
+          criado_por:currentUser.id,criado_por_nome:currentUser.nome});
+      }
+    });
+    if(!abaUsada){toast('Não encontrei o cabeçalho (precisa de MARCA e DATA'+(tipo==='inventario'?'':'')+')','error');return;}
+    // armazéns fora da permissão do usuário
+    var azs=armazensUsuario().map(normAz);
+    var fora=regs.filter(function(x){return azs.indexOf(normAz(x.armazem))<0;});
+    regs=regs.filter(function(x){return azs.indexOf(normAz(x.armazem))>=0;});
+    // duplicados (já lançados)
+    var ja={};est.movs.forEach(function(m){ja[[normAz(m.armazem),m.data,m.nf||'',nmMarca(m.marca),m.quantidade].join('|')]=1;});
+    var dups=0;regs=regs.filter(function(x){var k=[normAz(x.armazem),x.data,x.nf||'',nmMarca(x.marca),x.quantidade].join('|');if(ja[k]){dups++;return false;}return true;});
+    if(!regs.length){toast('Nada novo para importar ('+dups+' já lançados).','error');return;}
+    var semParam=[...new Set(regs.filter(function(x){return !marcaInfo(x.marca);}).map(function(x){return x.marca;}))];
+    var datas=regs.map(function(x){return x.data;}).sort();
+    var fd=regs.reduce(function(a,x){return a+x.quantidade;},0);
+    var semProd=regs.filter(function(x){return !x.produtor;}).length;
+    var msg=(tipo==='inventario'?'INVENTÁRIO DE ABERTURA em '+fmtIso(dataCorte):'DESCARGAS de '+fmtIso(datas[0])+' a '+fmtIso(datas[datas.length-1]))
+      +'\nAba: '+abaUsada+'\n\n• '+regs.length+' lançamento(s) · '+fd.toLocaleString('pt-BR')+' fardos'
+      +'\n• Armazém: '+[...new Set(regs.map(function(x){return x.armazem;}))].join(', ')
+      +(dups?'\n• '+dups+' já lançado(s) antes — ignorados':'')
+      +(ignorados.saida?'\n• '+ignorados.saida+' linha(s) de SAÍDA ignoradas (saídas vêm dos embarques)':'')
+      +(ignorados.semData?'\n• '+ignorados.semData+' linha(s) sem data válida — ignoradas':'')
+      +(fora.length?'\n• '+fora.length+' linha(s) de armazém sem permissão — ignoradas':'')
+      +(semProd?'\n• '+semProd+' sem produtor (a armazenagem fica como "(sem produtor)")':'')
+      +(semParam.length?'\n• '+semParam.length+' marca(s) sem parâmetro: '+semParam.slice(0,10).join(', ')+(semParam.length>10?'…':''):'')
+      +'\n\nConfirmar importação?';
+    if(!confirm(msg))return;
+    var tag=file.name+' · '+new Date().toLocaleString('pt-BR');
+    regs.forEach(function(x){x.importacao=tag;});
+    showLd(true);
+    var p=Promise.resolve(),feitos=0;
+    for(var i=0;i<regs.length;i+=500)(function(b){p=p.then(function(){return sb.from('wp_estoque_mov').insert(b).then(function(r){if(r.error)throw r.error;feitos+=b.length;});});})(regs.slice(i,i+500));
+    p.then(function(){showLd(false);toast(feitos+' lançamento(s) importado(s)','success');estAbrir(true);})
+     .catch(function(e){showLd(false);toast('Importação interrompida após '+feitos+' lançamento(s): '+(e.message||e)+'. Importe o arquivo de novo — os já gravados são ignorados.','error');estAbrir(true);});
+  });
+}
+
+// Modelos de planilha para importação (mesmos títulos que o importador procura)
+function baixarModeloEstoque(tipo){
+  var inv=tipo==='inventario';
+  var cab=inv?['MARCA','PRODUTOR','QUANTIDADE','ARMAZÉM','OBS']:['DATA','NF','PRODUTOR','MARCA','QUANTIDADE','ARMAZÉM','OBS'];
+  var texto=inv?[0,1,3,4]:[1,2,3,5,6]; // colunas em formato texto (não perde zero à esquerda da marca/NF)
+  var ws=XLSX.utils.aoa_to_sheet([cab]);
+  for(var r=1;r<=1000;r++)texto.forEach(function(c){ws[XLSX.utils.encode_cell({r:r,c:c})]={t:'s',v:'',z:'@'};});
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:1000,c:cab.length-1}});
+  ws['!cols']=cab.map(function(h){return {wch:h==='PRODUTOR'||h==='OBS'?30:14};});
+  var instr=inv?[
+    ['Modelo de importação — INVENTÁRIO DE ABERTURA'],[''],
+    ['1. Preencha o saldo atual de cada marca, por produtor, na aba "Inventario". Não altere os títulos da linha 1.'],
+    ['2. Obrigatórios: MARCA, PRODUTOR e QUANTIDADE (fardos em estoque). Marca com carga de dois produtores = uma linha para cada.'],
+    ['3. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
+    ['4. Ao importar, o WoodPort pergunta a DATA DO INVENTÁRIO. Embarques validados a partir dela baixam o estoque; a armazenagem conta a partir dela.'],
+    ['5. Importe uma vez por armazém; depois use as descargas do dia a dia.'],[''],
+    ['Exemplo:'],['MARCA | PRODUTOR | QUANTIDADE | ARMAZÉM'],['404D | Madeireira Exemplo | 201 | WRC'],['F8 | Serraria Modelo | 238 | WRC'],['F8 | Madeireira Exemplo | 26 | WRC']
+  ]:[
+    ['Modelo de importação — ENTRADAS (descargas)'],[''],
+    ['1. Uma linha por descarga (caminhão), na aba "Entradas". Não altere os títulos da linha 1.'],
+    ['2. Obrigatórios: DATA (dd/mm/aaaa), PRODUTOR, MARCA e QUANTIDADE (fardos). NF e OBS são opcionais.'],
+    ['3. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
+    ['4. A MARCA deve estar cadastrada em Estoque > Marcas para calcular m³ e armazenagem.'],
+    ['5. Não lance saídas aqui: o estoque baixa sozinho quando o embarque é validado.'],
+    ['6. Linhas já importadas antes (mesma data, NF, marca e quantidade) são ignoradas.'],[''],
+    ['Exemplo:'],['DATA | NF | PRODUTOR | MARCA | QUANTIDADE | ARMAZÉM'],['13/10/2026 | 11116 | Madeireira Exemplo | 404D | 60 | WRC'],['14/10/2026 | 6353 | Serraria Modelo | F12 | 28 |']
+  ];
+  var wi=XLSX.utils.aoa_to_sheet(instr);wi['!cols']=[{wch:110}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,inv?'Inventario':'Entradas');
+  XLSX.utils.book_append_sheet(wb,wi,'Como preencher');
+  XLSX.writeFile(wb,inv?'WoodPort - modelo de inventario de abertura.xlsx':'WoodPort - modelo de entradas (descargas).xlsx');
+}
+
+// ── MARCAS ──
+function estRenderMarcas(){
+  var b=(document.getElementById('mc-busca').value||'').trim().toLowerCase();
+  var lin=est.marcas.filter(function(m){return !b||[m.marca,m.exportador,m.commodity].join(' ').toLowerCase().indexOf(b)>=0;});
+  document.getElementById('mc-count').textContent=est.marcas.length+' marcas';
+  function n(x,d){return x===null||x===undefined||x===''?'—':fNum(x,d);}
+  document.getElementById('mc-tb').innerHTML=lin.slice(0,800).map(function(m){
+    return '<tr><td class="mono"><strong>'+esc(m.marca)+'</strong></td><td>'+esc(m.commodity||'—')+'</td>'
+      +'<td class="mono" style="text-align:right">'+n(m.comprimento,2)+'</td><td class="mono" style="text-align:right">'+n(m.largura,2)+'</td><td class="mono" style="text-align:right">'+n(m.altura,2)+'</td>'
+      +'<td class="mono" style="text-align:right">'+n(m.fl,0)+'</td><td class="mono" style="text-align:right">'+n(m.cbm,3)+'</td><td class="mono" style="text-align:right">'+n(m.peso_t,3)+'</td>'
+      +'<td>'+esc(m.exportador||'—')+'</td>'
+      +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="editarMarca(\''+m.id+'\')">✏</button>'
+      +(isAdmin()?' <button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_marcas\',\''+m.id+'\',function(){estAbrir(true);})">✕</button>':'')+'</td></tr>';
+  }).join('')||'<tr><td colspan="10" style="color:var(--ink3);text-align:center;padding:20px;">Nenhuma marca. Cadastre ao lado ou importe a planilha de parâmetros.</td></tr>';
+}
+function limparMarcaForm(){
+  ['mc-id','mc-marca','mc-comm','mc-comp','mc-larg','mc-alt','mc-fl','mc-mm','mc-exp','mc-cbm','mc-peso'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('mc-titulo').textContent='Nova marca';
+}
+function editarMarca(id){
+  var m=est.marcas.find(function(x){return x.id===id;});if(!m)return;
+  var f={'mc-id':m.id,'mc-marca':m.marca,'mc-comm':m.commodity,'mc-comp':m.comprimento,'mc-larg':m.largura,'mc-alt':m.altura,'mc-fl':m.fl,'mc-mm':m.mm,'mc-exp':m.exportador,'mc-cbm':m.cbm,'mc-peso':m.peso_t};
+  Object.keys(f).forEach(function(k){document.getElementById(k).value=f[k]==null?'':String(f[k]).replace('.',',');});
+  document.getElementById('mc-id').value=m.id;document.getElementById('mc-marca').value=m.marca;
+  document.getElementById('mc-titulo').textContent='Editar marca '+m.marca;
+  document.getElementById('mc-marca').scrollIntoView({block:'center'});
+}
+function salvarMarca(){
+  var id=document.getElementById('mc-id').value;
+  var reg={marca:(v('mc-marca')||'').toUpperCase(),commodity:v('mc-comm'),comprimento:numBR(v('mc-comp')),largura:numBR(v('mc-larg')),altura:numBR(v('mc-alt')),
+    fl:numBR(v('mc-fl')),mm:numBR(v('mc-mm')),exportador:v('mc-exp'),cbm:numBR(v('mc-cbm')),peso_t:numBR(v('mc-peso'))||0,updated_at:new Date().toISOString()};
+  if(!reg.marca){toast('Informe a marca','error');return;}
+  if(!reg.cbm||reg.cbm<=0){toast('Informe o CBM por fardo','error');return;}
+  var outra=est.marcas.find(function(m){return nmMarca(m.marca)===nmMarca(reg.marca)&&m.id!==id;});
+  if(outra){toast('A marca '+reg.marca+' já está cadastrada','error');return;}
+  showLd(true);
+  var q=id?sb.from('wp_marcas').update(reg).eq('id',id):sb.from('wp_marcas').insert(reg);
+  q.then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Marca '+reg.marca+' salva','success');limparMarcaForm();estAbrir(true);
+  });
+}
+function importarMarcasExcel(input){
+  var file=input.files[0];input.value='';if(!file)return;
+  lerPlanilha(file,function(abas){
+    var porMarca={},abaUsada=null;
+    abas.forEach(function(a){
+      if(abaUsada)return;
+      var R=a.raw,T=a.txt,h=-1;
+      for(var i=0;i<Math.min(R.length,40);i++){var l=R[i].map(hdr);if(l.some(function(c){return c==='MARKS'||c==='MARCA'||c==='MARCAS';})&&l.some(function(c){return c==='CBM';})){h=i;break;}}
+      if(h<0)return;abaUsada=a.nome;
+      var H=R[h].map(hdr);
+      function col(test){for(var c=0;c<H.length;c++)if(test(H[c]))return c;return -1;}
+      var c={marca:col(function(x){return x==='MARKS'||x==='MARCA'||x==='MARCAS';}),comm:col(function(x){return x.indexOf('COMM')===0;}),
+        comp:col(function(x){return x.indexOf('COMPR')===0;}),larg:col(function(x){return x.indexOf('LARG')===0;}),alt:col(function(x){return x.indexOf('ALT')===0;}),
+        fl:col(function(x){return x==='F/L';}),cbm:col(function(x){return x==='CBM';}),peso:col(function(x){return x.indexOf('WEIGHT')===0||x.indexOf('PESO')===0;}),
+        mm:col(function(x){return x==='MM';}),exp:col(function(x){return x.replace(/0/g,'O').indexOf('EXPORTADOR')===0;})};
+      for(var r=h+1;r<R.length;r++){
+        var L=R[r],LT=T[r]||[];
+        var marca=String(LT[c.marca]||L[c.marca]||'').trim().toUpperCase(),cbm=numBR(L[c.cbm]);
+        if(!marca||!cbm||cbm<=0)continue; // linhas de título/seção (ex.: nome do exportador) não têm CBM
+        function nv(k){return c[k]>=0?numBR(L[c[k]]):null;}
+        porMarca[nmMarca(marca)]={marca:marca,commodity:c.comm>=0?String(L[c.comm]||'').trim()||null:null,comprimento:nv('comp'),largura:nv('larg'),altura:nv('alt'),
+          fl:nv('fl'),mm:nv('mm'),cbm:cbm,peso_t:nv('peso')||0,exportador:c.exp>=0?String(L[c.exp]||'').trim()||null:null,updated_at:new Date().toISOString()};
+      }
+    });
+    var regs=Object.values(porMarca);
+    if(!abaUsada||!regs.length){toast('Não encontrei a tabela (cabeçalho com MARKS/MARCA e CBM)','error');return;}
+    var novos=[],atual=[];
+    regs.forEach(function(x){var ex=marcaInfo(x.marca);if(ex)atual.push(Object.assign({id:ex.id},x));else novos.push(x);});
+    if(!confirm('Tabela de marcas (aba '+abaUsada+'):\n\n• '+novos.length+' marca(s) nova(s)\n• '+atual.length+' marca(s) atualizada(s)\n\nConfirmar?'))return;
+    showLd(true);
+    var p=Promise.resolve();
+    function lote(fn,arr){for(var i=0;i<arr.length;i+=300)(function(b){p=p.then(function(){return fn(b).then(function(r){if(r.error)throw r.error;});});})(arr.slice(i,i+300));}
+    lote(function(b){return sb.from('wp_marcas').upsert(b,{onConflict:'id'});},atual);
+    lote(function(b){return sb.from('wp_marcas').insert(b);},novos);
+    p.then(function(){showLd(false);toast(novos.length+' novas · '+atual.length+' atualizadas','success');estAbrir(true);})
+     .catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');estAbrir(true);});
+  });
+}
+
+// ── LISTA × ESTOQUE ──
+var _lcRows=[];
+function estRenderComparar(){
+  var tb=document.getElementById('lc-tb'),emp=document.getElementById('lc-empty');
+  if(!navioAtivo){tb.innerHTML='';emp.style.display='';return;}
+  document.getElementById('lc-navio').textContent=navioAtivo.nome+(navioAtivo.viagem?' · '+navioAtivo.viagem:'');
+  var nid=navioAtivo.id;
+  Promise.all([fetchLista(nid),fetchUsadoNavio(nid)]).then(function(rs){
+    if(!navioAtivo||navioAtivo.id!==nid)return;
+    var lista=rs[0].data||[],usado=rs[1].map;
+    if(!lista.length){tb.innerHTML='';emp.style.display='';return;}
+    emp.style.display='none';
+    var az=document.getElementById('est-az').value,G={};
+    lista.forEach(function(l){
+      if(az&&l.armazem&&normAz(l.armazem)!==normAz(az))return;
+      var k=normAz(l.armazem||'*')+'|'+nmMarca(l.marca);
+      var g=G[k]||(G[k]={az:l.armazem?azDoMov(l.armazem):'',marca:String(l.marca||'—').toUpperCase(),lista:0,emb:0});
+      g.lista+=parseInt(l.quantidade)||0;g.emb+=Math.min(parseInt(l.quantidade)||0,usado[l.id]||0);
+    });
+    var saldo={};
+    Object.values(est.grupos.G).forEach(function(g){
+      saldo[normAz(g.az)+'|'+nmMarca(g.marca)]=g.saldo;
+      saldo['*|'+nmMarca(g.marca)]=(saldo['*|'+nmMarca(g.marca)]||0)+g.saldo;
+    });
+    _lcRows=Object.values(G).map(function(g){
+      g.aEmb=Math.max(0,g.lista-g.emb);
+      g.est=saldo[(g.az?normAz(g.az):'*')+'|'+nmMarca(g.marca)]||0;
+      g.dif=g.est-g.aEmb;
+      return g;
+    }).sort(function(a,b){return a.dif-b.dif||a.marca.localeCompare(b.marca);});
+    var soF=document.getElementById('lc-so-falta').checked,ok=0,falta=0,fdF=0;
+    _lcRows.forEach(function(g){if(g.aEmb===0)return;if(g.dif>=0)ok++;else{falta++;fdF+=-g.dif;}});
+    document.getElementById('lc-n').textContent=_lcRows.length;
+    document.getElementById('lc-ok').textContent=ok;
+    document.getElementById('lc-falta').textContent=falta;
+    document.getElementById('lc-fd').textContent=fdF.toLocaleString('pt-BR');
+    tb.innerHTML=_lcRows.filter(function(g){return !soF||g.dif<0;}).map(function(g){
+      var st=g.aEmb===0?'<span class="bge ntrl">Embarcado</span>':g.dif<0?'<span class="bge dng">Falta '+(-g.dif)+' fd</span>':g.dif===0?'<span class="bge ok">Exato</span>':'<span class="bge ok">OK · sobra '+g.dif+'</span>';
+      return '<tr><td>'+esc(g.az||'(sem armazém)')+'</td><td class="mono"><strong>'+esc(g.marca)+'</strong></td>'
+        +'<td class="mono" style="text-align:right">'+g.lista+'</td><td class="mono" style="text-align:right">'+g.emb+'</td>'
+        +'<td class="mono" style="text-align:right;font-weight:600;">'+g.aEmb+'</td><td class="mono" style="text-align:right">'+g.est+'</td>'
+        +'<td class="mono" style="text-align:right;color:'+(g.dif<0?'#B42318':'var(--ink)')+'">'+(g.dif>0?'+':'')+g.dif+'</td><td>'+st+'</td></tr>';
+    }).join('');
+  });
+}
+function estExportComparar(){
+  xlsxBaixar(_lcRows.map(function(g){return {'Armazém':g.az,'Marca':g.marca,'Na lista':g.lista,'Embarcado':g.emb,'A embarcar':g.aEmb,'Em estoque':g.est,'Diferença':g.dif};}),
+    'Lista x Estoque','lista_x_estoque_'+(navioAtivo?navioAtivo.nome.replace(/[^\w]+/g,'_'):'')+'.xlsx');
+}
+
+// ── INVENTÁRIO (contagem física) ──
+function estRenderInventario(){
+  var az=document.getElementById('est-az').value,aviso=document.getElementById('iv-aviso'),tb=document.getElementById('iv-tb');
+  if(!az){aviso.innerHTML='<div class="imp-st wait" style="margin-bottom:10px;">ℹ<div>Escolha um armazém no topo para fazer a contagem.</div></div>';tb.innerHTML='';return;}
+  aviso.innerHTML='';
+  var lin=gruposFiltrados().filter(function(g){return g.saldo>0;}).sort(function(a,b){return a.marca.localeCompare(b.marca);});
+  tb.innerHTML=lin.map(function(g){
+    return '<tr data-k="'+esc(g.marca)+'"><td class="mono"><strong>'+esc(g.marca)+'</strong></td><td style="font-size:12px;color:var(--ink3);">'+esc(produtoresEmEstoque(g).join(', '))+'</td>'
+      +'<td class="mono" style="text-align:right">'+g.saldo+'</td>'
+      +'<td><input type="number" min="0" inputmode="numeric" class="iv-cont" data-sis="'+g.saldo+'" oninput="ivDif(this)" style="height:38px;font-family:var(--mono);"></td>'
+      +'<td class="mono iv-dif" style="text-align:right">—</td></tr>';
+  }).join('')+'<tr><td colspan="5" style="font-size:12px;color:var(--ink3);">Marca encontrada que não está na lista? Lance como descarga (tipo Inventário) na aba Descargas.</td></tr>';
+  ivResumo();
+}
+function ivDif(inp){
+  var td=inp.closest('tr').querySelector('.iv-dif');
+  if(inp.value===''){td.textContent='—';td.style.color='';ivResumo();return;}
+  var d=(parseInt(inp.value)||0)-(+inp.dataset.sis);
+  td.textContent=(d>0?'+':'')+d;td.style.color=d<0?'#B42318':d>0?'var(--f400)':'';
+  ivResumo();
+}
+function ivResumo(){
+  var n=0,s=0;
+  document.querySelectorAll('.iv-cont').forEach(function(i){if(i.value!==''){var d=(parseInt(i.value)||0)-(+i.dataset.sis);if(d){n++;s+=d;}}});
+  document.getElementById('iv-resumo').textContent=n?n+' marca(s) com diferença · saldo do ajuste '+(s>0?'+':'')+s+' fd':'';
+}
+function lancarAjustesInventario(){
+  var az=document.getElementById('est-az').value,data=document.getElementById('iv-data').value;
+  if(!az||!data){toast('Escolha o armazém e a data da contagem','error');return;}
+  var regs=[];
+  document.querySelectorAll('#iv-tb tr[data-k]').forEach(function(tr){
+    var i=tr.querySelector('.iv-cont');if(i.value==='')return;
+    var d=(parseInt(i.value)||0)-(+i.dataset.sis);if(!d)return;
+    var marca=tr.getAttribute('data-k');
+    // sobra: atribui ao último produtor que descarregou a marca nesse armazém
+    var ult=est.movs.filter(function(m){return normAz(m.armazem)===normAz(az)&&nmMarca(m.marca)===nmMarca(marca)&&m.produtor;}).pop();
+    regs.push({armazem:az,data:data,tipo:'ajuste',nf:'CONTAGEM',produtor:d>0&&ult?ult.produtor:null,marca:marca,quantidade:d,
+      obs:'Contagem física de '+fmtIso(data),criado_por:currentUser.id,criado_por_nome:currentUser.nome});
+  });
+  if(!regs.length){toast('Nenhuma diferença para lançar','error');return;}
+  if(!confirm('Lançar '+regs.length+' ajuste(s) de estoque no armazém '+az+' em '+fmtIso(data)+'?'))return;
+  showLd(true);
+  sb.from('wp_estoque_mov').insert(regs).then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast(regs.length+' ajuste(s) lançado(s)','success');estAbrir(true);
+  });
+}
+function estExportInventario(){
+  var az=document.getElementById('est-az').value;
+  if(!az){toast('Escolha um armazém no topo','error');return;}
+  xlsxBaixar(gruposFiltrados().filter(function(g){return g.saldo>0;}).sort(function(a,b){return a.marca.localeCompare(b.marca);}).map(function(g){
+    return {'Marca':g.marca,'Sistema (fd)':g.saldo,'Contado':'','Diferença':''};
+  }),'Contagem','contagem_'+az+'_'+localISODate()+'.xlsx');
+}
+
+// ── ARMAZENAGEM ──
+function armAbrir(){
+  var sel=document.getElementById('ar-az'),azs=armazensUsuario();
+  if(!sel.options.length){
+    sel.innerHTML=(azs.length>1?'<option value="">Todos</option>':'')+azs.map(function(a){return '<option>'+esc(a)+'</option>';}).join('');
+    var h=new Date(),ini=new Date(h.getFullYear(),h.getMonth(),1);
+    document.getElementById('ar-de').value=localISODate(ini);
+    document.getElementById('ar-ate').value=localISODate(h);
+  }
+  estCarregar().then(armRenderTarifas);
+}
+function tarifaDe(az){return est.tarifas.find(function(t){return normAz(t.armazem)===normAz(az);})||{tarifa_m3_dia:0,dias_livres:0};}
+function armRenderTarifas(){
+  var pode=temModulo('armazenagem');
+  document.getElementById('ar-tarifas').innerHTML=armazensUsuario().map(function(az){
+    var t=tarifaDe(az);
+    return '<tr><td><strong>'+esc(az)+'</strong></td>'
+      +'<td><input class="ar-tar" data-az="'+esc(az)+'" inputmode="decimal" value="'+String(t.tarifa_m3_dia||0).replace('.',',')+'" style="max-width:160px;font-family:var(--mono);"'+(pode?'':' disabled')+'></td>'
+      +'<td><input class="ar-liv" data-az="'+esc(az)+'" type="number" min="0" value="'+(t.dias_livres||0)+'" style="max-width:110px;font-family:var(--mono);"'+(pode?'':' disabled')+'></td>'
+      +'<td>'+(pode?'<button class="btn bs bsm" onclick="salvarTarifa(\''+esc(az)+'\')">Salvar</button>':'')+'</td></tr>';
+  }).join('');
+}
+function salvarTarifa(az){
+  var tar=numBR(document.querySelector('.ar-tar[data-az="'+az+'"]').value),liv=parseInt(document.querySelector('.ar-liv[data-az="'+az+'"]').value)||0;
+  if(tar===null||tar<0){toast('Tarifa inválida','error');return;}
+  sb.from('wp_armazenagem_tarifa').upsert({armazem:az,tarifa_m3_dia:tar,dias_livres:liv,updated_at:new Date().toISOString()},{onConflict:'armazem'}).then(function(r){
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Tarifa de '+az+' salva','success');est.carregado=false;estCarregar().then(armRenderTarifas);
+  });
+}
+// Cobrança: para cada parcela de uma descarga (o que saiu em cada embarque e o que ainda está no armazém),
+// conta os dias entre (entrada + dias livres) e a saída, dentro do período [de, até].
+function calcularArmazenagem(){
+  var de=document.getElementById('ar-de').value,ate=document.getElementById('ar-ate').value,azF=document.getElementById('ar-az').value;
+  if(!de||!ate||de>ate){toast('Informe o período','error');return;}
+  estCarregar().then(function(){
+    var res=estCalcular(ate),deN=diaN(de),fimN=diaN(ate)+1;
+    var porProd={},linhas=[],semParam={},semTarifa={};
+    Object.values(res.G).forEach(function(g){
+      if(azF&&normAz(g.az)!==normAz(azF))return;
+      var mi=marcaInfo(g.marca),t=tarifaDe(g.az);
+      if(!mi){semParam[g.marca]=1;}
+      if(!(+t.tarifa_m3_dia))semTarifa[g.az]=1;
+      var partes=g.aloc.map(function(a){return {ent:a.ent,qtd:a.qtd,saiN:a.saiN,saiData:a.saiData,ref:a.ref};})
+        .concat(g.ent.filter(function(e){return e.resto>0;}).map(function(e){return {ent:e,qtd:e.resto,saiN:null,saiData:null,ref:'em estoque'};}));
+      partes.forEach(function(p){
+        var ini=Math.max(p.ent.n+(+t.dias_livres||0),deN),fim=Math.min(p.saiN===null?fimN:p.saiN,fimN);
+        var dias=Math.max(0,fim-ini);
+        if(!dias)return;
+        var m3=mi?p.qtd*mi.cbm:0,m3d=m3*dias,val=m3d*(+t.tarifa_m3_dia||0);
+        var prod=p.ent.produtor;
+        var P=porProd[prod]||(porProd[prod]={produtor:prod,m3d:0,valor:0});
+        P.m3d+=m3d;P.valor+=val;
+        linhas.push({produtor:prod,entrada:p.ent.data,nf:p.ent.nf,marca:g.marca,az:g.az,qtd:p.qtd,m3:m3,saida:p.saiData,ref:p.ref,dias:dias,valor:val});
+      });
+    });
+    est.armRes={de:de,ate:ate,porProd:Object.values(porProd).sort(function(a,b){return b.valor-a.valor;}),linhas:linhas};
+    var tot=est.armRes.porProd.reduce(function(a,p){return a+p.valor;},0);
+    document.getElementById('ar-total').textContent='Total '+brl(tot);
+    document.getElementById('ar-tb').innerHTML=est.armRes.porProd.map(function(p,i){
+      return '<tr style="cursor:pointer;" onclick="armDetalhe('+i+')"><td><strong>'+esc(p.produtor)+'</strong></td><td class="mono" style="text-align:right">'+fNum(p.m3d,1)+'</td><td class="mono" style="text-align:right;font-weight:600;">'+brl(p.valor)+'</td></tr>';
+    }).join('')||'<tr><td colspan="3" style="color:var(--ink3);text-align:center;padding:20px;">Nada a cobrar no período.</td></tr>';
+    var av=[];
+    if(Object.keys(semTarifa).length)av.push('Sem tarifa cadastrada: '+esc(Object.keys(semTarifa).join(', '))+' — valores ficam zerados.');
+    if(Object.keys(semParam).length)av.push('Marcas sem parâmetro (sem m³, não entram na cobrança): '+esc(Object.keys(semParam).slice(0,12).join(', ')));
+    document.getElementById('ar-aviso').innerHTML=av.map(function(t){return '<div class="imp-st err" style="margin-bottom:8px;">⚠<div>'+t+'</div></div>';}).join('');
+    document.getElementById('ar-det').innerHTML='';document.getElementById('ar-det-tit').textContent='— toque num produtor';
+  });
+}
+function armDetalhe(i){
+  var p=est.armRes.porProd[i];if(!p)return;
+  document.getElementById('ar-det-tit').textContent='— '+p.produtor;
+  document.getElementById('ar-det').innerHTML=est.armRes.linhas.filter(function(l){return l.produtor===p.produtor;})
+    .sort(function(a,b){return a.entrada<b.entrada?-1:1;}).map(function(l){
+      return '<tr><td>'+fmtIso(l.entrada)+'</td><td class="mono">'+esc(l.nf||'—')+'</td><td class="mono">'+esc(l.marca)+'</td><td>'+esc(l.az)+'</td>'
+        +'<td class="mono" style="text-align:right">'+l.qtd+'</td><td class="mono" style="text-align:right">'+fNum(l.m3,3)+'</td>'
+        +'<td>'+(l.saida?fmtIso(l.saida)+' <span style="font-size:11px;color:var(--ink3);">'+esc(l.ref)+'</span>':'<span class="bge info">em estoque</span>')+'</td>'
+        +'<td class="mono" style="text-align:right">'+l.dias+'</td><td class="mono" style="text-align:right">'+brl(l.valor)+'</td></tr>';
+    }).join('');
+}
+function exportArmazenagem(){
+  if(!est.armRes){toast('Calcule o período primeiro','error');return;}
+  var r=est.armRes;
+  var wb=XLSX.utils.book_new();
+  var res=r.porProd.map(function(p){return {'Produtor':p.produtor,'m³·dia':+p.m3d.toFixed(3),'Valor (R$)':+p.valor.toFixed(2)};});
+  var det=r.linhas.map(function(l){return {'Produtor':l.produtor,'Entrada':fmtIso(l.entrada),'NF':l.nf,'Marca':l.marca,'Armazém':l.az,'Fardos':l.qtd,'m³':+l.m3.toFixed(3),
+    'Saída':l.saida?fmtIso(l.saida):'em estoque','Ticket':l.saida?l.ref:'','Dias cobrados':l.dias,'Valor (R$)':+l.valor.toFixed(2)};});
+  if(!res.length){toast('Nada a exportar','error');return;}
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(res),'Por produtor');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'Detalhe');
+  XLSX.writeFile(wb,'armazenagem_'+r.de+'_a_'+r.ate+'.xlsx');
+}
+
+
+// ══════════════════════════════════════════════════
+// MENU EM MÓDULOS (Embarque · Armazém · Administração)
+// ══════════════════════════════════════════════════
+var MOD_DE_PAGINA={dashboard:'embarque',lista:'embarque',tickets:'embarque',validar:'embarque',relatorios:'embarque',
+  estoque:'armazem',armazenagem:'armazem','rel-armazem':'armazem',
+  usuarios:'admin',navio:'admin',backup:'admin',impressoras:'admin','rel-admin':'admin',cfg:'admin'};
+var MOD_NOME={embarque:'Embarque',armazem:'Armazém',admin:'Administração'};
+function abrirMod(mod,abrir){
+  var el=document.querySelector('.nav-mod[data-mod="'+mod+'"]');if(!el)return;
+  el.classList.toggle('open',abrir);
+  el.querySelector('.nv-mod').setAttribute('aria-expanded',abrir);
+  lsSet('wp_mod_'+mod,abrir?'1':'0');
+}
+function toggleMod(mod){
+  // menu recolhido no computador: expande antes de abrir o módulo
+  if(typeof sbCollapsed!=='undefined'&&sbCollapsed&&window.innerWidth>768){toggleSidebar();abrirMod(mod,true);return;}
+  var el=document.querySelector('.nav-mod[data-mod="'+mod+'"]');
+  abrirMod(mod,!(el&&el.classList.contains('open')));
+}
+
+// ══════════════════════════════════════════════════
+// RELATÓRIOS (Armazém e Administração) — tabela + Excel
+// ══════════════════════════════════════════════════
+var REL={ra:null,rd:null};
+function relFmt(c,v){
+  if(v===null||v===undefined||v==='')return '—';
+  if(c.tipo==='brl')return brl(v);
+  if(c.tipo==='num')return c.dec?fNum(v,c.dec):(+v).toLocaleString('pt-BR');
+  if(c.tipo==='data')return fmtIso(v);
+  return esc(v);
+}
+function relRender(px,rep){
+  REL[px]=rep;
+  document.getElementById(px+'-titulo').textContent=rep.titulo;
+  document.getElementById(px+'-info').textContent=rep.info||(rep.rows.length+' linha(s)');
+  var tab=document.getElementById(px+'-tab');
+  tab.querySelector('thead').innerHTML='<tr>'+rep.cols.map(function(c){return '<th style="'+(c.tipo==='num'||c.tipo==='brl'?'text-align:right':'')+'">'+esc(c.t)+'</th>';}).join('')+'</tr>';
+  function linha(r,neg){
+    return '<tr'+(neg?' style="font-weight:700;background:var(--s2);"':'')+'>'+rep.cols.map(function(c){
+      var num=c.tipo==='num'||c.tipo==='brl';
+      return '<td class="'+(num||c.mono?'mono':'')+'" style="'+(num?'text-align:right;':'')+'">'+relFmt(c,r[c.k])+'</td>';
+    }).join('')+'</tr>';
+  }
+  tab.querySelector('tbody').innerHTML=rep.rows.length
+    ?rep.rows.map(function(r){return linha(r);}).join('')+(rep.total?linha(rep.total,true):'')
+    :'<tr><td colspan="'+rep.cols.length+'" style="text-align:center;color:var(--ink3);padding:22px;">Nada encontrado.</td></tr>';
+}
+function relExportar(px){
+  var rep=REL[px];
+  if(!rep||!rep.rows.length){toast('Gere o relatório primeiro','error');return;}
+  var linhas=rep.rows.concat(rep.total?[rep.total]:[]).map(function(r){
+    var o={};rep.cols.forEach(function(c){
+      var v=r[c.k];
+      o[c.t]=c.tipo==='data'&&v?fmtIso(v):(c.tipo==='num'||c.tipo==='brl')&&v!==''&&v!=null?+(+v).toFixed(c.dec||(c.tipo==='brl'?2:0)):(v==null?'':v);
+    });return o;
+  });
+  xlsxBaixar(linhas,rep.titulo.slice(0,31),rep.arquivo||('relatorio_'+localISODate()+'.xlsx'));
+}
+function somaTotal(rows,cols,rotuloKey){
+  var t={};t[rotuloKey]='TOTAL';
+  cols.forEach(function(c){if((c.tipo==='num'||c.tipo==='brl')&&!c.semTotal)t[c.k]=rows.reduce(function(a,r){return a+(+r[c.k]||0);},0);});
+  return t;
+}
+
+// ── Armazém › Relatórios ──
+var raAtual='mov';
+var RA_DESC={
+  mov:'Saldo no início do período, entradas (descargas e inventário), saídas por embarque validado, ajustes de contagem e saldo no fim — por armazém e marca.',
+  prod:'Descargas lançadas no período, por produtor e marca (inclui inventário de abertura).',
+  idade:'O que está no armazém na data escolhida, por produtor e marca, separado pelo tempo desde a entrada (primeiro que entra, primeiro que sai).'
+};
+function raAbrir(){
+  var sel=document.getElementById('ra-az');
+  if(!sel.options.length){
+    var azs=armazensUsuario();
+    sel.innerHTML=(azs.length>1?'<option value="">Todos</option>':'')+azs.map(function(a){return '<option>'+esc(a)+'</option>';}).join('');
+    var h=new Date();document.getElementById('ra-de').value=localISODate(new Date(h.getFullYear(),h.getMonth(),1));document.getElementById('ra-ate').value=localISODate(h);
+  }
+  raAba(raAtual);
+}
+function raAba(a){
+  raAtual=a;
+  document.querySelectorAll('#ra-tabs button').forEach(function(b){var on=b.getAttribute('data-rel')===a;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  document.getElementById('ra-de-wrap').style.display=a==='idade'?'none':'';
+  document.getElementById('ra-ate-lbl').textContent=a==='idade'?'Posição em':'Até';
+  document.getElementById('ra-desc').textContent=RA_DESC[a];
+  estCarregar().then(raGerar);
+}
+function raGerar(){
+  var de=document.getElementById('ra-de').value,ate=document.getElementById('ra-ate').value,az=document.getElementById('ra-az').value;
+  if(!ate||(raAtual!=='idade'&&(!de||de>ate))){toast('Informe o período','error');return;}
+  var okAz=function(x){return !az||normAz(x)===normAz(az);};
+  var deN=diaN(de||ate),ateN=diaN(ate),rep;
+  if(raAtual==='mov'){
+    var fim=estCalcular(ate).G,ini=estCalcular(isoDeN(deN-1)).G,rows=[];
+    Object.keys(fim).forEach(function(k){
+      var g=fim[k];if(!okAz(g.az))return;
+      var ent=0,aj=0,sai=0;
+      g.ent.forEach(function(e){if(e.n>=deN&&e.n<=ateN){if(e.tipo==='ajuste')aj+=e.qtd;else ent+=e.qtd;}});
+      g.sai.forEach(function(s){if(s.n>=deN&&s.n<=ateN){if(s.ref==='Ajuste de inventário')aj-=s.qtd;else sai+=s.qtd;}});
+      var si=ini[k]?ini[k].saldo:0,mi=marcaInfo(g.marca);
+      if(!si&&!ent&&!sai&&!aj&&!g.saldo)return;
+      rows.push({az:g.az,marca:g.marca,ini:si,ent:ent,sai:sai,aj:aj,fim:g.saldo,m3:mi?g.saldo*mi.cbm:null});
+    });
+    rows.sort(function(a,b){return a.az.localeCompare(b.az)||a.marca.localeCompare(b.marca);});
+    var cols=[{t:'Armazém',k:'az'},{t:'Marca',k:'marca',mono:true},{t:'Saldo inicial',k:'ini',tipo:'num'},{t:'Entradas',k:'ent',tipo:'num'},
+      {t:'Saídas (embarque)',k:'sai',tipo:'num'},{t:'Ajustes',k:'aj',tipo:'num'},{t:'Saldo final',k:'fim',tipo:'num'},{t:'m³ final',k:'m3',tipo:'num',dec:3}];
+    rep={titulo:'Movimentação '+fmtIso(de)+' a '+fmtIso(ate),cols:cols,rows:rows,total:somaTotal(rows,cols,'az'),arquivo:'movimentacao_'+de+'_a_'+ate+'.xlsx'};
+  }
+  if(raAtual==='prod'){
+    var G={};
+    est.movs.forEach(function(m){
+      if(m.tipo==='ajuste'||!okAz(m.armazem))return;
+      var n=diaN(m.data);if(n<deN||n>ateN)return;
+      var prod=(m.produtor||'').trim()||'(sem produtor)',k=prod+'|'+nmMarca(m.marca)+'|'+normAz(m.armazem);
+      var r=G[k]||(G[k]={prod:prod,marca:String(m.marca).toUpperCase(),az:azDoMov(m.armazem),desc:0,fd:0,m3:0,t:0,primeira:m.data,ultima:m.data});
+      var mi=marcaInfo(m.marca),q=+m.quantidade;
+      r.desc++;r.fd+=q;if(mi){r.m3+=q*mi.cbm;r.t+=q*mi.peso_t;}
+      if(m.data<r.primeira)r.primeira=m.data;if(m.data>r.ultima)r.ultima=m.data;
+    });
+    var rows2=Object.values(G).sort(function(a,b){return a.prod.localeCompare(b.prod)||a.marca.localeCompare(b.marca);});
+    var cols2=[{t:'Produtor',k:'prod'},{t:'Marca',k:'marca',mono:true},{t:'Armazém',k:'az'},{t:'Lançamentos',k:'desc',tipo:'num'},{t:'Fardos',k:'fd',tipo:'num'},
+      {t:'m³',k:'m3',tipo:'num',dec:3},{t:'t',k:'t',tipo:'num',dec:3},{t:'Primeira',k:'primeira',tipo:'data'},{t:'Última',k:'ultima',tipo:'data'}];
+    rep={titulo:'Entradas por produtor '+fmtIso(de)+' a '+fmtIso(ate),cols:cols2,rows:rows2,total:somaTotal(rows2,cols2,'prod'),arquivo:'entradas_por_produtor_'+de+'_a_'+ate+'.xlsx'};
+  }
+  if(raAtual==='idade'){
+    var G3={},res=estCalcular(ate).G;
+    Object.values(res).forEach(function(g){
+      if(!okAz(g.az))return;
+      var mi=marcaInfo(g.marca);
+      g.ent.forEach(function(e){
+        if(e.resto<=0)return;
+        var k=e.produtor+'|'+nmMarca(g.marca)+'|'+normAz(g.az);
+        var r=G3[k]||(G3[k]={prod:e.produtor,marca:g.marca,az:g.az,fd:0,m3:0,a30:0,a60:0,a90:0,mais:0,diasPond:0});
+        var d=ateN-e.n;
+        r.fd+=e.resto;if(mi)r.m3+=e.resto*mi.cbm;r.diasPond+=d*e.resto;
+        if(d<=30)r.a30+=e.resto;else if(d<=60)r.a60+=e.resto;else if(d<=90)r.a90+=e.resto;else r.mais+=e.resto;
+      });
+    });
+    var rows3=Object.values(G3).map(function(r){r.medio=r.fd?Math.round(r.diasPond/r.fd):0;return r;})
+      .sort(function(a,b){return b.medio-a.medio;});
+    var cols3=[{t:'Produtor',k:'prod'},{t:'Marca',k:'marca',mono:true},{t:'Armazém',k:'az'},{t:'Fardos',k:'fd',tipo:'num'},{t:'m³',k:'m3',tipo:'num',dec:3},
+      {t:'Até 30 dias',k:'a30',tipo:'num'},{t:'31–60',k:'a60',tipo:'num'},{t:'61–90',k:'a90',tipo:'num'},{t:'Mais de 90',k:'mais',tipo:'num'},{t:'Idade média (dias)',k:'medio',tipo:'num',semTotal:true}];
+    rep={titulo:'Posição e idade do estoque em '+fmtIso(ate),cols:cols3,rows:rows3,total:somaTotal(rows3,cols3,'prod'),arquivo:'idade_estoque_'+ate+'.xlsx'};
+  }
+  relRender('ra',rep);
+}
+
+// ── Administração › Relatórios ──
+var rdAtual='usuarios';
+var RD_DESC={
+  usuarios:'Todos os usuários com perfil, armazém, situação e os módulos que cada um acessa.',
+  navios:'Por navio: lista de carga, tickets emitidos e validados, fardos e m³ embarcados e período de embarque.',
+  impressoes:'Trabalhos de impressão no período, por impressora: emissões, reimpressões, testes e erros.'
+};
+function rdAbrir(){
+  if(!document.getElementById('rd-de').value){
+    var h=new Date();document.getElementById('rd-de').value=localISODate(new Date(h.getFullYear(),h.getMonth(),1));document.getElementById('rd-ate').value=localISODate(h);
+  }
+  rdAba(rdAtual);
+}
+function rdAba(a){
+  rdAtual=a;
+  document.querySelectorAll('#rd-tabs button').forEach(function(b){var on=b.getAttribute('data-rel')===a;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  document.querySelectorAll('.rd-periodo').forEach(function(e){e.style.display=a==='impressoes'?'':'none';});
+  document.getElementById('rd-desc').textContent=RD_DESC[a];
+  rdGerar();
+}
+function rdGerar(){
+  showLd(true);
+  var fim=function(){showLd(false);};
+  if(rdAtual==='usuarios'){
+    sb.from('wp_usuarios').select('nome,login,perfil,armazem,ativo,modulos').neq('perfil','agente').order('nome').then(function(r){
+      fim();if(r.error){toast('Erro: '+r.error.message,'error');return;}
+      var rows=(r.data||[]).map(function(u){
+        var mods=modulosEfetivos(u).map(function(k){var m=MODULOS.find(function(x){return x.k===k;});return m?m.l:k;});
+        return {nome:u.nome,login:u.login,perfil:{admin:'Administrador',supervisor:'Supervisor',conferente:'Conferente'}[u.perfil]||u.perfil,
+          az:u.armazem==='*'?'Todos':(u.armazem||'').replace(/,/g,', '),sit:u.ativo===false?'Inativo':'Ativo',
+          mods:u.perfil==='admin'?'Todos':(mods.join('; ')+(u.modulos?'':' (padrão do perfil)'))};
+      });
+      relRender('rd',{titulo:'Usuários e acessos',cols:[{t:'Nome',k:'nome'},{t:'Login',k:'login',mono:true},{t:'Perfil',k:'perfil'},{t:'Armazém',k:'az'},{t:'Situação',k:'sit'},{t:'Módulos',k:'mods'}],
+        rows:rows,info:rows.length+' usuário(s) · '+rows.filter(function(x){return x.sit==='Ativo';}).length+' ativo(s)',arquivo:'usuarios_e_acessos_'+localISODate()+'.xlsx'});
+    });
+    return;
+  }
+  if(rdAtual==='navios'){
+    Promise.all([
+      supaAll(function(){return sb.from('wp_navios').select('id,nome,viagem,eta').order('created_at').order('id');}),
+      supaAll(function(){return sb.from('wp_lista_carga').select('id,navio_id,quantidade,cbm_total').order('id');}),
+      supaAll(function(){return sb.from('wp_tickets').select('id,navio_id,status,validado_em').order('id');}),
+      supaAll(function(){return sb.from('wp_ticket_itens').select('id,ticket_id,quantidade,cbm_calculado').order('id');}),
+    ]).then(function(rs){
+      fim();var err=rs.find(function(x){return x.error;});if(err){toast('Erro: '+err.error.message,'error');return;}
+      var N={};
+      rs[0].data.forEach(function(n){N[n.id]={nome:n.nome,vgm:n.viagem||'',eta:n.eta,lotes:0,fdLista:0,m3Lista:0,tks:0,val:0,fdEmb:0,m3Emb:0,ini:null,fim:null};});
+      rs[1].data.forEach(function(l){var n=N[l.navio_id];if(!n)return;n.lotes++;n.fdLista+=+l.quantidade||0;n.m3Lista+=+l.cbm_total||0;});
+      var tk={};
+      rs[2].data.forEach(function(t){var n=N[t.navio_id];if(!n)return;n.tks++;tk[t.id]=t;
+        if(t.status==='validado'){n.val++;var d=t.validado_em?localISODate(new Date(t.validado_em)):null;if(d){if(!n.ini||d<n.ini)n.ini=d;if(!n.fim||d>n.fim)n.fim=d;}}});
+      rs[3].data.forEach(function(i){var t=tk[i.ticket_id];if(!t||t.status!=='validado')return;var n=N[t.navio_id];n.fdEmb+=+i.quantidade||0;n.m3Emb+=+i.cbm_calculado||0;});
+      var rows=Object.values(N).map(function(n){n.pct=n.fdLista?Math.round(n.fdEmb/n.fdLista*100):0;return n;}).reverse();
+      var cols=[{t:'Navio',k:'nome'},{t:'Viagem',k:'vgm',mono:true},{t:'ETA',k:'eta',tipo:'data'},{t:'Lotes',k:'lotes',tipo:'num'},{t:'Fardos na lista',k:'fdLista',tipo:'num'},
+        {t:'m³ na lista',k:'m3Lista',tipo:'num',dec:1},{t:'Tickets',k:'tks',tipo:'num'},{t:'Validados',k:'val',tipo:'num'},{t:'Fardos embarcados',k:'fdEmb',tipo:'num'},
+        {t:'m³ embarcados',k:'m3Emb',tipo:'num',dec:1},{t:'% embarcado',k:'pct',tipo:'num',semTotal:true},{t:'1º embarque',k:'ini',tipo:'data'},{t:'Último embarque',k:'fim',tipo:'data'}];
+      relRender('rd',{titulo:'Resumo por navio',cols:cols,rows:rows,total:somaTotal(rows,cols,'nome'),arquivo:'resumo_por_navio_'+localISODate()+'.xlsx'});
+    });
+    return;
+  }
+  if(rdAtual==='impressoes'){
+    var de=document.getElementById('rd-de').value,ate=document.getElementById('rd-ate').value;
+    if(!de||!ate||de>ate){fim();toast('Informe o período','error');return;}
+    var deTs=new Date(de+'T00:00:00').toISOString(),ateTs=new Date(ate+'T23:59:59.999').toISOString();
+    Promise.all([
+      loadImpressoras(),
+      supaAll(function(){return sb.from('wp_fila_impressao').select('id,impressora_id,tipo,status,created_at').gte('created_at',deTs).lte('created_at',ateTs).order('created_at').order('id');}),
+    ]).then(function(rs){
+      fim();if(rs[1].error){toast('Erro: '+rs[1].error.message,'error');return;}
+      var G={};
+      rs[1].data.forEach(function(f){
+        var imp=impressorasAll.find(function(i){return i.id===f.impressora_id;});
+        var k=f.impressora_id||'-';
+        var r=G[k]||(G[k]={az:imp?imp.armazem:'—',imp:imp?imp.nome:'(excluída)',total:0,em:0,re:0,te:0,ok:0,err:0,pend:0});
+        r.total++;if(f.tipo==='emissao')r.em++;else if(f.tipo==='reimpressao')r.re++;else r.te++;
+        if(f.status==='impresso')r.ok++;else if(f.status==='erro')r.err++;else r.pend++;
+      });
+      var rows=Object.values(G).map(function(r){r.pctErr=r.total?Math.round(r.err/r.total*100):0;return r;}).sort(function(a,b){return a.az.localeCompare(b.az)||a.imp.localeCompare(b.imp);});
+      var cols=[{t:'Armazém',k:'az'},{t:'Impressora',k:'imp'},{t:'Trabalhos',k:'total',tipo:'num'},{t:'Emissões',k:'em',tipo:'num'},{t:'Reimpressões',k:'re',tipo:'num'},
+        {t:'Testes',k:'te',tipo:'num'},{t:'Impressos',k:'ok',tipo:'num'},{t:'Com erro',k:'err',tipo:'num'},{t:'Na fila',k:'pend',tipo:'num'},{t:'% erro',k:'pctErr',tipo:'num',semTotal:true}];
+      relRender('rd',{titulo:'Impressões '+fmtIso(de)+' a '+fmtIso(ate),cols:cols,rows:rows,total:somaTotal(rows,cols,'az'),arquivo:'impressoes_'+de+'_a_'+ate+'.xlsx'});
+    });
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -5447,6 +6696,7 @@ function canDelete(table, row){
   if(!currentUser)return false;
   var p=currentUser.perfil;
   if(p==='admin')return true;
+  if(table==='wp_estoque_mov')return temModulo('estoque');
   // lista de carga: quem tem o módulo de edição exclui lotes do próprio armazém (mesma regra do banco)
   if(table==='wp_lista_carga'){
     if(!temModulo('lista_editar'))return false;
