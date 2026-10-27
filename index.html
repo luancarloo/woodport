@@ -5501,7 +5501,7 @@ function loadImpressorasPage(silencioso){
 }
 function loadFila(){
   var hoje=new Date();hoje.setHours(0,0,0,0);
-  var q=sb.from('wp_fila_impressao').select('id,numero,tipo,status,erro,pedido_por_nome,created_at,impresso_em,impressora_id,bytes_b64')
+  var q=sb.from('wp_fila_impressao').select('id,numero,tipo,status,erro,pedido_por_nome,created_at,impresso_em,impressora_id')
     .gte('created_at',hoje.toISOString()).order('created_at',{ascending:false}).limit(200);
   if(document.getElementById('fila-so-erro').checked)q=q.eq('status','erro');
   q.then(function(r){
@@ -5521,7 +5521,7 @@ function loadFila(){
         +'<td>'+esc(tipos[f.tipo]||f.tipo)+'</td>'
         +'<td><span class="bge '+(cls[f.status]||'ntrl')+'" title="'+esc(f.erro||'')+'">'+esc(rot[f.status]||f.status)+'</span>'
         +(f.status==='erro'&&f.erro?'<div style="font-size:11px;color:var(--ink4);max-width:260px;">'+esc(f.erro)+'</div>':'')+'</td>'
-        +'<td>'+(f.status==='erro'&&f.bytes_b64&&imp?'<button class="btn bs bsm" onclick="reenviarFila(\''+f.id+'\')">Reenviar</button>':'')+'</td></tr>';
+        +'<td>'+(f.status==='erro'&&imp?'<button class="btn bs bsm" onclick="reenviarFila(\''+f.id+'\')">Reenviar</button>':'')+'</td></tr>';
     }).join('');
     tb._rows=rows;
   });
@@ -5529,10 +5529,14 @@ function loadFila(){
 function reenviarFila(id){
   var f=(document.getElementById('fila-tb')._rows||[]).find(function(x){return x.id===id;});
   if(!f)return;
-  sb.from('wp_fila_impressao').insert({ticket_id:null,numero:f.numero,impressora_id:f.impressora_id,tipo:'reimpressao',
-    bytes_b64:f.bytes_b64,status:'pendente',pedido_por:currentUser.id,pedido_por_nome:currentUser.nome}).then(function(r){
-    if(r.error){toast('Erro: '+r.error.message,'error');return;}
-    toast('Reenviado para a fila','success');loadFila();
+  sb.from('wp_fila_impressao').select('bytes_b64').eq('id',id).single().then(function(rb){
+    if(rb.error){toast('Erro: '+rb.error.message,'error');return;}
+    if(!rb.data||!rb.data.bytes_b64){toast('A imagem deste ticket não está mais guardada — reimprima pela tela do ticket','error');return;}
+    sb.from('wp_fila_impressao').insert({ticket_id:null,numero:f.numero,impressora_id:f.impressora_id,tipo:'reimpressao',
+      bytes_b64:rb.data.bytes_b64,status:'pendente',pedido_por:currentUser.id,pedido_por_nome:currentUser.nome}).then(function(r){
+      if(r.error){toast('Erro: '+r.error.message,'error');return;}
+      toast('Reenviado para a fila','success');loadFila();
+    });
   });
 }
 function salvarImpressora(){
