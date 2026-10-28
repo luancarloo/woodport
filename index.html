@@ -12,6 +12,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta name="theme-color" content="#13221C">
+<!-- app no celular (PWA): manifest + ícones + sw.js na mesma pasta do index.html -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="WoodPort">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <style>
 :root{
   --w50:#fdf6ee;--w100:#f5e6cc;--w200:#e8c99a;--w300:#d4a96a;--w400:#b8823a;
@@ -528,6 +535,12 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div class="fg"><label class="fl">Senha</label><input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <button class="btn bp" onclick="doLogin()" style="width:100%;justify-content:center;padding:10px;">Entrar</button>
       <div id="li-err" style="font-size:12px;color:#b91c1c;text-align:center;display:none;"></div>
+    </div>
+
+    <!-- instalar como app (aparece só no celular/navegador que permite e quando ainda não está instalado) -->
+    <div id="app-instalar" style="display:none;margin-top:18px;text-align:center;">
+      <button class="btn" onclick="instalarApp()" style="width:100%;justify-content:center;padding:9px;">📲 Instalar o WoodPort no celular</button>
+      <div id="app-ios" style="display:none;font-size:12.5px;color:var(--ink3);margin-top:10px;line-height:1.5;text-align:left;"></div>
     </div>
 
   </div>
@@ -1197,6 +1210,8 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         <button role="tab" data-aba="marcas" onclick="estAba('marcas')">Marcas</button>
         <button role="tab" data-aba="comparar" onclick="estAba('comparar')">Lista × Estoque</button>
         <button role="tab" data-aba="inventario" onclick="estAba('inventario')">Inventário</button>
+        <button role="tab" data-aba="booking" onclick="estAba('booking')">Booking</button>
+        <button role="tab" data-aba="clientes" onclick="estAba('clientes')">Clientes</button>
       </div>
 
       <!-- SALDO -->
@@ -1242,11 +1257,23 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
                 <div class="fg"><label class="fl" for="ed-marca">Marca <span class="req">*</span></label><input id="ed-marca" list="dl-marcas" autocomplete="off" oninput="edMarcaInfo()" style="font-family:var(--mono);text-transform:uppercase;"></div>
                 <div class="fg"><label class="fl" for="ed-qtd">Fardos <span class="req">*</span></label><input id="ed-qtd" type="number" min="1" inputmode="numeric" oninput="edMarcaInfo()" style="font-family:var(--mono);"></div>
               </div>
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="ed-produto">Tipo do produto</label><input id="ed-produto" list="dl-produtos" autocomplete="off" placeholder="SLBRC, SWPLY, MDF, HDF" style="text-transform:uppercase;"></div>
+                <div class="fg"><label class="fl" for="ed-dest">Destino <span class="req">*</span></label><input id="ed-dest" list="dl-destinos" autocomplete="off" placeholder="Porto de destino"></div>
+              </div>
+              <div id="ed-nova" style="display:none;border:1px solid #D97706;background:var(--s2);border-radius:10px;padding:12px;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Marca nova — informe os totais desta descarga para cadastrar</div>
+                <div class="gr g2">
+                  <div class="fg"><label class="fl" for="ed-cbmtot">CBM total (m³) <span class="req">*</span></label><input id="ed-cbmtot" inputmode="decimal" oninput="edMarcaInfo()" style="font-family:var(--mono);"></div>
+                  <div class="fg"><label class="fl" for="ed-pesotot">Peso total (t) <span class="req">*</span></label><input id="ed-pesotot" inputmode="decimal" oninput="edMarcaInfo()" style="font-family:var(--mono);"></div>
+                </div>
+                <div id="ed-unit" style="font-size:12px;color:var(--ink3);margin-top:6px;"></div>
+              </div>
               <div id="ed-info" style="font-size:12px;color:var(--ink3);min-height:16px;"></div>
               <div class="fg"><label class="fl" for="ed-obs">Observação</label><input id="ed-obs"></div>
               <button class="btn bp" onclick="lancarDescarga()">💾 Lançar</button>
               <hr>
-              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar do Excel — colunas <strong>Data, NF, Produtor, Marca, Quantidade</strong> (e Armazém, opcional). Na planilha de entrada e saída, só a coluna ENTRADA é usada; as saídas vêm dos embarques.</div>
+              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar do Excel — colunas <strong>Data, NF, Produtor, Marca, Tipo produto, Destino, Quantidade</strong> (Armazém opcional; <strong>CBM total</strong> e <strong>Peso total</strong> cadastram as marcas novas). Na planilha de entrada e saída, só a coluna ENTRADA é usada; as saídas vêm dos embarques.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn bs" onclick="document.getElementById('ed-file').dataset.tipo='descarga';document.getElementById('ed-file').click()">⬆ Importar descargas</button>
                 <button class="btn bs" onclick="document.getElementById('ed-file').dataset.tipo='inventario';document.getElementById('ed-file').click()">⬆ Importar inventário de abertura</button>
@@ -1268,7 +1295,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
                 <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="em-busca" placeholder="NF, produtor, marca" oninput="estRenderMovs()"></div>
               </div>
             </div>
-            <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Armazém</th><th>NF</th><th>Produtor</th><th>Marca</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th>Lançado por</th><th></th></tr></thead><tbody id="em-tb"></tbody></table></div>
+            <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Armazém</th><th>NF</th><th>Produtor</th><th>Marca</th><th>Produto</th><th>Destino</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th>Lançado por</th><th></th></tr></thead><tbody id="em-tb"></tbody></table></div>
             <div id="em-info" style="font-size:12px;color:var(--ink3);margin-top:8px;"></div>
           </div>
         </div>
@@ -1319,6 +1346,94 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         </div>
       </div>
 
+      <!-- BOOKING -->
+      <div class="est-aba" id="est-booking" style="display:none;">
+        <div id="bk-aviso"></div>
+        <div class="card" style="margin-bottom:14px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="fg" style="flex:2 1 240px;min-width:0;"><label class="fl" for="bk-navio">Navio</label>
+              <select id="bk-navio" onchange="est.bkNavio=this.value;bkLimparForm();estRender()"></select></div>
+            <div class="fg" style="flex:1 1 140px;min-width:0;"><label class="fl" for="bk-ini">Recebimento de</label><input type="date" id="bk-ini"></div>
+            <div class="fg" style="flex:1 1 140px;min-width:0;"><label class="fl" for="bk-fim">até <span style="font-weight:400;color:var(--ink4);">(vazio = em aberto)</span></label><input type="date" id="bk-fim"></div>
+            <button class="btn bs" onclick="salvarRecebimento()">Salvar período</button>
+          </div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:8px;line-height:1.5;">As descargas de cada cliente (armador <strong class="arm-nome"></strong>) feitas dentro do período de recebimento abatem o booking dele neste navio. Se dois navios recebem ao mesmo tempo, a descarga completa primeiro o booking do navio que começou a receber antes.</div>
+        </div>
+        <div class="sr" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px;">
+          <div class="sc"><div class="sl">Booking</div><div class="sv" id="bk-s-book">—</div></div>
+          <div class="sc"><div class="sl">Recebido</div><div class="sv" id="bk-s-rec">—</div></div>
+          <div class="sc"><div class="sl">Falta receber</div><div class="sv" id="bk-s-saldo">—</div></div>
+          <div class="sc"><div class="sl">Clientes</div><div class="sv" id="bk-s-cli">—</div></div>
+        </div>
+        <div id="bk-portos" style="margin-bottom:14px;"></div>
+        <div class="spl sp2">
+          <div class="card">
+            <div class="ch"><div class="ct" id="bk-titulo">Lançar booking</div></div>
+            <input type="hidden" id="bk-id">
+            <div class="gr" style="gap:12px;">
+              <div class="fg"><label class="fl" for="bk-cli">Cliente <span class="req">*</span></label><select id="bk-cli"></select></div>
+              <div class="fg"><label class="fl" for="bk-porto">Porto de destino</label><input id="bk-porto" list="dl-bk-portos" autocomplete="off" placeholder="Em branco = qualquer porto"><datalist id="dl-bk-portos"></datalist></div>
+              <div class="gr g2">
+                <div class="fg"><label class="fl" for="bk-m3">Booking (m³) <span class="req">*</span></label><input id="bk-m3" inputmode="decimal" style="font-family:var(--mono);"></div>
+                <div class="fg"><label class="fl" for="bk-t">Booking (t)</label><input id="bk-t" inputmode="decimal" style="font-family:var(--mono);"></div>
+              </div>
+              <div class="fg"><label class="fl" for="bk-obs">Observação</label><input id="bk-obs"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn bp" onclick="salvarBooking()">💾 Salvar booking</button>
+                <button class="btn bs" onclick="bkLimparForm()">Limpar</button>
+              </div>
+              <hr>
+              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar a previsão enviada pelo armador — colunas <strong>CLIENTE</strong> (ou EMBARCADOR / SHIPPER), <strong>PORTO</strong> (ou DESTINO / POD), <strong>CBM</strong> (ou M³) e <strong>PESO</strong> (ou TON / WEIGHT). Vai para o navio escolhido acima; cliente que já tem booking no mesmo porto do navio é atualizado; nome que não existe vira cliente novo.</div>
+              <button class="btn bs" onclick="if(!est.bkNavio){toast('Escolha o navio antes de importar','error');return;}document.getElementById('bk-file').click()">⬆ Importar previsão (Excel)</button>
+              <input type="file" id="bk-file" accept=".xlsx,.xls,.csv" hidden onchange="importarBookingExcel(this)">
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch">
+              <div class="ct">Booking × recebido <span class="cs" id="bk-count"></span></div>
+              <button class="btn bs bsm" onclick="bkExportar()">⬇ Excel do navio</button>
+            </div>
+            <div class="tw"><table><thead><tr><th>Cliente</th><th>Porto</th><th style="text-align:right">Booking m³</th><th style="text-align:right">Booking t</th><th style="text-align:right">Recebido fd</th><th style="text-align:right">Recebido m³</th><th style="text-align:right">Recebido t</th><th style="text-align:right">Falta m³</th><th style="text-align:right">Falta t</th><th style="min-width:110px;">%</th><th></th></tr></thead>
+              <tbody id="bk-tb"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="est-aba" id="est-clientes" style="display:none;">
+        <div class="spl sp2">
+          <div class="card">
+            <div class="ch"><div class="ct" id="cl-titulo">Novo cliente</div></div>
+            <input type="hidden" id="cl-id">
+            <div class="gr" style="gap:12px;">
+              <div class="fg"><label class="fl" for="cl-nome">Nome <span class="req">*</span></label><input id="cl-nome"></div>
+              <div class="fg"><label class="fl" for="cl-email">E-mail para o relatório</label><input id="cl-email" type="email" inputmode="email" placeholder="contato@cliente.com.br; outro@cliente.com.br"></div>
+              <div class="fg"><label class="fl" for="cl-apelidos">Nomes nas planilhas</label><textarea id="cl-apelidos" rows="3" placeholder="Um por linha — como aparece no Produtor das descargas ou no Exportador das marcas"></textarea></div>
+              <div class="fg"><label class="fl" for="cl-marcas">Marcas do cliente</label><textarea id="cl-marcas" rows="3" placeholder="Uma por linha (opcional) — a marca manda mais que o nome do produtor" style="font-family:var(--mono);text-transform:uppercase;"></textarea></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn bp" onclick="salvarCliente()">💾 Salvar cliente</button>
+                <button class="btn bs" onclick="cliLimparForm()">Limpar</button>
+              </div>
+              <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Como uma descarga é ligada ao cliente: 1º pela <strong>marca</strong> cadastrada no cliente; 2º pelo <strong>Produtor</strong> da descarga; 3º pelo <strong>Exportador</strong> da marca.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch">
+              <div class="ct">Clientes <span class="cs" id="cl-count"></span></div>
+              <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="cl-busca" placeholder="Nome, apelido ou marca" oninput="estRenderClientes()"></div>
+            </div>
+            <div class="tw"><table><thead><tr><th>Cliente</th><th>E-mail</th><th>Nomes nas planilhas</th><th>Marcas</th><th style="text-align:right">Bookings</th><th></th></tr></thead>
+              <tbody id="cl-tb"></tbody></table></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px;">
+          <div class="ch"><div class="ct">Produtores das descargas sem cliente <span class="cs" id="sc-count"></span></div></div>
+          <div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">Descargas do armador <strong class="arm-nome"></strong> que ainda não abatem nenhum booking. Vincule o produtor a um cliente (o nome entra em "Nomes nas planilhas").</div>
+          <div class="tw"><table><thead><tr><th>Produtor</th><th style="text-align:right">Descargas</th><th style="text-align:right">Fardos</th><th>Última</th><th>Vincular a</th></tr></thead>
+            <tbody id="sc-tb"></tbody></table></div>
+        </div>
+      </div>
+
       <!-- LISTA × ESTOQUE -->
       <div class="est-aba" id="est-comparar" style="display:none;">
         <div class="sr" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px;">
@@ -1361,6 +1476,8 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       </div>
       <datalist id="dl-marcas"></datalist>
       <datalist id="dl-produtores"></datalist>
+      <datalist id="dl-destinos"></datalist>
+      <datalist id="dl-produtos"></datalist>
     </div>
 
     <!-- ARMAZENAGEM -->
@@ -5539,12 +5656,18 @@ function reenviarFila(id){
     });
   });
 }
+// um cadastro = uma impressora: rede → um IP fixo; USB → nome exato no Windows
+function erroIpImpressora(ip){
+  if(!ip||ip.length<2)return 'Informe o IP ou o nome da impressora no Windows';
+  if((ip.match(/\d{1,3}(\.\d{1,3}){3}/g)||[]).length>1||/^[\d.]+[\s,;\/]+[\d.]/.test(ip))
+    return 'Coloque só UM IP. Para a segunda impressora, faça outro cadastro com outro nome e o IP dela.';
+  if(/^[\d.]+$/.test(ip)&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip))return 'IP inválido (ex.: 192.168.0.224)';
+  return null;
+}
 function salvarImpressora(){
   var nome=v('imp-nome'),ip=v('imp-ip'),porta=parseInt(v('imp-porta'))||9100,az=v('imp-az');
   if(!nome||!ip){toast('Informe nome e IP','error');return;}
-  // rede: IP fixo; USB: nome exato da impressora no Windows do computador do armazém
-  if(/^[\d.]+$/.test(ip)&&!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){toast('IP inválido (ex.: 192.168.0.224)','error');return;}
-  if(ip.length<2){toast('Informe o IP ou o nome da impressora no Windows','error');return;}
+  var eIp=erroIpImpressora(ip);if(eIp){toast(eIp,'error');return;}
   sb.from('wp_impressoras').insert({armazem:az,nome:nome,ip:ip,porta:porta}).then(function(r){
     if(r.error){toast('Erro: '+(r.error.code==='23505'?'Já existe uma impressora com esse nome neste armazém':r.error.message),'error');return;}
     toast('Impressora cadastrada','success');
@@ -5671,18 +5794,25 @@ function estCarregar(forcar){
       .select('id,marca,armazem,quantidade,wp_tickets!inner(numero,status,validado_em,armazem,navio_id)')
       .eq('wp_tickets.status','validado').order('id');}),
     sb.from('wp_armazenagem_tarifa').select('*'),
-    sb.from('wp_navios').select('id,nome,armador'),
+    sb.from('wp_navios').select('*').order('created_at',{ascending:false}),
+    sb.from('wp_clientes').select('*').order('nome'),
+    sb.from('wp_booking').select('*'),
   ]).then(function(rs){
     showLd(false);
     var err=rs[0].error||rs[1].error||rs[2].error;
     if(err){toast('Erro ao carregar estoque: '+err.message,'error');return;}
     est.marcas=rs[0].data||[];est.movs=rs[1].data||[];est.saidas=rs[2].data||[];est.tarifas=(rs[3].data||[]);
     est.navArm={};(rs[4].data||[]).forEach(function(n){est.navArm[n.id]=n.armador||'';});
+    est.navios=rs[4].data||[];
+    // clientes/booking: sem o woodport_booking.sql o resto do estoque continua funcionando
+    est.semBookingSql=!!(rs[5].error||rs[6].error);
+    est.clientes=rs[5].data||[];est.booking=rs[6].data||[];
     est.carregado=true;est.grupos=null;
     // listas de apoio para digitação
     document.getElementById('dl-marcas').innerHTML=est.marcas.map(function(m){return '<option value="'+esc(m.marca)+'">';}).join('');
     var prods=[...new Set(est.movs.map(function(m){return (m.produtor||'').trim();}).filter(Boolean))].sort();
     document.getElementById('dl-produtores').innerHTML=prods.map(function(p){return '<option value="'+esc(p)+'">';}).join('');
+    atualizarListasEstoque();
   });
 }
 
@@ -5775,6 +5905,8 @@ function estRender(){
   if(est.aba==='marcas')estRenderMarcas();
   if(est.aba==='comparar')estRenderComparar();
   if(est.aba==='inventario')estRenderInventario();
+  if(est.aba==='booking')estRenderBooking();
+  if(est.aba==='clientes')estRenderClientes();
 }
 function gruposFiltrados(){
   var az=document.getElementById('est-az').value;
@@ -5840,40 +5972,90 @@ function xlsxBaixar(rows,aba,nome){
 }
 
 // ── DESCARGAS ──
+var TIPOS_PRODUTO=['SLBRC','SWPLY','MDF','HDF'];
+function unicosAz(a){var v={};return a.map(function(x){return String(x||'').trim();}).filter(function(x){var k=normAz(x);if(!x||v[k])return false;v[k]=1;return true;});}
+// destinos conhecidos: portos dos planos de estiva + os já usados em descargas e bookings
+function destinosConhecidos(){
+  var a=[];
+  (est.navios||[]).forEach(function(n){a=a.concat(n.plano_estiva&&n.plano_estiva.portos||[]);});
+  (est.movs||[]).forEach(function(m){if(m.destino)a.push(m.destino);});
+  (est.booking||[]).forEach(function(b){if(b.porto)a.push(b.porto);});
+  return unicosAz(a).sort();
+}
+function destinoCanon(s){s=String(s||'').trim();if(!s)return null;return destinosConhecidos().find(function(x){return normAz(x)===normAz(s);})||s;}
+function atualizarListasEstoque(){
+  document.getElementById('dl-marcas').innerHTML=est.marcas.map(function(m){return '<option value="'+esc(m.marca)+'">';}).join('');
+  document.getElementById('dl-destinos').innerHTML=destinosConhecidos().map(function(p){return '<option value="'+esc(p)+'">';}).join('');
+  var tps=unicosAz(TIPOS_PRODUTO.concat(est.marcas.map(function(m){return (m.commodity||'').toUpperCase();})));
+  document.getElementById('dl-produtos').innerHTML=tps.map(function(p){return '<option value="'+esc(p)+'">';}).join('');
+}
+// marca cadastrada: puxa o tipo do produto; marca nova: pede CBM e peso totais e calcula por fardo
 function edMarcaInfo(){
-  var mi=marcaInfo(document.getElementById('ed-marca').value),q=parseInt(document.getElementById('ed-qtd').value)||0,el=document.getElementById('ed-info');
-  if(!document.getElementById('ed-marca').value){el.textContent='';return;}
-  el.innerHTML=mi?('CBM '+fNum(mi.cbm,3)+' m³ · '+fNum(mi.peso_t,3)+' t por fardo'+(q?' → <strong>'+fNum(q*mi.cbm,3)+' m³ · '+fNum(q*mi.peso_t,3)+' t</strong>':''))
-    :'<span style="color:#B45309;">Marca sem parâmetro — cadastre em Marcas para calcular m³ e armazenagem.</span>';
+  var marca=(document.getElementById('ed-marca').value||'').trim(),mi=marcaInfo(marca),q=parseInt(document.getElementById('ed-qtd').value)||0;
+  var el=document.getElementById('ed-info'),nova=document.getElementById('ed-nova'),pr=document.getElementById('ed-produto');
+  pr.readOnly=!!(mi&&mi.commodity);
+  if(!marca){el.textContent='';nova.style.display='none';return;}
+  if(mi){
+    nova.style.display='none';
+    if(mi.commodity)pr.value=mi.commodity;
+    el.innerHTML='CBM '+fNum(mi.cbm,3)+' m³ · '+fNum(mi.peso_t,3)+' t por fardo'+(mi.commodity?'':' · <span style="color:#B45309;">marca sem tipo de produto — o informado aqui fica gravado na marca</span>')
+      +(q?' → <strong>'+fNum(q*mi.cbm,3)+' m³ · '+fNum(q*mi.peso_t,3)+' t</strong>':'');
+    return;
+  }
+  nova.style.display='';el.textContent='';
+  var cb=numBR(document.getElementById('ed-cbmtot').value),ps=numBR(document.getElementById('ed-pesotot').value);
+  document.getElementById('ed-unit').innerHTML=q&&cb>0&&ps>0
+    ?'Por fardo: <strong>'+fNum(cb/q,4)+' m³ · '+fNum(ps/q,4)+' t</strong> — a marca '+esc(marca.toUpperCase())+' será cadastrada com esses valores ao lançar.'
+    :'Informe fardos, CBM total e peso total para calcular o valor por fardo.';
 }
 function lancarDescarga(){
   var reg={armador:armadorAtual,armazem:document.getElementById('ed-az').value,data:document.getElementById('ed-data').value,tipo:document.getElementById('ed-tipo').value,
-    nf:v('ed-nf'),produtor:v('ed-prod'),marca:(v('ed-marca')||'').toUpperCase(),quantidade:parseInt(document.getElementById('ed-qtd').value)||0,obs:v('ed-obs'),
+    nf:v('ed-nf'),produtor:v('ed-prod'),marca:(v('ed-marca')||'').toUpperCase(),produto:(v('ed-produto')||'').toUpperCase()||null,destino:destinoCanon(v('ed-dest')),
+    quantidade:parseInt(document.getElementById('ed-qtd').value)||0,obs:v('ed-obs'),
     criado_por:currentUser.id,criado_por_nome:currentUser.nome};
   if(!reg.data||!reg.armazem||!reg.marca||!reg.produtor){toast('Preencha data, armazém, produtor e marca','error');return;}
   if(reg.quantidade<=0){toast('Quantidade de fardos deve ser maior que zero','error');return;}
+  if(reg.tipo==='descarga'&&!reg.destino){toast('Informe o destino da carga','error');return;}
+  var mi=marcaInfo(reg.marca),novaMarca=null,tipoNaMarca=null;
+  if(!mi){
+    var cb=numBR(v('ed-cbmtot')),ps=numBR(v('ed-pesotot'));
+    if(!reg.produto){toast('Marca nova: informe o tipo do produto','error');return;}
+    if(!(cb>0)||!(ps>0)){toast('Marca nova: informe o CBM total e o peso total desta descarga','error');return;}
+    novaMarca={marca:reg.marca,commodity:reg.produto,cbm:+(cb/reg.quantidade).toFixed(4),peso_t:+(ps/reg.quantidade).toFixed(4),exportador:reg.produtor,updated_at:new Date().toISOString()};
+    if(!confirm('Cadastrar a marca nova '+reg.marca+' ('+reg.produto+')?\n\n'+fNum(cb,3)+' m³ e '+fNum(ps,3)+' t em '+reg.quantidade+' fardos\n= '+fNum(novaMarca.cbm,4)+' m³ e '+fNum(novaMarca.peso_t,4)+' t por fardo'))return;
+  }else if(!reg.produto)reg.produto=mi.commodity||null;
+  else if(!mi.commodity)tipoNaMarca=reg.produto;
   var dup=est.movs.find(function(m){return mesmoArmador(m.armador)&&normAz(m.armazem)===normAz(reg.armazem)&&m.data===reg.data&&(m.nf||'')===(reg.nf||'')&&nmMarca(m.marca)===nmMarca(reg.marca)&&+m.quantidade===reg.quantidade;});
   if(dup&&!confirm('Já existe um lançamento igual (mesma data, NF, marca e quantidade). Lançar de novo?'))return;
   showLd(true);
-  sb.from('wp_estoque_mov').insert(reg).select('*').single().then(function(r){
+  var pm=novaMarca?sb.from('wp_marcas').insert(novaMarca).select('*').single()
+    :tipoNaMarca?sb.from('wp_marcas').update({commodity:tipoNaMarca,updated_at:new Date().toISOString()}).eq('id',mi.id).select('*').single()
+    :Promise.resolve(null);
+  pm.then(function(rm){
+    if(rm&&rm.error)throw rm.error;
+    if(rm&&rm.data){est.marcas=est.marcas.filter(function(x){return x.id!==rm.data.id;}).concat([rm.data]);atualizarListasEstoque();}
+    return sb.from('wp_estoque_mov').insert(reg).select('*').single();
+  }).then(function(r){
     showLd(false);
-    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(r.error)throw r.error;
     est.movs.push(r.data);
-    toast('Descarga lançada: '+reg.quantidade+' fd '+reg.marca,'success');
-    ['ed-nf','ed-marca','ed-qtd','ed-obs'].forEach(function(id){document.getElementById(id).value='';});
+    toast('Descarga lançada: '+reg.quantidade+' fd '+reg.marca+(novaMarca?' · marca nova cadastrada':''),'success');
+    ['ed-nf','ed-marca','ed-qtd','ed-obs','ed-produto','ed-cbmtot','ed-pesotot'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('ed-produto').readOnly=false;
+    document.getElementById('ed-nova').style.display='none';
     document.getElementById('ed-info').textContent='';
+    atualizarListasEstoque();
     document.getElementById('ed-marca').focus();
     estRender();
-  });
-}
-function estRenderMovs(){
+  }).catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');});
+}function estRenderMovs(){
   var de=document.getElementById('em-de').value,ate=document.getElementById('em-ate').value;
   var b=(document.getElementById('em-busca').value||'').trim().toLowerCase(),az=document.getElementById('est-az').value;
   var lin=est.movs.filter(function(m){
     if(!mesmoArmador(m.armador))return false;
     if(az&&normAz(m.armazem)!==normAz(az))return false;
     if(de&&m.data<de)return false;if(ate&&m.data>ate)return false;
-    return !b||[m.nf,m.produtor,m.marca].join(' ').toLowerCase().indexOf(b)>=0;
+    return !b||[m.nf,m.produtor,m.marca,m.produto,m.destino].join(' ').toLowerCase().indexOf(b)>=0;
   }).slice().reverse();
   var tipos={descarga:'Descarga',inventario:'<span class="bge info">Inventário</span>',ajuste:'<span class="bge warn">Ajuste</span>'};
   var tot=0,totM3=0;
@@ -5881,11 +6063,11 @@ function estRenderMovs(){
   document.getElementById('em-tb').innerHTML=mostra.map(function(m){
     var mi=marcaInfo(m.marca),q=+m.quantidade;tot+=q;if(mi)totM3+=q*mi.cbm;
     return '<tr><td>'+fmtIso(m.data)+'</td><td>'+(tipos[m.tipo]||esc(m.tipo))+'</td><td>'+esc(m.armazem)+'</td><td class="mono">'+esc(m.nf||'—')+'</td><td>'+esc(m.produtor||'—')+'</td>'
-      +'<td class="mono"><strong>'+esc(m.marca)+'</strong></td><td class="mono" style="text-align:right">'+q+'</td><td class="mono" style="text-align:right">'+(mi?fNum(q*mi.cbm,3):'—')+'</td>'
+      +'<td class="mono"><strong>'+esc(m.marca)+'</strong></td><td>'+esc(m.produto||(mi&&mi.commodity)||'—')+'</td><td>'+esc(m.destino||'—')+'</td><td class="mono" style="text-align:right">'+q+'</td><td class="mono" style="text-align:right">'+(mi?fNum(q*mi.cbm,3):'—')+'</td>'
       +'<td style="font-size:12px;color:var(--ink3);">'+esc(m.criado_por_nome||'—')+'</td>'
       +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="editarMov(\''+m.id+'\')">✏</button> '
       +'<button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_estoque_mov\',\''+m.id+'\',function(){estAbrir(true);})">✕</button></td></tr>';
-  }).join('')||'<tr><td colspan="10" style="color:var(--ink3);text-align:center;padding:20px;">Nenhum lançamento no período.</td></tr>';
+  }).join('')||'<tr><td colspan="12" style="color:var(--ink3);text-align:center;padding:20px;">Nenhum lançamento no período.</td></tr>';
   document.getElementById('em-info').textContent=lin.length+' lançamento(s) no período'+(lin.length>500?' (mostrando os 500 mais recentes)':'')+' · '+tot.toLocaleString('pt-BR')+' fardos · '+fNum(totM3,1)+' m³';
 }
 function editarMov(id){
@@ -5895,6 +6077,8 @@ function editarMov(id){
     {key:'nf',label:'NF / Minuta',val:m.nf},
     {key:'produtor',label:'Produtor',val:m.produtor},
     {key:'marca',label:'Marca',val:m.marca},
+    {key:'produto',label:'Tipo do produto',val:m.produto},
+    {key:'destino',label:'Destino',val:m.destino},
     {key:'quantidade',label:'Fardos',type:'number',val:m.quantidade},
     {key:'obs',label:'Observação',val:m.obs},
   ],'wp_estoque_mov',id,function(){estAbrir(true);});
@@ -5951,7 +6135,11 @@ function importarMovExcel(input){
           cProd=col(function(c){return c.indexOf('PRODUTOR')>=0||c.indexOf('EXPORTADOR')>=0||c==='CLIENTE';}),
           cMarca=col(function(c){return c==='MARCA'||c==='MARCAS'||c==='MARKS';}),
           cAz=col(function(c){return c.indexOf('ARMAZ')===0||c==='AZ';}),
-          cObs=col(function(c){return c.indexOf('OBS')===0;});
+          cObs=col(function(c){return c.indexOf('OBS')===0;}),
+          cTipoP=col(function(c){return c==='PRODUTO'||c.indexOf('TIPO')===0||c.indexOf('COMM')===0;}),
+          cDest=col(function(c){return c.indexOf('DESTINO')===0||c==='PORTO'||c.indexOf('PORTO DE')===0||c==='POD';}),
+          cCbm=col(function(c){return c.indexOf('CBM')===0||c.indexOf('M3')===0||c.indexOf('M³')===0||c.indexOf('VOLUME')===0;}),
+          cPeso=col(function(c){return c.indexOf('PESO')===0||c.indexOf('WEIGHT')===0||c.indexOf('TON')===0;});
       // quantidade: coluna "ENTRADA" na linha de baixo (planilha de entrada e saída) ou QUANTIDADE/QTD/SALDO
       var cQtd=H2.indexOf('ENTRADA'),cSai=H2.indexOf('SAIDA'),ini=h+1;
       if(cQtd>=0)ini=h+2;
@@ -5968,6 +6156,9 @@ function importarMovExcel(input){
           nf:cNf>=0?String(LT[cNf]||L[cNf]||'').trim()||null:(tipo==='inventario'?'INV':null),
           produtor:cProd>=0?String(LT[cProd]||L[cProd]||'').trim()||null:null,
           marca:marca,quantidade:q,obs:cObs>=0?String(LT[cObs]||'').trim()||null:null,
+          produto:cTipoP>=0?String(LT[cTipoP]||L[cTipoP]||'').trim().toUpperCase()||null:null,
+          destino:cDest>=0?destinoCanon(LT[cDest]||L[cDest]):null,
+          _cbm:cCbm>=0?numBR(L[cCbm]):null,_peso:cPeso>=0?numBR(L[cPeso]):null,
           criado_por:currentUser.id,criado_por_nome:currentUser.nome});
       }
     });
@@ -5980,7 +6171,21 @@ function importarMovExcel(input){
     var ja={};est.movs.forEach(function(m){if(mesmoArmador(m.armador))ja[[normAz(m.armazem),m.data,m.nf||'',nmMarca(m.marca),m.quantidade].join('|')]=1;});
     var dups=0;regs=regs.filter(function(x){var k=[normAz(x.armazem),x.data,x.nf||'',nmMarca(x.marca),x.quantidade].join('|');if(ja[k]){dups++;return false;}return true;});
     if(!regs.length){toast('Nada novo para importar ('+dups+' já lançados).','error');return;}
-    var semParam=[...new Set(regs.filter(function(x){return !marcaInfo(x.marca);}).map(function(x){return x.marca;}))];
+    // marcas que não existem: cadastra com CBM e peso por fardo = totais da planilha ÷ fardos
+    var nov={};
+    regs.forEach(function(x){
+      var mi=marcaInfo(x.marca);
+      if(mi){if(!x.produto)x.produto=mi.commodity||null;return;}
+      var k=nmMarca(x.marca),n=nov[k]||(nov[k]={marca:x.marca,commodity:null,exportador:x.produtor,fd:0,cbm:0,peso:0});
+      if(!n.commodity&&x.produto)n.commodity=x.produto;
+      if(x._cbm>0){n.fd+=x.quantidade;n.cbm+=x._cbm;n.peso+=x._peso>0?x._peso:0;}
+    });
+    var marcasNovas=Object.values(nov).filter(function(n){return n.fd>0&&n.cbm>0;}).map(function(n){
+      return {marca:n.marca,commodity:n.commodity,exportador:n.exportador,cbm:+(n.cbm/n.fd).toFixed(4),peso_t:+(n.peso/n.fd).toFixed(4),updated_at:new Date().toISOString()};});
+    var novasK={};marcasNovas.forEach(function(m){novasK[nmMarca(m.marca)]=1;});
+    regs.forEach(function(x){delete x._cbm;delete x._peso;var n=nov[nmMarca(x.marca)];if(n&&!x.produto)x.produto=n.commodity;});
+    var semParam=[...new Set(regs.filter(function(x){return !marcaInfo(x.marca)&&!novasK[nmMarca(x.marca)];}).map(function(x){return x.marca;}))];
+    var semDest=regs.filter(function(x){return x.tipo==='descarga'&&!x.destino;}).length;
     var datas=regs.map(function(x){return x.data;}).sort();
     var fd=regs.reduce(function(a,x){return a+x.quantidade;},0);
     var semProd=regs.filter(function(x){return !x.produtor;}).length;
@@ -5992,13 +6197,15 @@ function importarMovExcel(input){
       +(ignorados.semData?'\n• '+ignorados.semData+' linha(s) sem data válida — ignoradas':'')
       +(fora.length?'\n• '+fora.length+' linha(s) de armazém sem permissão — ignoradas':'')
       +(semProd?'\n• '+semProd+' sem produtor (a armazenagem fica como "(sem produtor)")':'')
+      +(marcasNovas.length?'\n• '+marcasNovas.length+' marca(s) nova(s) serão cadastradas (CBM e peso por fardo pelos totais): '+marcasNovas.slice(0,10).map(function(m){return m.marca;}).join(', ')+(marcasNovas.length>10?'…':''):'')
+      +(semDest?'\n• '+semDest+' descarga(s) sem DESTINO — não abatem booking de porto':'')
       +(semParam.length?'\n• '+semParam.length+' marca(s) sem parâmetro: '+semParam.slice(0,10).join(', ')+(semParam.length>10?'…':''):'')
       +'\n\nConfirmar importação?';
     if(!confirm(msg))return;
     var tag=file.name+' · '+new Date().toLocaleString('pt-BR');
     regs.forEach(function(x){x.importacao=tag;});
     showLd(true);
-    var p=Promise.resolve(),feitos=0;
+    var p=marcasNovas.length?sb.from('wp_marcas').insert(marcasNovas).then(function(r){if(r.error)throw r.error;}):Promise.resolve(),feitos=0;
     for(var i=0;i<regs.length;i+=500)(function(b){p=p.then(function(){return sb.from('wp_estoque_mov').insert(b).then(function(r){if(r.error)throw r.error;feitos+=b.length;});});})(regs.slice(i,i+500));
     p.then(function(){showLd(false);toast(feitos+' lançamento(s) importado(s)','success');estAbrir(true);})
      .catch(function(e){showLd(false);toast('Importação interrompida após '+feitos+' lançamento(s): '+(e.message||e)+'. Importe o arquivo de novo — os já gravados são ignorados.','error');estAbrir(true);});
@@ -6008,29 +6215,33 @@ function importarMovExcel(input){
 // Modelos de planilha para importação (mesmos títulos que o importador procura)
 function baixarModeloEstoque(tipo){
   var inv=tipo==='inventario';
-  var cab=inv?['MARCA','PRODUTOR','QUANTIDADE','ARMAZÉM','OBS']:['DATA','NF','PRODUTOR','MARCA','QUANTIDADE','ARMAZÉM','OBS'];
-  var texto=inv?[0,1,3,4]:[1,2,3,5,6]; // colunas em formato texto (não perde zero à esquerda da marca/NF)
+  var cab=inv?['MARCA','PRODUTOR','TIPO PRODUTO','DESTINO','QUANTIDADE','CBM TOTAL','PESO TOTAL (t)','ARMAZÉM','OBS']
+    :['DATA','NF','PRODUTOR','MARCA','TIPO PRODUTO','DESTINO','QUANTIDADE','CBM TOTAL','PESO TOTAL (t)','ARMAZÉM','OBS'];
+  var texto=inv?[0,1,2,3,7,8]:[1,2,3,4,5,9,10]; // colunas em formato texto (não perde zero à esquerda da marca/NF)
   var ws=XLSX.utils.aoa_to_sheet([cab]);
   for(var r=1;r<=1000;r++)texto.forEach(function(c){ws[XLSX.utils.encode_cell({r:r,c:c})]={t:'s',v:'',z:'@'};});
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:1000,c:cab.length-1}});
-  ws['!cols']=cab.map(function(h){return {wch:h==='PRODUTOR'||h==='OBS'?30:14};});
+  ws['!cols']=cab.map(function(h){return {wch:h==='PRODUTOR'||h==='OBS'?30:h==='DESTINO'?18:14};});
   var instr=inv?[
     ['Modelo de importação — INVENTÁRIO DE ABERTURA'],[''],
     ['1. Preencha o saldo atual de cada marca, por produtor, na aba "Inventario". Não altere os títulos da linha 1.'],
     ['2. Obrigatórios: MARCA, PRODUTOR e QUANTIDADE (fardos em estoque). Marca com carga de dois produtores = uma linha para cada.'],
-    ['3. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
-    ['4. Ao importar, o WoodPort pergunta a DATA DO INVENTÁRIO. Embarques validados a partir dela baixam o estoque; a armazenagem conta a partir dela.'],
-    ['5. Importe uma vez por armazém; depois use as descargas do dia a dia.'],[''],
-    ['Exemplo:'],['MARCA | PRODUTOR | QUANTIDADE | ARMAZÉM'],['404D | Madeireira Exemplo | 201 | WRC'],['F8 | Serraria Modelo | 238 | WRC'],['F8 | Madeireira Exemplo | 26 | WRC']
+    ['3. TIPO PRODUTO (SLBRC, SWPLY, MDF, HDF) e DESTINO (porto) — o destino é usado para abater o booking de cada porto.'],
+    ['4. Marca que ainda não existe no WoodPort: preencha CBM TOTAL (m³) e PESO TOTAL (t) da linha; o sistema divide pelos fardos e cadastra a marca.'],
+    ['5. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
+    ['6. Ao importar, o WoodPort pergunta a DATA DO INVENTÁRIO. Embarques validados a partir dela baixam o estoque; a armazenagem conta a partir dela.'],[''],
+    ['Exemplo:'],['MARCA | PRODUTOR | TIPO PRODUTO | DESTINO | QUANTIDADE | CBM TOTAL | PESO TOTAL (t) | ARMAZÉM'],['404D | Madeireira Exemplo | SLBRC | Houston | 201 | | | WRC'],['F99 | Serraria Modelo | SWPLY | Savannah | 40 | 92,8 | 48,4 | WRC']
   ]:[
     ['Modelo de importação — ENTRADAS (descargas)'],[''],
     ['1. Uma linha por descarga (caminhão), na aba "Entradas". Não altere os títulos da linha 1.'],
-    ['2. Obrigatórios: DATA (dd/mm/aaaa), PRODUTOR, MARCA e QUANTIDADE (fardos). NF e OBS são opcionais.'],
-    ['3. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
-    ['4. A MARCA deve estar cadastrada em Estoque > Marcas para calcular m³ e armazenagem.'],
-    ['5. Não lance saídas aqui: o estoque baixa sozinho quando o embarque é validado.'],
-    ['6. Linhas já importadas antes (mesma data, NF, marca e quantidade) são ignoradas.'],[''],
-    ['Exemplo:'],['DATA | NF | PRODUTOR | MARCA | QUANTIDADE | ARMAZÉM'],['13/10/2026 | 11116 | Madeireira Exemplo | 404D | 60 | WRC'],['14/10/2026 | 6353 | Serraria Modelo | F12 | 28 |']
+    ['2. Obrigatórios: DATA (dd/mm/aaaa), PRODUTOR, MARCA, DESTINO e QUANTIDADE (fardos). NF e OBS são opcionais.'],
+    ['3. TIPO PRODUTO: SLBRC, SWPLY, MDF ou HDF. Para marca já cadastrada pode ficar em branco (vem da marca).'],
+    ['4. DESTINO: porto de destino da carga. É o que abate o booking do cliente naquele porto.'],
+    ['5. Marca que ainda não existe no WoodPort: preencha CBM TOTAL (m³) e PESO TOTAL (t) da descarga; o sistema divide pelos fardos e cadastra a marca. Para marca já cadastrada, deixe em branco.'],
+    ['6. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
+    ['7. Não lance saídas aqui: o estoque baixa sozinho quando o embarque é validado. Linhas já importadas antes (mesma data, NF, marca e quantidade) são ignoradas.'],[''],
+    ['Exemplo:'],['DATA | NF | PRODUTOR | MARCA | TIPO PRODUTO | DESTINO | QUANTIDADE | CBM TOTAL | PESO TOTAL (t) | ARMAZÉM'],
+    ['13/10/2026 | 11116 | Madeireira Exemplo | 404D | SLBRC | Houston | 60 | | | WRC'],['14/10/2026 | 6353 | Serraria Modelo | F99 | SWPLY | Savannah | 28 | 64,96 | 33,88 |']
   ];
   var wi=XLSX.utils.aoa_to_sheet(instr);wi['!cols']=[{wch:110}];
   var wb=XLSX.utils.book_new();
@@ -6118,6 +6329,383 @@ function importarMarcasExcel(input){
     lote(function(b){return sb.from('wp_marcas').insert(b);},novos);
     p.then(function(){showLd(false);toast(novos.length+' novas · '+atual.length+' atualizadas','success');estAbrir(true);})
      .catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');estAbrir(true);});
+  });
+}
+
+// ══════════════════════════════════════════════════
+// CLIENTES E BOOKING
+// O armador manda a previsão (m³ e t) de cada embarcador por navio; as descargas
+// do cliente dentro do período de recebimento do navio vão abatendo o booking.
+// ══════════════════════════════════════════════════
+function nmCli(s){return hdr(s).replace(/[^A-Z0-9]/g,'');}
+function linhasTexto(id){return [...new Set(String(document.getElementById(id).value||'').split(/[;\n]/).map(function(x){return x.trim();}).filter(Boolean))];}
+function navioNome(n){return n?n.nome+(n.viagem?' · '+n.viagem:''):'—';}
+function bkPortosNavio(n){
+  if(!n)return [];
+  var a=[].concat(n.plano_estiva&&n.plano_estiva.portos||[]);
+  (est.booking||[]).forEach(function(b){if(b.navio_id===n.id&&b.porto)a.push(b.porto);});
+  return unicosAz(a);
+}
+function bkPortoCanon(n,s){s=String(s||'').trim();if(!s)return '';return bkPortosNavio(n).concat(destinosConhecidos()).find(function(x){return normAz(x)===normAz(s);})||s;}
+function navioDe(id){return (est.navios||[]).find(function(n){return n.id===id;})||null;}
+function clienteDe(id){return (est.clientes||[]).find(function(c){return c.id===id;})||null;}
+// cliente de uma descarga: marca do cliente → Produtor da descarga → Exportador da marca
+function cliIndice(){
+  var ix={marca:{},nome:{}};
+  (est.clientes||[]).forEach(function(c){
+    (c.marcas||[]).forEach(function(m){if(nmMarca(m))ix.marca[nmMarca(m)]=c;});
+    [c.nome].concat(c.apelidos||[]).forEach(function(n){if(nmCli(n))ix.nome[nmCli(n)]=c;});
+  });
+  return ix;
+}
+function clienteDaDescarga(m,ix){
+  var c=ix.marca[nmMarca(m.marca)];if(c)return c;
+  c=ix.nome[nmCli(m.produtor)];if(c)return c;
+  var mi=marcaInfo(m.marca);
+  return mi&&mi.exportador?ix.nome[nmCli(mi.exportador)]||null:null;
+}
+function bkCalcular(){
+  var ix=cliIndice(),R={},porCli={},semCliente={},semPorto={};
+  (est.booking||[]).forEach(function(b){
+    var n=navioDe(b.navio_id);if(!n||!mesmoArmador(n.armador))return;
+    var r=R[b.id]={b:b,navio:n,cli:clienteDe(b.cliente_id),fd:0,m3:0,t:0,semParam:0,descargas:[]};
+    (porCli[b.cliente_id]=porCli[b.cliente_id]||[]).push(r);
+  });
+  Object.keys(porCli).forEach(function(k){porCli[k].sort(function(a,b){
+    return String(a.navio.receb_inicio||'9999').localeCompare(String(b.navio.receb_inicio||'9999'))||String(a.navio.eta||'').localeCompare(String(b.navio.eta||''));});});
+  est.movs.filter(function(m){return m.tipo==='descarga'&&mesmoArmador(m.armador);})
+    .sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:String(a.created_at||'')<String(b.created_at||'')?-1:1;})
+    .forEach(function(m){
+      var c=clienteDaDescarga(m,ix),q=parseInt(m.quantidade)||0;
+      if(!c){
+        var p=(m.produtor||'').trim()||'(sem produtor)',s=semCliente[nmCli(p)]||(semCliente[nmCli(p)]={produtor:p,fd:0,n:0,ultima:''});
+        s.fd+=q;s.n++;if(m.data>s.ultima)s.ultima=m.data;return;
+      }
+      var noPer=(porCli[c.id]||[]).filter(function(r){var n=r.navio;return n.receb_inicio&&m.data>=n.receb_inicio&&(!n.receb_fim||m.data<=n.receb_fim);});
+      if(!noPer.length)return;
+      // booking do porto de destino da descarga; booking sem porto aceita qualquer destino
+      var dest=normAz(m.destino);
+      var cand=dest?noPer.filter(function(r){return normAz(r.b.porto)===dest;}):[];
+      if(!cand.length)cand=noPer.filter(function(r){return !r.b.porto;});
+      if(!cand.length){
+        var kp=c.id+'|'+noPer[0].navio.id+'|'+dest,sp=semPorto[kp]||(semPorto[kp]={cli:c,navio_id:noPer[0].navio.id,destino:(m.destino||'').trim(),fd:0});
+        sp.fd+=q;return;
+      }
+      var r=cand.find(function(x){return x.m3<(+x.b.m3||0);})||cand[cand.length-1];
+      var mi=marcaInfo(m.marca),m3=mi?q*mi.cbm:null,t=mi?q*mi.peso_t:null;
+      r.fd+=q;if(mi){r.m3+=m3;r.t+=t;}else r.semParam+=q;
+      r.descargas.push({m:m,m3:m3,t:t});
+    });
+  return {R:R,semCliente:Object.values(semCliente).sort(function(a,b){return b.fd-a.fd;}),semPorto:Object.values(semPorto)};
+}
+
+// ── BOOKING ──
+function estRenderBooking(){
+  var av=document.getElementById('bk-aviso');
+  if(est.semBookingSql){av.innerHTML='<div class="imp-st err" style="margin-bottom:12px;">⚠<div>Rode o script <strong>woodport_booking.sql</strong> no Supabase para usar clientes e booking.</div></div>';return;}
+  av.innerHTML='';
+  var navs=est.navios.filter(function(n){return mesmoArmador(n.armador);});
+  if(est.bkNavio&&!navs.some(function(n){return n.id===est.bkNavio;}))est.bkNavio='';
+  if(!est.bkNavio&&navs.length)est.bkNavio=navs[0].id;
+  var sel=document.getElementById('bk-navio');
+  sel.innerHTML=navs.length?navs.map(function(n){return '<option value="'+n.id+'">'+esc(navioNome(n))+(n.eta?' — ETA '+fmtIso(n.eta):'')+'</option>';}).join('')
+    :'<option value="">Nenhum navio do armador '+esc(armadorAtual)+' (defina o armador em Administração › Navios)</option>';
+  sel.value=est.bkNavio||'';
+  var nav=navioDe(est.bkNavio);
+  document.getElementById('bk-ini').value=nav&&nav.receb_inicio||'';
+  document.getElementById('bk-fim').value=nav&&nav.receb_fim||'';
+  var cs=est.clientes.filter(function(c){return c.ativo!==false;});
+  var cSel=document.getElementById('bk-cli'),cVal=cSel.value;
+  cSel.innerHTML='<option value="">— Selecione o cliente —</option>'+cs.map(function(c){return '<option value="'+c.id+'">'+esc(c.nome)+'</option>';}).join('');
+  cSel.value=cVal;
+  est.bk=bkCalcular();
+  var lin=Object.values(est.bk.R).filter(function(r){return r.b.navio_id===est.bkNavio;})
+    .sort(function(a,b){return String(a.cli&&a.cli.nome||'').localeCompare(String(b.cli&&b.cli.nome||''))||String(a.b.porto).localeCompare(String(b.b.porto));});
+  var tB=0,tR=0,tBt=0,tRt=0,tF=0,tFt=0; // falta = soma do que falta de cada cliente (quem passou do booking não compensa quem deve)
+  document.getElementById('bk-tb').innerHTML=lin.map(function(r){
+    var bm=+r.b.m3||0,bt=+r.b.t||0,fm=bm-r.m3,ft=bt-r.t,pc=bm?r.m3/bm*100:0;
+    tB+=bm;tR+=r.m3;tBt+=bt;tRt+=r.t;tF+=Math.max(0,fm);tFt+=Math.max(0,ft);
+    var cor=pc>100?'#B45309':pc>=95?'#1e7e34':'var(--acc,#8B4513)';
+    var cli=r.cli||{nome:'(cliente excluído)'};
+    return '<tr><td><strong>'+esc(cli.nome)+'</strong>'+(r.b.obs?'<div style="font-size:11px;color:var(--ink4);">'+esc(r.b.obs)+'</div>':'')
+      +(r.semParam?' <span class="bge warn" title="Marca sem parâmetro: fardos sem m³/t">'+r.semParam+' fd sem m³</span>':'')+'</td>'
+      +'<td>'+(r.b.porto?esc(r.b.porto):'<span style="color:var(--ink4);">qualquer</span>')+'</td>'
+      +'<td class="mono" style="text-align:right">'+fNum(bm,3)+'</td><td class="mono" style="text-align:right">'+fNum(bt,3)+'</td>'
+      +'<td class="mono" style="text-align:right">'+r.fd.toLocaleString('pt-BR')+'</td>'
+      +'<td class="mono" style="text-align:right">'+fNum(r.m3,3)+'</td><td class="mono" style="text-align:right">'+fNum(r.t,3)+'</td>'
+      +'<td class="mono" style="text-align:right;font-weight:600;'+(fm<0?'color:#B45309;':'')+'">'+fNum(fm,3)+'</td>'
+      +'<td class="mono" style="text-align:right;'+(ft<0?'color:#B45309;':'')+'">'+fNum(ft,3)+'</td>'
+      +'<td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;min-width:50px;"><div style="height:100%;width:'+Math.min(100,pc).toFixed(1)+'%;background:'+cor+';"></div></div><span class="mono" style="font-size:12px;">'+pc.toFixed(0)+'%</span></div></td>'
+      +'<td style="white-space:nowrap;"><button class="btn bs bsm" title="Relatório para o cliente" aria-label="Relatório" onclick="bkRelatorio(\''+r.b.id+'\')">📄</button>'
+      +(r.cli&&r.cli.email?' <button class="btn bs bsm" title="E-mail para '+esc(r.cli.email)+'" aria-label="E-mail" onclick="bkEmail(\''+r.b.id+'\')">✉</button>':'')
+      +' <button class="btn bs bsm" aria-label="Editar" onclick="bkEditar(\''+r.b.id+'\')">✏</button>'
+      +' <button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_booking\',\''+r.b.id+'\',function(){est.booking=est.booking.filter(function(x){return x.id!==\''+r.b.id+'\';});estRender();})">✕</button></td></tr>';
+  }).join('')||'<tr><td colspan="11" style="color:var(--ink3);text-align:center;padding:20px;">'+(nav?'Nenhum booking neste navio. Lance ao lado ou importe a previsão do armador.':'Escolha um navio.')+'</td></tr>';
+  document.getElementById('bk-count').textContent=lin.length?lin.length+' cliente(s)':'';
+  document.getElementById('bk-s-book').innerHTML=fNum(tB,1)+' <small>m³</small><div style="font-size:12px;color:var(--ink3);font-weight:400;">'+fNum(tBt,1)+' t</div>';
+  document.getElementById('bk-s-rec').innerHTML=fNum(tR,1)+' <small>m³</small><div style="font-size:12px;color:var(--ink3);font-weight:400;">'+fNum(tRt,1)+' t'+(tB?' · '+(tR/tB*100).toFixed(0)+'%':'')+'</div>';
+  document.getElementById('bk-s-saldo').innerHTML=fNum(tF,1)+' <small>m³</small><div style="font-size:12px;color:var(--ink3);font-weight:400;">'+fNum(tFt,1)+' t</div>';
+  document.getElementById('bk-s-cli').textContent=new Set(lin.map(function(r){return r.b.cliente_id;})).size;
+  // resumo por porto
+  var pt={};lin.forEach(function(r){var k=r.b.porto||'',x=pt[k]||(pt[k]={b:0,r:0});x.b+=+r.b.m3||0;x.r+=r.m3;});
+  var ks=Object.keys(pt).sort();
+  document.getElementById('bk-portos').innerHTML=ks.length>1||(ks.length===1&&ks[0])?'<div style="display:flex;gap:10px;flex-wrap:wrap;">'+ks.map(function(k){
+    var x=pt[k],pc=x.b?x.r/x.b*100:0;
+    return '<div class="sc" style="flex:1 1 180px;min-width:0;padding:10px 14px;"><div class="sl">'+esc(k||'Qualquer porto')+'</div><div class="mono" style="font-size:14px;font-weight:600;">'
+      +fNum(x.r,1)+' / '+fNum(x.b,1)+' m³ <span style="color:var(--ink3);font-weight:400;">'+pc.toFixed(0)+'%</span></div></div>';}).join('')+'</div>':'';
+  document.getElementById('dl-bk-portos').innerHTML=bkPortosNavio(nav).map(function(p){return '<option value="'+esc(p)+'">';}).join('');
+  var spN=est.bk.semPorto.filter(function(x){return x.navio_id===est.bkNavio;});
+  if(spN.length)av.innerHTML+='<div class="imp-st err" style="margin-bottom:12px;">⚠<div><strong>Descargas sem booking para o destino</strong> (não abatem nenhum booking deste navio): '
+    +esc(spN.slice(0,8).map(function(x){return x.cli.nome+' → '+(x.destino||'sem destino')+' ('+x.fd+' fd)';}).join(' · '))+(spN.length>8?' …':'')+'</div></div>';
+  if(nav&&!nav.receb_inicio&&lin.length)av.innerHTML+='<div class="imp-st err" style="margin-bottom:12px;">⚠<div>Defina o <strong>período de recebimento</strong> deste navio — sem ele nenhuma descarga abate o booking.</div></div>';
+}
+function bkLimparForm(){
+  ['bk-id','bk-m3','bk-t','bk-obs','bk-porto'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('bk-porto').disabled=false;
+  document.getElementById('bk-cli').value='';document.getElementById('bk-cli').disabled=false;
+  document.getElementById('bk-titulo').textContent='Lançar booking';
+}
+function bkEditar(id){
+  var b=est.booking.find(function(x){return x.id===id;});if(!b)return;
+  document.getElementById('bk-id').value=b.id;
+  document.getElementById('bk-cli').value=b.cliente_id;document.getElementById('bk-cli').disabled=true;
+  document.getElementById('bk-m3').value=String(b.m3==null?'':b.m3).replace('.',',');
+  document.getElementById('bk-t').value=String(b.t==null?'':b.t).replace('.',',');
+  document.getElementById('bk-obs').value=b.obs||'';
+  document.getElementById('bk-porto').value=b.porto||'';document.getElementById('bk-porto').disabled=true;
+  var c=clienteDe(b.cliente_id);
+  document.getElementById('bk-titulo').textContent='Editar booking'+(c?' — '+c.nome:'')+(b.porto?' · '+b.porto:'');
+  document.getElementById('bk-m3').focus();
+}
+function salvarBooking(){
+  var id=document.getElementById('bk-id').value,cli=document.getElementById('bk-cli').value;
+  var reg={m3:numBR(v('bk-m3')),t:numBR(v('bk-t'))||0,obs:v('bk-obs'),updated_at:new Date().toISOString()};
+  if(!est.bkNavio){toast('Escolha o navio','error');return;}
+  if(!cli){toast('Escolha o cliente','error');return;}
+  if(!(reg.m3>0)){toast('Informe o booking em m³','error');return;}
+  var porto=bkPortoCanon(navioDe(est.bkNavio),v('bk-porto'));
+  if(!id){
+    var ja=est.booking.find(function(b){return b.navio_id===est.bkNavio&&b.cliente_id===cli&&normAz(b.porto)===normAz(porto);});
+    if(ja){if(!confirm('Este cliente já tem booking '+(porto?'para '+porto+' ':'sem porto ')+'neste navio. Substituir pelos valores novos?'))return;id=ja.id;}
+  }
+  if(!id)Object.assign(reg,{navio_id:est.bkNavio,cliente_id:cli,porto:porto,criado_por:currentUser.id,criado_por_nome:currentUser.nome});
+  showLd(true);
+  (id?sb.from('wp_booking').update(reg).eq('id',id):sb.from('wp_booking').insert(reg)).select('*').single().then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    est.booking=est.booking.filter(function(x){return x.id!==r.data.id;}).concat([r.data]);
+    toast('Booking salvo','success');bkLimparForm();estRender();
+  });
+}
+function salvarRecebimento(){
+  var nav=navioDe(est.bkNavio);if(!nav){toast('Escolha o navio','error');return;}
+  var ini=document.getElementById('bk-ini').value||null,fim=document.getElementById('bk-fim').value||null;
+  if(fim&&!ini){toast('Informe o início do recebimento','error');return;}
+  if(ini&&fim&&fim<ini){toast('O fim do recebimento é antes do início','error');return;}
+  showLd(true);
+  sb.rpc('wp_definir_recebimento',{p_navio:nav.id,p_inicio:ini,p_fim:fim}).then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    nav.receb_inicio=ini;nav.receb_fim=fim;
+    toast('Período de recebimento salvo','success');estRender();
+  });
+}
+function importarBookingExcel(input){
+  var file=input.files[0];input.value='';if(!file)return;
+  var nav=navioDe(est.bkNavio);if(!nav){toast('Escolha o navio antes de importar','error');return;}
+  lerPlanilha(file,function(abas){
+    var soma={},abaUsada=null;
+    abas.forEach(function(a){
+      if(abaUsada)return;
+      var R=a.raw,T=a.txt,h=-1,cC=-1,cM=-1,cT=-1,cP=-1;
+      for(var i=0;i<Math.min(R.length,40)&&h<0;i++){
+        var H=R[i].map(hdr);
+        cC=H.findIndex(function(x){return /^(CLIENTE|EMBARCADOR|SHIPPER|EXPORTADOR|PRODUTOR)/.test(x);});
+        cM=H.findIndex(function(x){return /^(CBM|M3|M³|VOLUME)/.test(x);});
+        if(cC>=0&&cM>=0){h=i;cT=H.findIndex(function(x){return /^(PESO|TON|WEIGHT|MT\b|T$)/.test(x);});cP=H.findIndex(function(x){return /^(PORTO|DESTINO|POD\b|DISCH)/.test(x);});}
+      }
+      if(h<0)return;abaUsada=a.nome;
+      for(var r=h+1;r<R.length;r++){
+        var nome=String((T[r]||[])[cC]||R[r][cC]||'').trim(),m3=numBR(R[r][cM]),t=cT>=0?numBR(R[r][cT]):0;
+        if(!nome||!(m3>0)||/^(TOTAL|SUBTOTAL)/.test(hdr(nome)))continue;
+        var porto=cP>=0?bkPortoCanon(nav,(T[r]||[])[cP]||R[r][cP]):'';
+        var k=nmCli(nome)+'|'+normAz(porto),s=soma[k]||(soma[k]={nome:nome,porto:porto,m3:0,t:0});
+        s.m3+=m3;s.t+=t||0;
+      }
+    });
+    var linhas=Object.values(soma);
+    if(!abaUsada||!linhas.length){toast('Não encontrei a tabela (cabeçalho com CLIENTE/EMBARCADOR e CBM/M³)','error');return;}
+    var ix=cliIndice(),vistos={},novosCli=linhas.filter(function(l){var k=nmCli(l.nome);if(ix.nome[k]||vistos[k])return false;vistos[k]=1;return true;});
+    var atual=linhas.filter(function(l){var c=ix.nome[nmCli(l.nome)];return c&&est.booking.some(function(b){return b.navio_id===nav.id&&b.cliente_id===c.id&&normAz(b.porto)===normAz(l.porto);});}).length;
+    var nPortos=new Set(linhas.map(function(l){return normAz(l.porto);})).size;
+    var tm=linhas.reduce(function(a,l){return a+l.m3;},0);
+    if(!confirm('Previsão para '+navioNome(nav)+' (aba '+abaUsada+'):\n\n• '+linhas.length+' linha(s) de booking ('+new Set(linhas.map(function(l){return nmCli(l.nome);})).size+' cliente(s), '+nPortos+' porto(s)) · '+fNum(tm,1)+' m³\n• '+(linhas.length-atual)+' booking(s) novo(s), '+atual+' atualizado(s)'
+      +(novosCli.length?'\n• '+novosCli.length+' cliente(s) novo(s) serão cadastrados: '+novosCli.slice(0,8).map(function(l){return l.nome;}).join(', ')+(novosCli.length>8?' …':''):'')+'\n\nConfirmar?'))return;
+    showLd(true);
+    var p=novosCli.length?sb.from('wp_clientes').insert(novosCli.map(function(l){return {nome:l.nome};})).select('*'):Promise.resolve({data:[]});
+    p.then(function(rc){
+      if(rc.error)throw rc.error;
+      est.clientes=est.clientes.concat(rc.data||[]);
+      var ix2=cliIndice(),agora=new Date().toISOString();
+      var regs=linhas.map(function(l){return {navio_id:nav.id,cliente_id:ix2.nome[nmCli(l.nome)].id,porto:l.porto||'',m3:+l.m3.toFixed(3),t:+l.t.toFixed(3),updated_at:agora,criado_por:currentUser.id,criado_por_nome:currentUser.nome};});
+      return sb.from('wp_booking').upsert(regs,{onConflict:'navio_id,cliente_id,porto'}).select('*');
+    }).then(function(rb){
+      showLd(false);
+      if(rb.error)throw rb.error;
+      var ids={};(rb.data||[]).forEach(function(b){ids[b.id]=1;});
+      est.booking=est.booking.filter(function(b){return !ids[b.id];}).concat(rb.data||[]);
+      toast('Previsão importada: '+linhas.length+' cliente(s)','success');estRender();
+    }).catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');estAbrir(true);});
+  });
+}
+function bkLinhaResumo(r){
+  var bm=+r.b.m3||0,bt=+r.b.t||0;
+  return {'Cliente':r.cli?r.cli.nome:'','Navio':navioNome(r.navio),'Porto':r.b.porto||'qualquer','Booking m³':bm,'Booking t':bt,'Recebido fardos':r.fd,
+    'Recebido m³':+r.m3.toFixed(3),'Recebido t':+r.t.toFixed(3),'Falta m³':+(bm-r.m3).toFixed(3),'Falta t':+(bt-r.t).toFixed(3),'%':bm?+(r.m3/bm*100).toFixed(1):''};
+}
+function bkLinhasDescarga(r){
+  return r.descargas.map(function(d){return {'Cliente':r.cli?r.cli.nome:'','Data':fmtIso(d.m.data),'Armazém':d.m.armazem,'NF':d.m.nf||'','Produtor':d.m.produtor||'','Marca':d.m.marca,'Produto':d.m.produto||(marcaInfo(d.m.marca)||{}).commodity||'','Destino':d.m.destino||'','Porto do booking':r.b.porto||'qualquer',
+    'Fardos':+d.m.quantidade,'m³':d.m3===null?'':+d.m3.toFixed(3),'t':d.t===null?'':+d.t.toFixed(3)};});
+}
+function bkExportar(){
+  var nav=navioDe(est.bkNavio);if(!nav||!est.bk){toast('Escolha o navio','error');return;}
+  var lin=Object.values(est.bk.R).filter(function(r){return r.b.navio_id===nav.id;}).sort(function(a,b){return String(a.cli&&a.cli.nome||'').localeCompare(String(b.cli&&b.cli.nome||''));});
+  if(!lin.length){toast('Nada para exportar','error');return;}
+  var wb=XLSX.utils.book_new();
+  [['Resumo',lin.map(bkLinhaResumo)],['Descargas',[].concat.apply([],lin.map(bkLinhasDescarga))]].forEach(function(x){
+    if(!x[1].length)return;
+    var ws=XLSX.utils.json_to_sheet(x[1]);ws['!cols']=Object.keys(x[1][0]).map(function(k){return {wch:Math.max(10,k.length+2)};});
+    XLSX.utils.book_append_sheet(wb,ws,x[0]);
+  });
+  XLSX.writeFile(wb,'booking_'+(nav.nome+'_'+(nav.viagem||'')).replace(/[^\w]+/g,'_')+'_'+localISODate()+'.xlsx');
+}
+// todos os bookings do cliente no navio (um por porto), somados
+function bkDoCliente(id){
+  var r=est.bk&&est.bk.R[id];if(!r)return null;
+  var rs=Object.values(est.bk.R).filter(function(x){return x.b.navio_id===r.b.navio_id&&x.b.cliente_id===r.b.cliente_id;})
+    .sort(function(a,b){return String(a.b.porto).localeCompare(String(b.b.porto));});
+  var t={bm:0,bt:0,fd:0,m3:0,t:0,semParam:0,descargas:[]};
+  rs.forEach(function(x){t.bm+=+x.b.m3||0;t.bt+=+x.b.t||0;t.fd+=x.fd;t.m3+=x.m3;t.t+=x.t;t.semParam+=x.semParam;t.descargas=t.descargas.concat(x.descargas);});
+  t.descargas.sort(function(a,b){return a.m.data<b.m.data?-1:a.m.data>b.m.data?1:0;});
+  return {rs:rs,tot:t,cli:r.cli,navio:r.navio};
+}
+// relatório para o cliente: página pronta para imprimir / salvar em PDF
+function bkRelatorio(id){
+  var D=bkDoCliente(id);if(!D)return;
+  var T=D.tot,n=D.navio,pc=T.bm?T.m3/T.bm*100:0;
+  var w=window.open('','_blank');
+  if(!w){toast('O navegador bloqueou a janela do relatório — libere pop-ups para este site','error');return;}
+  function td(x,al){return '<td'+(al?' style="text-align:right"':'')+'>'+x+'</td>';}
+  function linhaRes(nome,bm,bt,fd,m3,t,neg){
+    var p=bm?m3/bm*100:0;
+    return '<tr'+(neg?' class="tot"':'')+'>'+td(nome)+td(fNum(bm,3),1)+td(fNum(bt,3),1)+td(fd.toLocaleString('pt-BR'),1)+td(fNum(m3,3),1)+td(fNum(t,3),1)
+      +td(fNum(bm-m3,3),1)+td(fNum(bt-t,3),1)+td(p.toFixed(1)+'%',1)+'</tr>';
+  }
+  var res=D.rs.map(function(x){return linhaRes(esc(x.b.porto||'Qualquer porto'),+x.b.m3||0,+x.b.t||0,x.fd,x.m3,x.t);}).join('')
+    +(D.rs.length>1?linhaRes('Total',T.bm,T.bt,T.fd,T.m3,T.t,1):'');
+  var linhas=T.descargas.map(function(d){return '<tr>'+td(fmtIso(d.m.data))+td(esc(d.m.armazem))+td(esc(d.m.nf||'—'))+td(esc(d.m.marca))+td(esc(d.m.produto||(marcaInfo(d.m.marca)||{}).commodity||'—'))+td(esc(d.m.destino||'—'))
+    +td(Number(d.m.quantidade).toLocaleString('pt-BR'),1)+td(d.m3===null?'—':fNum(d.m3,3),1)+td(d.t===null?'—':fNum(d.t,3),1)+'</tr>';}).join('');
+  var html='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Booking '+esc(D.cli?D.cli.nome:'')+' — '+esc(navioNome(n))+'</title>'
+    +'<style>body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;font-size:13px;background:#fff;}h1{font-size:18px;margin:0;}h2{font-size:14px;margin:22px 0 8px;}'
+    +'.top{display:flex;align-items:center;gap:16px;border-bottom:2px solid #111;padding-bottom:12px;}.top img{width:90px;}.meta{color:#555;margin-top:4px;line-height:1.5;}'
+    +'table{width:100%;border-collapse:collapse;}th,td{border:1px solid #bbb;padding:6px 8px;}th{background:#eee;text-align:left;font-size:12px;}tr.tot td{font-weight:bold;background:#f5f5f5;}'
+    +'.bar{height:10px;background:#ddd;border-radius:5px;overflow:hidden;margin-top:6px;}.bar div{height:100%;background:#8B4513;}'
+    +'.acoes{margin:16px 0;}button{padding:8px 16px;font-size:14px;cursor:pointer;}@media print{.acoes{display:none;}body{margin:10mm;}}</style></head><body>'
+    +'<div class="acoes"><button onclick="window.print()">🖨 Imprimir / salvar PDF</button></div>'
+    +'<div class="top"><img src="'+LOGO_TICKET.src+'" alt="4SIDES"><div><h1>Posição de booking</h1><div class="meta"><strong>'+esc(D.cli?D.cli.nome:'')+'</strong><br>'
+    +'Navio: '+esc(navioNome(n))+' · Armador: '+esc(n.armador||'—')+'<br>Recebimento: '+fmtIso(n.receb_inicio)+' a '+(n.receb_fim?fmtIso(n.receb_fim):'em aberto')
+    +' · Posição em '+new Date().toLocaleString('pt-BR')+'</div></div></div>'
+    +'<h2>Booking × recebido por porto</h2><table><tr><th>Porto</th><th style="text-align:right">Booking m³</th><th style="text-align:right">Booking t</th><th style="text-align:right">Recebido fardos</th>'
+    +'<th style="text-align:right">Recebido m³</th><th style="text-align:right">Recebido t</th><th style="text-align:right">Falta m³</th><th style="text-align:right">Falta t</th><th style="text-align:right">%</th></tr>'+res+'</table>'
+    +'<div style="margin-top:8px;">'+pc.toFixed(1)+'% do booking recebido<div class="bar"><div style="width:'+Math.min(100,pc).toFixed(1)+'%"></div></div></div>'
+    +'<p style="color:#555;font-size:12px;">Valor negativo em "Falta" = recebido acima do booking.</p>'
+    +(T.semParam?'<p style="color:#B45309;">'+T.semParam+' fardo(s) de marca sem parâmetro cadastrado não entraram no m³/t.</p>':'')
+    +'<h2>Descargas no período</h2>'+(linhas?'<table><tr><th>Data</th><th>Armazém</th><th>NF</th><th>Marca</th><th>Produto</th><th>Destino</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th style="text-align:right">t</th></tr>'+linhas
+    +'<tr class="tot"><td colspan="6">Total</td><td style="text-align:right">'+T.fd.toLocaleString('pt-BR')+'</td><td style="text-align:right">'+fNum(T.m3,3)+'</td><td style="text-align:right">'+fNum(T.t,3)+'</td></tr></table>':'<p>Nenhuma descarga no período.</p>')
+    +'</body></html>';
+  w.document.open();w.document.write(html);w.document.close();
+}
+// e-mail com o resumo (o PDF do relatório vai anexado por quem envia)
+function bkEmail(id){
+  var D=bkDoCliente(id);if(!D||!D.cli||!D.cli.email)return;
+  var T=D.tot,n=D.navio;
+  function bloco(nome,bm,bt,fd,m3,t){
+    return nome+'\n  Booking: '+fNum(bm,3)+' m³ / '+fNum(bt,3)+' t\n  Recebido: '+fNum(m3,3)+' m³ / '+fNum(t,3)+' t ('+fd.toLocaleString('pt-BR')+' fardos)\n  '
+      +(bm-m3>=0?'Falta receber: ':'Recebido acima do booking: ')+fNum(Math.abs(bm-m3),3)+' m³ / '+fNum(Math.abs(bt-t),3)+' t\n';
+  }
+  var corpo='Prezados,\n\nSegue a posição do booking de '+D.cli.nome+' no navio '+navioNome(n)+' (armador '+(n.armador||'—')+'), em '+new Date().toLocaleDateString('pt-BR')+':\n\n'
+    +D.rs.map(function(x){return bloco('Porto: '+(x.b.porto||'qualquer'),+x.b.m3||0,+x.b.t||0,x.fd,x.m3,x.t);}).join('\n')
+    +(D.rs.length>1?'\n'+bloco('TOTAL',T.bm,T.bt,T.fd,T.m3,T.t):'')
+    +'\nO relatório com as descargas segue em anexo.\n\nAtenciosamente,\n'+(currentUser&&currentUser.nome||'')+'\n4SIDES Logística e Serviços';
+  var para=String(D.cli.email).split(/[;,\s]+/).filter(Boolean).join(',');
+  window.location.href='mailto:'+para+'?subject='+encodeURIComponent('Posição de booking — '+D.cli.nome+' — '+navioNome(n))+'&body='+encodeURIComponent(corpo);
+}
+// ── CLIENTES ──
+function estRenderClientes(){
+  if(est.semBookingSql){document.getElementById('cl-tb').innerHTML='<tr><td colspan="6" style="color:#B45309;padding:16px;">Rode o script woodport_booking.sql no Supabase para usar clientes e booking.</td></tr>';return;}
+  est.bk=bkCalcular();
+  var b=(document.getElementById('cl-busca').value||'').trim().toLowerCase();
+  var nb={};est.booking.forEach(function(x){nb[x.cliente_id]=(nb[x.cliente_id]||0)+1;});
+  var lin=est.clientes.filter(function(c){return !b||[c.nome,c.email].concat(c.apelidos||[],c.marcas||[]).join(' ').toLowerCase().indexOf(b)>=0;});
+  document.getElementById('cl-count').textContent=est.clientes.length+' cliente(s)';
+  function lista(a){a=a||[];return a.length?esc(a.slice(0,4).join(', '))+(a.length>4?' <span style="color:var(--ink4);">+'+(a.length-4)+'</span>':''):'<span style="color:var(--ink4);">—</span>';}
+  document.getElementById('cl-tb').innerHTML=lin.map(function(c){
+    return '<tr><td><strong>'+esc(c.nome)+'</strong>'+(c.ativo===false?' <span class="bge ntrl">inativo</span>':'')+'</td><td style="font-size:12px;">'+esc(c.email||'—')+'</td>'
+      +'<td style="font-size:12px;max-width:220px;">'+lista(c.apelidos)+'</td><td class="mono" style="font-size:12px;max-width:200px;">'+lista(c.marcas)+'</td>'
+      +'<td class="mono" style="text-align:right">'+(nb[c.id]||0)+'</td>'
+      +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="cliEditar(\''+c.id+'\')">✏</button>'
+      +(isAdmin()&&!nb[c.id]?' <button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_clientes\',\''+c.id+'\',function(){est.clientes=est.clientes.filter(function(x){return x.id!==\''+c.id+'\';});estRender();})">✕</button>':'')+'</td></tr>';
+  }).join('')||'<tr><td colspan="6" style="color:var(--ink3);text-align:center;padding:20px;">Nenhum cliente. Cadastre ao lado ou importe a previsão do armador na aba Booking.</td></tr>';
+  var sc=est.bk.semCliente,opts='<option value="">— cliente —</option>'+est.clientes.map(function(c){return '<option value="'+c.id+'">'+esc(c.nome)+'</option>';}).join('');
+  est.semCliList=sc;
+  document.getElementById('sc-count').textContent=sc.length?sc.length+' produtor(es)':'';
+  document.getElementById('sc-tb').innerHTML=sc.slice(0,300).map(function(s,i){
+    return '<tr><td><strong>'+esc(s.produtor)+'</strong></td><td class="mono" style="text-align:right">'+s.n+'</td><td class="mono" style="text-align:right">'+s.fd.toLocaleString('pt-BR')+'</td><td>'+fmtIso(s.ultima)+'</td>'
+      +'<td style="white-space:nowrap;"><select id="sc-sel-'+i+'" style="width:auto;max-width:200px;" aria-label="Cliente para '+esc(s.produtor)+'">'+opts+'</select> <button class="btn bs bsm" onclick="cliVincular('+i+')">Vincular</button></td></tr>';
+  }).join('')||'<tr><td colspan="5" style="color:var(--ink3);text-align:center;padding:16px;">Todas as descargas têm cliente.</td></tr>';
+}
+function cliLimparForm(){
+  ['cl-id','cl-nome','cl-email','cl-apelidos','cl-marcas'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('cl-titulo').textContent='Novo cliente';
+}
+function cliEditar(id){
+  var c=clienteDe(id);if(!c)return;
+  document.getElementById('cl-id').value=c.id;document.getElementById('cl-nome').value=c.nome;document.getElementById('cl-email').value=c.email||'';
+  document.getElementById('cl-apelidos').value=(c.apelidos||[]).join('\n');document.getElementById('cl-marcas').value=(c.marcas||[]).join('\n');
+  document.getElementById('cl-titulo').textContent='Editar cliente '+c.nome;
+  document.getElementById('cl-nome').scrollIntoView({block:'center'});
+}
+function salvarCliente(){
+  var id=document.getElementById('cl-id').value;
+  var reg={nome:v('cl-nome'),email:v('cl-email'),apelidos:linhasTexto('cl-apelidos'),marcas:linhasTexto('cl-marcas').map(function(m){return m.toUpperCase();}),updated_at:new Date().toISOString()};
+  if(!reg.nome){toast('Informe o nome do cliente','error');return;}
+  if(est.clientes.some(function(c){return c.id!==id&&nmCli(c.nome)===nmCli(reg.nome);})){toast('Já existe um cliente com esse nome','error');return;}
+  var conflito=[];
+  est.clientes.forEach(function(c){
+    if(c.id===id)return;
+    (c.marcas||[]).forEach(function(m){if(reg.marcas.some(function(x){return nmMarca(x)===nmMarca(m);}))conflito.push('marca '+m+' (de '+c.nome+')');});
+    [c.nome].concat(c.apelidos||[]).forEach(function(n){if(reg.apelidos.some(function(x){return nmCli(x)===nmCli(n);}))conflito.push('nome "'+n+'" (de '+c.nome+')');});
+  });
+  if(conflito.length&&!confirm('Já está em outro cliente:\n• '+conflito.slice(0,8).join('\n• ')+'\n\nO último salvo passa a valer. Continuar?'))return;
+  showLd(true);
+  (id?sb.from('wp_clientes').update(reg).eq('id',id):sb.from('wp_clientes').insert(reg)).select('*').single().then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    est.clientes=est.clientes.filter(function(x){return x.id!==r.data.id;}).concat([r.data]).sort(function(a,b){return a.nome.localeCompare(b.nome);});
+    toast('Cliente '+reg.nome+' salvo','success');cliLimparForm();estRender();
+  });
+}
+function cliVincular(i){
+  var s=(est.semCliList||[])[i],cid=(document.getElementById('sc-sel-'+i)||{}).value;
+  if(!s||!cid){toast('Escolha o cliente','error');return;}
+  var c=clienteDe(cid);if(!c)return;
+  var ap=(c.apelidos||[]).concat([s.produtor]);
+  showLd(true);
+  sb.from('wp_clientes').update({apelidos:ap,updated_at:new Date().toISOString()}).eq('id',cid).select('*').single().then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    Object.assign(c,r.data);
+    toast(s.produtor+' vinculado a '+c.nome,'success');estRender();
   });
 }
 
@@ -6966,6 +7554,7 @@ function saveEdit(){
     var key=el.id.replace('ef-','');
     payload[key]=el.value.trim()||null;
   });
+  if(_editState.table==='wp_impressoras'){var eIp=erroIpImpressora(payload.ip);if(eIp){toast(eIp,'error');return;}}
   showLd(true);
   sb.from(_editState.table).update(payload).eq('id',_editState.id).then(function(r){
     showLd(false);
@@ -7511,7 +8100,7 @@ function canDelete(table, row){
   if(!currentUser)return false;
   var p=currentUser.perfil;
   if(p==='admin')return true;
-  if(table==='wp_estoque_mov')return temModulo('estoque');
+  if(table==='wp_estoque_mov'||table==='wp_booking')return temModulo('estoque');
   // lista de carga: quem tem o módulo de edição exclui lotes do próprio armazém (mesma regra do banco)
   if(table==='wp_lista_carga'){
     if(!temModulo('lista_editar'))return false;
@@ -7561,6 +8150,35 @@ function confirmDel(table,id,cb){
     });
   };
   document.getElementById('del-modal').style.display='flex';
+}
+</script>
+<script>
+// ── App no celular (PWA) ─────────────────────────────────────────────
+var _pedidoInstalar=null;
+function appInstalado(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
+function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('sw.js:',e);});});
+}
+window.addEventListener('beforeinstallprompt',function(e){ // Android / Chrome / Edge
+  e.preventDefault();_pedidoInstalar=e;
+  if(!appInstalado())document.getElementById('app-instalar').style.display='block';
+});
+window.addEventListener('appinstalled',function(){_pedidoInstalar=null;document.getElementById('app-instalar').style.display='none';toast('WoodPort instalado — abra pelo ícone na tela inicial','success');});
+if(ehIOS()&&!appInstalado())document.getElementById('app-instalar').style.display='block'; // iPhone não tem botão automático
+function instalarApp(){
+  if(_pedidoInstalar){
+    _pedidoInstalar.prompt();
+    _pedidoInstalar.userChoice.then(function(){_pedidoInstalar=null;});
+    return;
+  }
+  var box=document.getElementById('app-ios');
+  box.innerHTML=ehIOS()
+    ?(/crios|fxios|edgios/i.test(navigator.userAgent)
+      ?'No iPhone, abra este endereço no <b>Safari</b> e siga os passos abaixo.<br>'
+      :'')+'1. Toque em <b>Compartilhar</b> (o quadrado com a seta ↑) na barra do Safari.<br>2. Role e toque em <b>Adicionar à Tela de Início</b>.<br>3. Toque em <b>Adicionar</b>. O ícone do WoodPort aparece junto dos outros apps.'
+    :'No menu do navegador (⋮), toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.';
+  box.style.display='block';
 }
 </script>
 </body>
