@@ -1263,7 +1263,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
               <button class="btn bs bsm" onclick="estExportSaldo()">⬇ Excel</button>
             </div>
           </div>
-          <div class="tw"><table><thead><tr><th>Armazém</th><th>Marca</th><th>Produtor(es) em estoque</th><th style="text-align:right">Entradas</th><th style="text-align:right">Saídas</th><th style="text-align:right">Saldo (fd)</th><th style="text-align:right">m³</th><th style="text-align:right">t</th><th>Entrada mais antiga</th></tr></thead><tbody id="es-tb"></tbody></table></div>
+          <div class="tw"><table><thead><tr><th>Armazém</th><th>Marca</th><th>Produtor(es) em estoque</th><th style="text-align:right">Entradas</th><th style="text-align:right">Saídas</th><th style="text-align:right">Saldo (fds)</th><th style="text-align:right">m³</th><th style="text-align:right">t</th><th>Entrada mais antiga</th></tr></thead><tbody id="es-tb"></tbody></table></div>
           <div id="es-empty" class="empty" style="display:none;"><p>Nada em estoque. Lance as descargas ou importe o inventário de abertura.</p></div>
         </div>
       </div>
@@ -1498,7 +1498,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
             </div>
           </div>
           <div id="iv-aviso"></div>
-          <div class="tw"><table><thead><tr><th>Marca</th><th>Produtor(es)</th><th style="text-align:right">Sistema (fd)</th><th style="width:130px;">Contado</th><th style="text-align:right">Diferença</th></tr></thead><tbody id="iv-tb"></tbody></table></div>
+          <div class="tw"><table><thead><tr><th>Marca</th><th>Produtor(es)</th><th style="text-align:right">Sistema (fds)</th><th style="width:130px;">Contado</th><th style="text-align:right">Diferença</th></tr></thead><tbody id="iv-tb"></tbody></table></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;">
             <span id="iv-resumo" style="font-size:13px;color:var(--ink3);align-self:center;"></span>
             <button class="btn bp" onclick="lancarAjustesInventario()">Lançar ajustes</button>
@@ -3011,7 +3011,7 @@ function preencherBlk(blk,l){
     var saldo=Math.max(0,total-used);
     var pct=total>0?Math.round(used/total*100):0;
     setField(blk,'.lt-qtd-max',saldo);
-    setField(blk,'.lt-saldo-lbl',saldo+' pçs disponíveis ('+used+' usadas de '+total+')');
+    setField(blk,'.lt-saldo-lbl',saldo+' fds disponíveis ('+used+' usados de '+total+')');
     var bar=blk.querySelector('.lt-prog');
     if(bar){
       bar.style.width=Math.min(pct,100)+'%';
@@ -3271,7 +3271,7 @@ function showTicketPrint(tk,lotes){
     linhasLotes+='<div class="tsec">Lote '+(i+1)+(l.lote?' · '+esc(l.lote):'')+'</div>'
       +g2( fi('Ref',l.ref||'—'), fi('Marca',l.marca||'—') )
       +g2( fi('Shipper',l.shipper||'—',true), fi('DUE/RUC',l.due||'—') )
-      +g3( fi('NF',l.nf||'—'), fi('Qtde',(l.quantidade||0)+' pçs'), fi('CBM',fNum(l.cbm_calculado,3)+'m³') );
+      +g3( fi('NF',l.nf||'—'), fi('Qtde',(l.quantidade||0)+' fds'), fi('CBM',fNum(l.cbm_calculado,3)+'m³') );
   });
 
   var html=''
@@ -3291,7 +3291,7 @@ function showTicketPrint(tk,lotes){
     +linhasLotes
     +'<div class="ts"></div>'
     +'<div class="tot">'
-      +'<div class="tc"><span class="lb">Qtde</span><span class="vl">'+totQtd+' pçs</span></div>'
+      +'<div class="tc"><span class="lb">Qtde</span><span class="vl">'+totQtd+' fds</span></div>'
       +'<div class="tc"><span class="lb">CBM</span><span class="vl">'+fNum(totCBM,3)+'m³</span></div>'
       +'<div class="tc"><span class="lb">Peso</span><span class="vl">'+fNum(totPeso,2)+'kg</span></div>'
     +'</div>'
@@ -4623,7 +4623,7 @@ function renderValResult(tk){
     return '<div style="background:var(--s3);border-radius:var(--rsm);padding:8px 10px;margin-top:6px;font-size:12px;">'
       +'<strong>Ref '+esc(l.ref||'—')+' — '+esc(l.lote)+'</strong>'+(l.marca?' | '+esc(l.marca):'')
       +'<div style="color:var(--ink4);margin-top:3px;">'+esc(l.porto_descarga||'')+(l.armazem?' · '+esc(l.armazem):'')
-        +' · '+l.quantidade+' pçs · '+fNum(l.cbm_calculado,3)+' m³'+'</div>'
+        +' · '+l.quantidade+' fds · '+fNum(l.cbm_calculado,3)+' m³'+'</div>'
       +'</div>';
   }).join('');
   document.getElementById('val-card').innerHTML='<div style="background:var(--s2);border:1px solid var(--bds);border-radius:var(--rmd);padding:14px;">'
@@ -4952,7 +4952,7 @@ function loadDash(){
       prgHtml+='<div style="margin-bottom:12px;">'
         +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">'
           +'<strong>'+esc(p)+'</strong>'
-          +'<span style="color:var(--ink4);">'+done+' / '+tot+' pçs ('+pct+'%)</span>'
+          +'<span style="color:var(--ink4);">'+done+' / '+tot+' fds ('+pct+'%)</span>'
         +'</div>'
         +'<div class="pw"><div class="pb '+cl+'" style="width:'+pct+'%"></div></div>'
         +'</div>';
@@ -5263,7 +5263,7 @@ function svgNavio(o){
       if(t>c){s.push('<rect x="'+cx+'" y="'+cy+'" width="'+cwi+'" height="'+chi+'" rx="2" fill="url(#pl-hach)"/>');continue;}
       var ps=o.cel(p,t)||[],e=o.emb&&o.emb[p+'|'+t];
       var tit=p+' T'+t+': '+(ps.length?ps.join(', '):'sem porto no plano')
-        +(e?' · embarcado '+fNum(e.cbm,2)+' m³, '+e.qtd+' fd, '+e.tk+' ticket(s) — '+Object.keys(e.portos).join(', '):'');
+        +(e?' · embarcado '+fNum(e.cbm,2)+' m³, '+e.qtd+' fds, '+e.tk+' ticket(s) — '+Object.keys(e.portos).join(', '):'');
       s.push('<g'+(o.clique?' style="cursor:pointer" onclick="'+o.clique+'(\''+esc(p)+'\','+t+')"':'')+'><title>'+esc(tit)+'</title>');
       if(ps.length){
         var sg=cwi/ps.length;
@@ -5351,7 +5351,7 @@ function renderDesenho(){
     cel:celPlano,cor:cor,modo:_dn.modo,emb:emb2?emb:null,temPlano:!!pl,totais:emb2?tot:null,
     legenda:portos.map(function(p){
       var e=porPorto[Object.keys(porPorto).find(function(x){return normAz(x)===normAz(p);})];
-      return {cor:cor(p),txt:p+(emb2?' — '+(e?fNum(e.cbm,1)+' m³ · '+e.qtd+' fd · '+fNum(e.kg/1000,1)+' t':'nada embarcado'):'')};
+      return {cor:cor(p),txt:p+(emb2?' — '+(e?fNum(e.cbm,1)+' m³ · '+e.qtd+' fds · '+fNum(e.kg/1000,1)+' t':'nada embarcado'):'')};
     })
   });
   var msgs=[];
@@ -5608,14 +5608,14 @@ function canvasTicket(tk,lotes,opt){
     y+=tkp(10)*1.2+tkp(1);barra(X0,y,W,3);y+=3+tkp(3.8);
     grade([['Ref',l.ref||'—'],['Marca',l.marca||'—']],tkp(5.7));
     grade([['Shipper',l.shipper||'—',true],['DUE/RUC',l.due||'—']],tkp(5.7));
-    grade([['NF',l.nf||'—'],['Qtde',(l.quantidade||0)+' pçs'],['CBM',fNum(l.cbm_calculado,3)+'m³']],tkp(3.8));
+    grade([['NF',l.nf||'—'],['Qtde',(l.quantidade||0)+' fds'],['CBM',fNum(l.cbm_calculado,3)+'m³']],tkp(3.8));
   });
   separador();
   // caixa de totais
   var cw=W/3,ht=tkp(9)*1.2+tkp(13)*1.25+tkp(7.5);
   barra(X0,y,W,4);barra(X0,y+ht-4,W,4);barra(X0,y,4,ht);barra(X0+W-4,y,4,ht);
   barra(X0+cw,y,2,ht);barra(X0+2*cw,y,2,ht);
-  [['Qtde',totQ+' pçs'],['CBM',fNum(totC,3)+'m³'],['Peso',fNum(totP,2)+'kg']].forEach(function(t,i){
+  [['Qtde',totQ+' fds'],['CBM',fNum(totC,3)+'m³'],['Peso',fNum(totP,2)+'kg']].forEach(function(t,i){
     var x=X0+i*cw;
     fonte(9,'bold');escreve(t[0].toUpperCase(),x,y+tkp(3.8),cw,'center');
     fonte(13,'900');escreve(t[1],x,y+tkp(3.8)+tkp(9)*1.2,cw,'center');
@@ -6144,7 +6144,7 @@ function estCalcular(ateIso){
       if(q>0)gr.deficit+=q;
     });
     gr.saldo=gr.ent.reduce(function(a,e){return a+e.resto;},0);
-    if(gr.deficit>0)avisos.semEstoque.push(gr.az+' · '+gr.marca+': '+gr.deficit+' fd');
+    if(gr.deficit>0)avisos.semEstoque.push(gr.az+' · '+gr.marca+': '+gr.deficit+' fds');
   });
   est.corte=corte;
   return {G:G,avisos:avisos};
@@ -6235,7 +6235,7 @@ function estRenderSaldo(){
 function estExportSaldo(){
   var rows=gruposFiltrados().filter(function(g){return g.saldo>0||g.deficit;}).map(function(g){
     var mi=marcaInfo(g.marca);
-    return {'Armazém':g.az,'Marca':g.marca,'Produtores':produtoresEmEstoque(g).join(', '),'Entradas':g.totEnt,'Saídas':g.totSai,'Saldo (fd)':g.saldo,
+    return {'Armazém':g.az,'Marca':g.marca,'Produtores':produtoresEmEstoque(g).join(', '),'Entradas':g.totEnt,'Saídas':g.totSai,'Saldo (fds)':g.saldo,
       'm³':mi?+(g.saldo*mi.cbm).toFixed(3):'','t':mi?+(g.saldo*mi.peso_t).toFixed(3):'','Embarcado sem entrada':g.deficit||''};
   });
   xlsxBaixar(rows,'Saldo','estoque_saldo_'+armadorAtual.replace(/\s+/g,'_')+'_'+localISODate()+'.xlsx');
@@ -6315,7 +6315,7 @@ function lancarDescarga(){
     showLd(false);
     if(r.error)throw r.error;
     est.movs.push(r.data);
-    toast('Descarga lançada: '+reg.quantidade+' fd '+reg.marca+(novaMarca?' · marca nova cadastrada':''),'success');
+    toast('Descarga lançada: '+reg.quantidade+' fds '+reg.marca+(novaMarca?' · marca nova cadastrada':''),'success');
     ['ed-nf','ed-marca','ed-qtd','ed-obs','ed-produto','ed-cbmtot','ed-pesotot'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('ed-produto').readOnly=false;
     document.getElementById('ed-nova').style.display='none';
@@ -6704,7 +6704,7 @@ function estRenderBooking(){
     var cor=pc>100?'#B45309':pc>=95?'#1e7e34':'var(--acc,#8B4513)';
     var cli=r.cli||{nome:'(cliente excluído)'};
     return '<tr><td><strong>'+esc(cli.nome)+'</strong>'+(r.b.obs?'<div style="font-size:11px;color:var(--ink4);">'+esc(r.b.obs)+'</div>':'')
-      +(r.semParam?' <span class="bge warn" title="Marca sem parâmetro: fardos sem m³/t">'+r.semParam+' fd sem m³</span>':'')+'</td>'
+      +(r.semParam?' <span class="bge warn" title="Marca sem parâmetro: fardos sem m³/t">'+r.semParam+' fds sem m³</span>':'')+'</td>'
       +'<td>'+(r.b.porto?esc(r.b.porto):'<span style="color:var(--ink4);">qualquer</span>')+'</td>'
       +'<td class="mono" style="text-align:right">'+fNum(bm,3)+'</td><td class="mono" style="text-align:right">'+fNum(bt,3)+'</td>'
       +'<td class="mono" style="text-align:right">'+r.fd.toLocaleString('pt-BR')+'</td>'
@@ -6732,7 +6732,7 @@ function estRenderBooking(){
   document.getElementById('dl-bk-portos').innerHTML=bkPortosNavio(nav).map(function(p){return '<option value="'+esc(p)+'">';}).join('');
   var spN=est.bk.semPorto.filter(function(x){return x.navio_id===est.bkNavio;});
   if(spN.length)av.innerHTML+='<div class="imp-st err" style="margin-bottom:12px;">⚠<div><strong>Descargas sem booking para o destino</strong> (não abatem nenhum booking deste navio): '
-    +esc(spN.slice(0,8).map(function(x){return x.cli.nome+' → '+(x.destino||'sem destino')+' ('+x.fd+' fd)';}).join(' · '))+(spN.length>8?' …':'')+'</div></div>';
+    +esc(spN.slice(0,8).map(function(x){return x.cli.nome+' → '+(x.destino||'sem destino')+' ('+x.fd+' fds)';}).join(' · '))+(spN.length>8?' …':'')+'</div></div>';
   if(nav&&!nav.receb_inicio&&lin.length)av.innerHTML+='<div class="imp-st err" style="margin-bottom:12px;">⚠<div>Defina o <strong>período de recebimento</strong> deste navio — sem ele nenhuma descarga abate o booking.</div></div>';
 }
 function bkLimparForm(){
@@ -7061,7 +7061,7 @@ function ivDif(inp){
 function ivResumo(){
   var n=0,s=0;
   document.querySelectorAll('.iv-cont').forEach(function(i){if(i.value!==''){var d=(parseInt(i.value)||0)-(+i.dataset.sis);if(d){n++;s+=d;}}});
-  document.getElementById('iv-resumo').textContent=n?n+' marca(s) com diferença · saldo do ajuste '+(s>0?'+':'')+s+' fd':'';
+  document.getElementById('iv-resumo').textContent=n?n+' marca(s) com diferença · saldo do ajuste '+(s>0?'+':'')+s+' fds':'';
 }
 function lancarAjustesInventario(){
   var az=document.getElementById('est-az').value,data=document.getElementById('iv-data').value;
@@ -7089,7 +7089,7 @@ function estExportInventario(){
   var az=document.getElementById('est-az').value;
   if(!az){toast('Escolha um armazém no topo','error');return;}
   xlsxBaixar(gruposFiltrados().filter(function(g){return g.saldo>0;}).sort(function(a,b){return a.marca.localeCompare(b.marca);}).map(function(g){
-    return {'Marca':g.marca,'Sistema (fd)':g.saldo,'Contado':'','Diferença':''};
+    return {'Marca':g.marca,'Sistema (fds)':g.saldo,'Contado':'','Diferença':''};
   }),'Contagem','contagem_'+az+'_'+localISODate()+'.xlsx');
 }
 
