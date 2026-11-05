@@ -443,6 +443,9 @@ tbody tr:hover{background:#FAFBF9;}
 .pl-porto.on{border-color:var(--ink);background:#fff;box-shadow:0 0 0 3px rgba(23,32,27,.1);}
 .pl-porto .x{font-style:normal;color:var(--ink4);margin-left:2px;font-weight:400;}
 .pl-grid{border-collapse:separate;border-spacing:4px;min-width:0;}
+.dn-tab th{text-align:center;font-size:11.5px;}
+.dn-tab td{font-size:13px;}
+.dn-tab thead tr:first-child th{border-bottom:1px solid var(--bds);}
 .pl-grid th{background:none;padding:2px 4px;font-size:11px;text-align:center;}
 .pl-grid td{padding:0;}
 .pl-cel{width:46px;height:46px;border-radius:8px;border:1px solid var(--bdr);background:#fff;cursor:pointer;display:flex;flex-direction:column;overflow:hidden;padding:0;}
@@ -633,6 +636,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div style="display:flex;gap:2px;margin-bottom:14px;border-bottom:1px solid var(--bds);">
         <button class="rl-tab on" id="rlt-analitico" onclick="switchRlTab('analitico')" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid var(--w500);color:var(--ink1);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">📊 Analítico</button>
         <button class="rl-tab" id="rlt-hatchlist" onclick="switchRlTab('hatchlist')" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink4);font-family:inherit;font-size:13px;cursor:pointer;">📋 Hatch List</button>
+        <button class="rl-tab" id="rlt-desenho" onclick="switchRlTab('desenho')" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink4);font-family:inherit;font-size:13px;cursor:pointer;">🚢 Desenho do navio</button>
       </div>
 
       <!-- ─── ABA ANALÍTICO ─── -->
@@ -739,6 +743,27 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         </div>
         <div id="hl-empty" class="empty-state" style="display:none;">Nenhum dado encontrado. Certifique-se de ter embarques validados para o navio selecionado.</div>
       </div><!-- /rl-hatchlist -->
+
+      <!-- ─── ABA DESENHO DO NAVIO ─── -->
+      <div id="rl-desenho" style="display:none;">
+        <div class="card">
+          <div class="ch"><span class="ct">Desenho do navio</span><span class="cs">Plano de estiva × embarcado, por porão e camada</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+            <div id="dn-modo" style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button type="button" class="chip on" data-m="embarque" onclick="dnModo(this)">Embarcado sobre o plano</button>
+              <button type="button" class="chip" data-m="plano" onclick="dnModo(this)">Só o plano</button>
+            </div>
+            <span style="flex:1;"></span>
+            <button class="btn bs bsm" onclick="carregarDesenho()">↻ Atualizar</button>
+            <button class="btn bs bsm" onclick="baixarDesenhoPng()">⬇ Imagem (PNG)</button>
+            <button class="btn bs bsm" onclick="imprimirDesenho()">🖨 Imprimir</button>
+          </div>
+          <div id="dn-aviso"></div>
+          <div id="dn-svg" style="overflow-x:auto;"></div>
+          <div id="dn-tabela" style="margin-top:14px;"></div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:8px;">Cores claras = planejado · cor forte com número = m³ embarcado (tickets validados) · contorno vermelho = porto fora do plano · listrado = camada que o porão não tem. Passe o dedo/mouse numa camada para ver o detalhe.</div>
+        </div>
+      </div><!-- /rl-desenho -->
 
     </div>
 
@@ -1114,6 +1139,12 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
               </select>
               <span style="font-size:12px;color:var(--ink3);">Pré-selecionado pelo horário de emissão — altere se necessário</span>
             </div>
+            <div class="fg" id="val-terno-wrap" style="margin-top:12px;">
+              <label class="fl">Terno <span class="req">*</span></label>
+              <div class="seg dark cols4" id="val-terno-btns" role="group" aria-label="Terno"></div>
+              <input type="hidden" id="val-terno" value="">
+              <span style="font-size:12px;color:var(--ink3);">Escolha um. Este aparelho lembra o último terno usado</span>
+            </div>
             <div id="val-actions" style="margin-top:14px;display:flex;gap:10px;"></div>
           </div>
         </div>
@@ -1132,11 +1163,11 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
           </div>
           <div class="tw"><table id="val-report-table"><thead><tr>
             <th style="width:30px;"><input type="checkbox" id="val-chk-all" onchange="toggleAllValidados(this)" style="width:auto;cursor:pointer;"></th>
-            <th>Ticket</th><th>Navio</th><th>Viagem</th><th>Porão</th><th>Tier</th>
+            <th>Ticket</th><th>Navio</th><th>Viagem</th><th>Porão</th><th>Terno</th><th>Tier</th>
             <th>Ref</th><th>Lote</th><th>Marca</th><th>Shipper</th><th>Porto Descarga</th>
             <th>Commodity</th><th>Armazém</th><th>DUE</th><th>NF</th>
             <th>Qtde</th><th>CBM</th><th>Peso (kg)</th>
-            <th>Placa</th><th>Motorista</th><th>Conferente</th><th>Período</th><th>Validado em</th><th></th>
+            <th>Placa</th><th>Motorista</th><th>Conferente</th><th>Período</th><th>Validado em</th><th>Validado por</th><th></th>
           </tr></thead><tbody id="val-tb"></tbody></table></div>
           <div id="val-empty" class="empty" style="display:none;"><div class="ei">✅</div><h3>Nenhum embarque validado</h3></div>
         </div>
@@ -1710,6 +1741,10 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         <div class="fl" style="margin-bottom:6px;">2. Camadas de cada porão — toque para marcar/desmarcar o porto escolhido (uma camada pode ter mais de um porto)</div>
         <div class="tw" style="border:1px solid var(--bds);border-radius:12px;padding:6px;"><table class="pl-grid" id="pl-grid"></table></div>
         <div style="font-size:12px;color:var(--ink3);margin-top:6px;">Camada listrada = sem porto: não aparece na emissão.</div>
+      </div>
+      <div>
+        <div class="fl" style="margin-bottom:6px;">Desenho do navio — também dá para tocar nas camadas aqui</div>
+        <div id="pl-desenho" style="border:1px solid var(--bds);border-radius:12px;padding:8px;overflow-x:auto;"></div>
       </div>
       <div class="pl-resumo" id="pl-resumo"></div>
     </div>
@@ -2351,7 +2386,7 @@ function loadNavios(){
         +'<button class="btn bs bsm" onclick="abrirPlano(\''+n.id+'\')">Plano de estiva</button>'
         +'<button class="btn bs bsm" onclick="editNavio(\''+n.id+'\')" aria-label="Editar navio">✏</button>'
         +(canDelete('wp_navios',{})
-          ?'<button class="btn bd bsm" onclick="confirmDel(\'wp_navios\',\''+n.id+'\',loadNavios)">✕</button>':'')
+          ?'<button class="btn bd bsm" onclick="excluirNavio(\''+n.id+'\')" aria-label="Excluir navio">✕</button>':'')
         +'</td></tr>';
     }).join('');
   });
@@ -3461,7 +3496,7 @@ function loadRelatorios(){
     };
   }
 
-  supaAll(montar(TK_COLS+',periodo')).then(function(r){
+  supaAll(montar(TK_COLS+',periodo,terno,validado_por_nome')).then(function(r){
     showLd(false);
     if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
       // fallback sem periodo
@@ -3998,6 +4033,7 @@ async function fazerRestore(){
 function switchRlTab(tab){
   document.getElementById('rl-analitico').style.display = tab==='analitico'?'':'none';
   document.getElementById('rl-hatchlist').style.display = tab==='hatchlist' ?'':'none';
+  document.getElementById('rl-desenho').style.display = tab==='desenho' ?'':'none';
   document.querySelectorAll('.rl-tab').forEach(function(b){
     var on=b.id==='rlt-'+tab;
     b.style.borderBottom=on?'2px solid var(--w500)':'2px solid transparent';
@@ -4005,6 +4041,7 @@ function switchRlTab(tab){
     b.style.fontWeight=on?'600':'400';
   });
   if(tab==='hatchlist')initHatchListForm();
+  if(tab==='desenho')carregarDesenho();
 }
 
 // ══════════════════════════════════════════════════
@@ -4032,7 +4069,7 @@ function gerarHatchList(){
   var nid=navioAtivo.id;
   Promise.all([
     supaAll(function(){
-      var q=qAz(sb.from('wp_tickets').select(TK_COLS+',periodo').eq('navio_id',nid).eq('status','validado'),'armazem');
+      var q=qAz(sb.from('wp_tickets').select(TK_COLS+',periodo,terno,validado_por_nome').eq('navio_id',nid).eq('status','validado'),'armazem');
       if(poroesSel.length)q=q.in('porao',poroesSel);
       return q.order('porao').order('tier').order('created_at').order('id');
     }),
@@ -4533,7 +4570,7 @@ function buscarTicketVal(){
   showLd(true);
   // Tenta buscar primeiro com periodo; se falhar, tenta sem
   function fetchComPeriodo(field,val,cb){
-    qAz(sb.from('wp_tickets').select(TK_COLS+',periodo').eq(field,val),'armazem').limit(1).then(function(r){
+    qAz(sb.from('wp_tickets').select(TK_COLS+',periodo,terno,validado_por_nome').eq(field,val),'armazem').limit(1).then(function(r){
       if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
         // coluna periodo não existe no banco ainda — busca sem ela
         qAz(sb.from('wp_tickets').select(TK_COLS).eq(field,val),'armazem').limit(1).then(function(r2){
@@ -4604,19 +4641,24 @@ function renderValResult(tk){
     +(tk.porao?'<div><span style="color:var(--ink4);">Porão · tier:</span><br><strong class="val-grande">'+esc(tk.porao)+(tk.tier?' · T'+tk.tier:'')+'</strong></div>':'')
     +'</div>'
     +lotesHtml
-    +(isVal?'<div style="margin-top:8px;font-size:12px;color:var(--ink4);">Validado em: '+new Date(tk.validado_em).toLocaleString('pt-BR')+(tk.periodo?' · Período: <strong>'+tk.periodo+'</strong>':'')+'</div>':'')
+    +(isVal?'<div style="margin-top:8px;font-size:12px;color:var(--ink4);">Validado em: '+new Date(tk.validado_em).toLocaleString('pt-BR')+(tk.periodo?' · Período: <strong>'+tk.periodo+'</strong>':'')+(tk.terno?' · Terno: <strong>'+esc(tk.terno)+'</strong>':'')+(tk.validado_por_nome?' · por '+esc(tk.validado_por_nome):'')+'</div>':'')
     +'</div>';
 
   // seletor de período: se já validado mostra o salvo; senão calcula pelo horário de emissão
   var periodoWrap=document.getElementById('val-periodo-wrap');
   var periodoSel=document.getElementById('val-periodo');
+  var ternoWrap=document.getElementById('val-terno-wrap');
   if(isVal||isCanc){
-    periodoWrap.style.display='none';
+    periodoWrap.style.display='none';ternoWrap.style.display='none';
   } else {
     periodoWrap.style.display='';
     var p=tk.periodo||calcPeriodo(tk.created_at);
     periodoSel.value=p;
     renderPeriodoBtns();
+    ternoWrap.style.display='';
+    var tn=tk.terno||lsGet('wp_terno')||'';
+    document.getElementById('val-terno').value=TERNOS.indexOf(tn)>=0?tn:'';
+    renderTernoBtns();
   }
 
   var actions=document.getElementById('val-actions');
@@ -4640,11 +4682,15 @@ function renderValResult(tk){
 function validarTicket(id){
   var periodo=document.getElementById('val-periodo').value;
   if(!periodo){toast('Selecione o período de embarque','error');return;}
+  var terno=document.getElementById('val-terno').value;
+  if(TERNOS.indexOf(terno)<0){toast('Selecione o terno (01, 02, 03 ou 04)','error');return;}
+  lsSet('wp_terno',terno);
   showLd(true);
   // Tenta update com periodo; se a coluna não existir, faz sem ela
   // .eq('status','emitido'): se outro conferente validou antes, não sobrescreve data/período
-  sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString(),periodo:periodo}).eq('id',id).eq('status','emitido').select('id').then(function(r){
+  sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString(),periodo:periodo,terno:terno}).eq('id',id).eq('status','emitido').select('id').then(function(r){
     showLd(false);
+    if(r.error&&/terno/.test(r.error.message)){toast('Rode o woodport_terno.sql no Supabase para gravar o terno — o ticket NÃO foi validado','error');return;}
     if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
       // coluna periodo não existe — valida sem ela e avisa para rodar o SQL
       sb.from('wp_tickets').update({status:'validado',validado_em:new Date().toISOString()}).eq('id',id).then(function(r2){
@@ -4658,7 +4704,7 @@ function validarTicket(id){
     }
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
     if(!r.data||!r.data.length){toast('Este ticket já havia sido validado por outra pessoa.','error');buscarTicketVal();return;}
-    toast('Embarque validado! Período: '+periodo,'success');
+    toast('Embarque validado! Período: '+periodo+' · Terno '+terno,'success');
     document.getElementById('val-result').style.display='none';
     document.getElementById('val-code').value='';
     loadValidados();if(typeof loadTickets==='function')loadTickets();
@@ -4673,7 +4719,7 @@ function loadValidados(){
         .order('validado_em',{ascending:false}).order('id');
     };
   }
-  supaAll(montar(TK_COLS+',periodo')).then(function(r){
+  supaAll(montar(TK_COLS+',periodo,terno,validado_por_nome')).then(function(r){
       if(!navioAtivo||navioAtivo.id!==nid)return;
       // Se der erro de schema cache no periodo, tenta sem ele
       if(r.error&&(r.error.message.includes('periodo')||r.error.code==='42703')){
@@ -4699,10 +4745,10 @@ function renderValidados(list){
             +'<td><input type="checkbox" class="val-row-chk" data-id="'+t.id+'" onchange="updateValBatchBar()" style="width:auto;cursor:pointer;"></td>'
             +'<td><strong>'+esc(t.numero)+'</strong></td>'
             +'<td>'+esc(nomeNavio)+'</td><td>'+esc(t.viagem||'—')+'</td>'
-            +'<td>'+esc(t.porao||'—')+'</td><td>'+esc(t.tier||'—')+'</td>'
+            +'<td>'+esc(t.porao||'—')+'</td><td>'+esc(t.terno||'—')+'</td><td>'+esc(t.tier||'—')+'</td>'
             +'<td colspan="9" style="color:var(--ink4);">—</td>'
             +'<td>0</td><td>0,000</td><td>0,000</td>'
-            +'<td>'+esc(t.placa)+'</td><td>'+esc(t.motorista)+'</td><td>'+esc(conf)+'</td><td>'+esc(t.periodo||'—')+'</td><td>'+valEm+'</td>'
+            +'<td>'+esc(t.placa)+'</td><td>'+esc(t.motorista)+'</td><td>'+esc(conf)+'</td><td>'+esc(t.periodo||'—')+'</td><td>'+valEm+'</td><td>'+esc(t.validado_por_nome||'—')+'</td>'
             +'<td><button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')">✏</button></td>'
             +'</tr>';
         } else {
@@ -4713,7 +4759,7 @@ function renderValidados(list){
                 :'<td></td>')
               +'<td><strong>'+esc(t.numero)+'</strong></td>'
               +'<td>'+esc(nomeNavio)+'</td><td>'+esc(t.viagem||'—')+'</td>'
-              +'<td>'+esc(t.porao||'—')+'</td><td>'+esc(t.tier||'—')+'</td>'
+              +'<td>'+esc(t.porao||'—')+'</td><td>'+esc(t.terno||'—')+'</td><td>'+esc(t.tier||'—')+'</td>'
               +'<td>'+esc(it.ref||'—')+'</td><td>'+esc(it.lote||'—')+'</td>'
               +'<td>'+esc(it.marca||'—')+'</td><td>'+esc(it.shipper||'—')+'</td>'
               +'<td>'+esc(it.porto_descarga||'—')+'</td><td>'+esc(it.commodity||'—')+'</td>'
@@ -4722,7 +4768,7 @@ function renderValidados(list){
               +'<td>'+(it.quantidade||0)+'</td>'
               +'<td>'+fNum(it.cbm_calculado,4)+'</td>'
               +'<td>'+fNum(it.peso_calculado,3)+'</td>'
-              +'<td>'+esc(t.placa)+'</td><td>'+esc(t.motorista)+'</td><td>'+esc(conf)+'</td><td>'+esc(t.periodo||'—')+'</td><td>'+valEm+'</td>'
+              +'<td>'+esc(t.placa)+'</td><td>'+esc(t.motorista)+'</td><td>'+esc(conf)+'</td><td>'+esc(t.periodo||'—')+'</td><td>'+valEm+'</td><td>'+esc(t.validado_por_nome||'—')+'</td>'
               +'<td>'+(idx===0?'<button class="btn bs bsm" onclick="editTicket(\''+t.id+'\')">✏</button>':'')+'</td>'
               +'</tr>';
           });
@@ -4745,35 +4791,27 @@ function exportValidados(){
       if(!list.length){toast('Nenhum embarque validado para exportar','error');return;}
       var rows=[];
       var nomeNavio=navioAtivo?navioAtivo.nome:'—';
+      // ordem das colunas definida pela operação (relatório de embarques validados)
+      function linhaExcel(t,it){
+        var em=t.created_at?new Date(t.created_at):null;
+        it=it||{};
+        return {
+          'Ticket':t.numero,'NF':it.nf||'','Placa':t.placa||'','Conferente':t.conferente_nome||'',
+          'Data':em?em.toLocaleDateString('pt-BR'):'',
+          'Horario Emissão':em?em.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'',
+          'Período':t.periodo||'','Viagem':t.viagem||'','Porão':t.porao||'','Terno':t.terno||'','Tier':t.tier||'',
+          'Ref':it.ref||'','Lote':it.lote||'','Shipper':it.shipper||'','Armazém':it.armazem||t.armazem||'',
+          'Porto Descarga':it.porto_descarga||'','Commodity':it.commodity||'','DUE':it.due||'','Marca':it.marca||'',
+          'CBM m³':parseFloat(it.cbm_calculado||0),'Qtde':it.quantidade||0,'Peso kg':parseFloat(it.peso_calculado||0),
+          'Motorista':t.motorista||'','CPF Motorista':t.motorista_cpf?fmtCpf(t.motorista_cpf):'',
+          'Validado em':t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'',
+          'Validado Por':t.validado_por_nome||''
+        };
+      }
       list.forEach(function(t){
         var itens=t.wp_ticket_itens||[];
-        var conf=t.conferente_nome||'—';
-        var valEm=t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'—';
-        if(!itens.length){
-          rows.push({
-            'Ticket':t.numero,'Navio':nomeNavio,'Viagem':t.viagem||'',
-            'Porão':t.porao||'','Tier':t.tier||'',
-            'Ref':'','Lote':'','Marca':'','Shipper':'','Porto Descarga':'',
-            'Commodity':'','Armazém':'','DUE':'','NF':'',
-            'Qtde':0,'CBM m³':0,'Peso kg':0,
-            'Placa':t.placa,'Carreta':t.placa_carreta||'','Motorista':t.motorista,'CPF':t.motorista_cpf?fmtCpf(t.motorista_cpf):'','Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
-          });
-        } else {
-          itens.forEach(function(it){
-            rows.push({
-              'Ticket':t.numero,'Navio':nomeNavio,'Viagem':t.viagem||'',
-              'Porão':t.porao||'','Tier':t.tier||'',
-              'Ref':it.ref||'','Lote':it.lote||'','Marca':it.marca||'',
-              'Shipper':it.shipper||'','Porto Descarga':it.porto_descarga||'',
-              'Commodity':it.commodity||'','Armazém':it.armazem||'',
-              'DUE':it.due||'','NF':it.nf||'',
-              'Qtde':it.quantidade||0,
-              'CBM m³':parseFloat(it.cbm_calculado||0),
-              'Peso kg':parseFloat(it.peso_calculado||0),
-              'Placa':t.placa,'Carreta':t.placa_carreta||'','Motorista':t.motorista,'CPF':t.motorista_cpf?fmtCpf(t.motorista_cpf):'','Conferente':conf,'Período':t.periodo||'—','Validado em':valEm
-            });
-          });
-        }
+        if(itens.length)itens.forEach(function(it){rows.push(linhaExcel(t,it));});
+        else rows.push(linhaExcel(t,null));
       });
       var ws=XLSX.utils.json_to_sheet(rows);
       // auto col width
@@ -5089,6 +5127,13 @@ function renderPlano(){
       +(ks.length?ks.map(function(k){return esc(k)+' '+faixas(m[k]);}).join(' · '):'<span style="color:#B45309;">nenhuma camada</span>')+'</div>';
   });
   document.getElementById('pl-resumo').innerHTML=res.join('');
+  document.getElementById('pl-desenho').innerHTML=svgNavio({
+    poroes:_pl.poroes,
+    camadas:function(po){return pl.poroes[po].camadas||1;},
+    cel:function(po,t){return (pl.poroes[po].t||{})[t]||[];},
+    cor:corPorto,modo:'plano',clique:'toggleCelula',
+    legenda:pl.portos.map(function(p){return {cor:corPorto(p),txt:p};})
+  });
 }
 function pincelPlano(i){_pl.pincel=_pl.plano.portos[i];renderPlano();}
 function addPortoPlano(){
@@ -5166,6 +5211,228 @@ function limparPlano(){
   gravarPlano(null,'Plano de estiva removido');
 }
 
+// ══════════════════════════════════════════════════
+// DESENHO DO NAVIO (perfil lateral: popa à esquerda, proa à direita, #01 junto à proa)
+// ══════════════════════════════════════════════════
+// o = {poroes, camadas(po), cel(po,t)→[portos planejados], cor(porto), modo:'plano'|'embarque',
+//      emb:{'po|t':{cbm,qtd,tk,portos:{porto:cbm}}}, temPlano, totais:{po:cbm}, legenda:[{cor,txt}],
+//      clique:'nomeDaFuncao(po,t)', titulo}
+function svgNavio(o){
+  var po=o.poroes,n=po.length;if(!n)return '';
+  var cams=po.map(o.camadas),maxT=Math.max.apply(null,cams.concat([1]));
+  var cw=Math.max(60,Math.min(150,Math.floor(1150/n))),rh=maxT>14?16:maxT>10?19:22;
+  var popa=150,proa=120,x0=popa,xf=x0+n*cw,W=xf+proa;
+  var deck=96,top=deck+6,hh=maxT*rh,bot=top+hh+10,base=bot+(o.totais?34:18);
+  var leg=[],lx=20,ly=base+18;
+  (o.legenda||[]).forEach(function(it){
+    var w=24+String(it.txt).length*6.8+18;
+    if(lx+w>W-10&&lx>20){lx=20;ly+=20;}
+    leg.push('<rect x="'+lx+'" y="'+(ly-10)+'" width="12" height="12" rx="2" fill="'+it.cor+'"/>'
+      +'<text x="'+(lx+18)+'" y="'+ly+'" font-size="12" fill="#17201B">'+esc(it.txt)+'</text>');
+    lx+=w;
+  });
+  var H=leg.length?ly+12:base;
+  var s=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="width:100%;min-width:'+Math.min(W,640)+'px;height:auto;display:block;font-family:Arial,Helvetica,sans-serif;" role="img" aria-label="'+esc(o.titulo||'Desenho do navio')+'">',
+    '<defs><pattern id="pl-hach" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#D5DBD7"/><line x1="0" y1="0" x2="0" y2="6" stroke="#BCC5BF" stroke-width="3"/></pattern></defs>',
+    '<rect width="'+W+'" height="'+H+'" fill="#fff"/>'];
+  if(o.titulo)s.push('<text x="'+(W/2)+'" y="20" font-size="15" font-weight="700" text-anchor="middle" fill="#17201B">'+esc(o.titulo)+'</text>');
+  s.push('<text x="14" y="20" font-size="11" font-weight="700" fill="#6B7F73">◀ POPA</text>',
+    '<text x="'+(W-10)+'" y="20" font-size="11" font-weight="700" text-anchor="end" fill="#6B7F73">PROA ▶</text>');
+  // casco, água, superestrutura (ponte + chaminé)
+  s.push('<path d="M14 '+(deck-4)+' L'+(xf+18)+' '+(deck-4)+' L'+(xf+18)+' '+(deck-18)+' L'+(W-8)+' '+(deck-22)
+    +' Q'+(W-30)+' '+(bot+4)+' '+(xf-10)+' '+(bot+8)+' L60 '+(bot+8)+' Q24 '+(bot+6)+' 18 '+(bot-24)+' Z" fill="#24352C"/>');
+  s.push('<rect x="'+(x0-4)+'" y="'+(top-4)+'" width="'+(n*cw+8)+'" height="'+(hh+8)+'" rx="4" fill="#E3E8E5"/>');
+  var sx=34,sw=popa-60;
+  s.push('<rect x="'+(sx+sw-28)+'" y="'+(deck-92)+'" width="18" height="30" rx="2" fill="#B45309"/>',
+    '<rect x="'+sx+'" y="'+(deck-64)+'" width="'+sw+'" height="60" rx="3" fill="#E8ECE9" stroke="#24352C" stroke-width="2"/>');
+  for(var k=0;k<4;k++){
+    var ww=(sw-16)/4;
+    s.push('<rect x="'+(sx+8+k*ww+1)+'" y="'+(deck-54)+'" width="'+(ww-6)+'" height="8" rx="1" fill="#24352C"/>',
+      '<rect x="'+(sx+8+k*ww+1)+'" y="'+(deck-36)+'" width="'+(ww-6)+'" height="8" rx="1" fill="#24352C"/>');
+  }
+  // camadas (T1 embaixo)
+  for(var t=1;t<=maxT;t++){
+    if(rh>=16||t%2===1)s.push('<text x="'+(x0-10)+'" y="'+(top+hh-t*rh+rh/2+4)+'" font-size="10" text-anchor="end" fill="#E8ECE9">T'+t+'</text>');
+  }
+  po.forEach(function(p,i){
+    var x=x0+(n-1-i)*cw,c=cams[i];
+    s.push('<rect x="'+(x+6)+'" y="'+(deck-13)+'" width="'+(cw-12)+'" height="9" rx="2" fill="#6B7F73"/>',
+      '<text x="'+(x+cw/2)+'" y="'+(deck-19)+'" font-size="12" font-weight="700" text-anchor="middle" fill="#17201B">'+esc(p)+'</text>');
+    for(var t=1;t<=maxT;t++){
+      var y=top+hh-t*rh,cx=x+2,cy=y+1,cwi=cw-4,chi=rh-2;
+      if(t>c){s.push('<rect x="'+cx+'" y="'+cy+'" width="'+cwi+'" height="'+chi+'" rx="2" fill="url(#pl-hach)"/>');continue;}
+      var ps=o.cel(p,t)||[],e=o.emb&&o.emb[p+'|'+t];
+      var tit=p+' T'+t+': '+(ps.length?ps.join(', '):'sem porto no plano')
+        +(e?' · embarcado '+fNum(e.cbm,2)+' m³, '+e.qtd+' fd, '+e.tk+' ticket(s) — '+Object.keys(e.portos).join(', '):'');
+      s.push('<g'+(o.clique?' style="cursor:pointer" onclick="'+o.clique+'(\''+esc(p)+'\','+t+')"':'')+'><title>'+esc(tit)+'</title>');
+      if(ps.length){
+        var sg=cwi/ps.length;
+        ps.forEach(function(pt,j){s.push('<rect x="'+(cx+j*sg)+'" y="'+cy+'" width="'+sg+'" height="'+chi+'" fill="'+o.cor(pt)+'"'+(o.modo==='embarque'?' fill-opacity="0.25"':'')+'/>');});
+        s.push('<rect x="'+cx+'" y="'+cy+'" width="'+cwi+'" height="'+chi+'" rx="2" fill="none" stroke="#fff" stroke-width="1"/>');
+      } else {
+        s.push('<rect x="'+cx+'" y="'+cy+'" width="'+cwi+'" height="'+chi+'" rx="2" fill="#F4F6F5" stroke="#C9D1CC" stroke-dasharray="3 2"/>');
+      }
+      if(e){
+        var ks=Object.keys(e.portos).sort(function(a,b){return e.portos[b]-e.portos[a];});
+        var m=4,ex=cx+m/2,ewi=cwi-m,sg2=ewi/ks.length;
+        ks.forEach(function(pt,j){s.push('<rect x="'+(ex+j*sg2)+'" y="'+(cy+2)+'" width="'+sg2+'" height="'+(chi-4)+'" fill="'+o.cor(pt)+'"/>');});
+        if(cw>=50&&rh>=16)s.push('<text x="'+(cx+cwi/2)+'" y="'+(cy+chi/2+4)+'" font-size="'+Math.min(11,rh-7)+'" font-weight="700" text-anchor="middle" fill="#fff">'+fNum(e.cbm,1)+'</text>');
+        var fora=o.temPlano&&ks.some(function(pt){return !ps.some(function(x){return normAz(x)===normAz(pt);});});
+        if(fora)s.push('<rect x="'+(cx+1)+'" y="'+(cy+1)+'" width="'+(cwi-2)+'" height="'+(chi-2)+'" rx="2" fill="none" stroke="#DC2626" stroke-width="2.5"/>');
+      }
+      s.push('</g>');
+    }
+    if(o.totais)s.push('<text x="'+(x+cw/2)+'" y="'+(bot+26)+'" font-size="11" font-weight="600" text-anchor="middle" fill="#17201B">'+(o.totais[p]?fNum(o.totais[p],1)+' m³':'—')+'</text>');
+  });
+  s.push('<rect x="0" y="'+(bot-4)+'" width="'+W+'" height="14" fill="#5B9BD5" fill-opacity="0.3"/>');
+  return s.concat(leg).concat(['</svg>']).join('');
+}
+
+var _dn={modo:'embarque',dados:null};
+function dnModo(b){
+  _dn.modo=b.getAttribute('data-m');
+  document.querySelectorAll('#dn-modo .chip').forEach(function(x){x.classList.toggle('on',x===b);});
+  renderDesenho();
+}
+function carregarDesenho(){
+  var box=document.getElementById('dn-svg');
+  if(!sb||!navioAtivo){box.innerHTML=msgSeg('Selecione um navio no topo');document.getElementById('dn-aviso').innerHTML='';return;}
+  var nid=navioAtivo.id;showLd(true);
+  Promise.all([
+    supaAll(function(){
+      return qAz(sb.from('wp_tickets').select('id,porao,tier,porto_descarga,wp_ticket_itens(cbm_calculado,peso_calculado,quantidade,porto_descarga)').eq('navio_id',nid).eq('status','validado'),'armazem').order('id');
+    }),
+    supaAll(function(){
+      return qAz(sb.from('wp_lista_carga').select('id,porto_descarga,cbm_total,quantidade,peso_bruto,peso_medio').eq('navio_id',nid),'armazem').order('id');
+    })
+  ]).then(function(rs){
+    showLd(false);
+    if(!navioAtivo||navioAtivo.id!==nid)return;
+    var er=rs[0].error||rs[1].error;
+    if(er){toast('Erro: '+er.message,'error');return;}
+    _dn.dados={navio:navioAtivo,tickets:rs[0].data||[],lista:rs[1].data||[]};
+    renderDesenho();
+  });
+}
+function renderDesenho(){
+  var box=document.getElementById('dn-svg'),av=document.getElementById('dn-aviso');
+  if(!_dn.dados)return;
+  var nv=_dn.dados.navio,pl=planoDe(nv),emb={},tot={},porPorto={},semPos=0,maxEmb={};
+  _dn.dados.tickets.forEach(function(t){
+    if(!t.porao||!t.tier){semPos++;return;}
+    var k=t.porao+'|'+t.tier,e=emb[k]||(emb[k]={cbm:0,qtd:0,tk:0,portos:{}});
+    e.tk++;maxEmb[t.porao]=Math.max(maxEmb[t.porao]||0,parseInt(t.tier)||0);
+    (t.wp_ticket_itens||[]).forEach(function(it){
+      var c=parseFloat(it.cbm_calculado)||0,q=parseInt(it.quantidade)||0,kg=parseFloat(it.peso_calculado)||0;
+      var pt=String(it.porto_descarga||t.porto_descarga||'').trim()||'(sem porto)';
+      var chave=Object.keys(porPorto).find(function(x){return normAz(x)===normAz(pt);})||pt;
+      e.cbm+=c;e.qtd+=q;e.portos[chave]=(e.portos[chave]||0)+c;tot[t.porao]=(tot[t.porao]||0)+c;
+      var pp=porPorto[chave]||(porPorto[chave]={cbm:0,qtd:0,kg:0});pp.cbm+=c;pp.qtd+=q;pp.kg+=kg;
+    });
+  });
+  var poroes=poroesDoNavio(nv).slice();
+  Object.keys(maxEmb).forEach(function(p){if(poroes.indexOf(p)<0)poroes.push(p);});
+  poroes.sort(function(a,b){return a.localeCompare(b,undefined,{numeric:true});});
+  if(!poroes.length){box.innerHTML=msgSeg('Defina os porões do navio na tela Navios (botão ✏)');av.innerHTML='';return;}
+  var emb2=_dn.modo==='embarque';
+  var portos=(pl&&pl.portos||[]).slice();
+  if(emb2)Object.keys(porPorto).forEach(function(p){if(!portos.some(function(x){return normAz(x)===normAz(p);}))portos.push(p);});
+  function cor(p){var i=portos.findIndex(function(x){return normAz(x)===normAz(p);});return PL_CORES[(i<0?0:i)%PL_CORES.length];}
+  function celPlano(p,t){return (pl&&pl.poroes[p]&&(pl.poroes[p].t||{})[t])||[];}
+  var fora=0;
+  if(pl)Object.keys(emb).forEach(function(k){
+    var a=k.split('|'),ps=celPlano(a[0],a[1]);
+    if(Object.keys(emb[k].portos).some(function(pt){return !ps.some(function(x){return normAz(x)===normAz(pt);});}))fora++;
+  });
+  box.innerHTML=svgNavio({
+    titulo:nv.nome+(nv.viagem?' · Viagem '+nv.viagem:''),
+    poroes:poroes,
+    camadas:function(p){var c=pl&&pl.poroes[p]&&pl.poroes[p].camadas;return Math.max(c||0,maxEmb[p]||0)||(pl?1:8);},
+    cel:celPlano,cor:cor,modo:_dn.modo,emb:emb2?emb:null,temPlano:!!pl,totais:emb2?tot:null,
+    legenda:portos.map(function(p){
+      var e=porPorto[Object.keys(porPorto).find(function(x){return normAz(x)===normAz(p);})];
+      return {cor:cor(p),txt:p+(emb2?' — '+(e?fNum(e.cbm,1)+' m³ · '+e.qtd+' fd · '+fNum(e.kg/1000,1)+' t':'nada embarcado'):'')};
+    })
+  });
+  var msgs=[];
+  if(!pl)msgs.push('Este navio não tem plano de estiva — o desenho mostra só o embarcado. Defina o plano em Navios › Plano de estiva.');
+  if(emb2&&!_dn.dados.tickets.length)msgs.push('Nenhum embarque validado ainda neste navio.');
+  if(emb2&&fora)msgs.push(fora+' camada(s) com carga de porto fora do plano (contorno vermelho).');
+  if(emb2&&semPos)msgs.push(semPos+' ticket(s) validado(s) sem porão/tier não aparecem no desenho.');
+  av.innerHTML=msgs.map(function(m){return '<div style="font-size:13px;color:#B45309;margin-bottom:6px;">⚠ '+esc(m)+'</div>';}).join('');
+  document.getElementById('dn-tabela').innerHTML=tabelaDesenho(_dn.dados.lista||[],porPorto,portos,cor);
+}
+// Lista de carga × embarcado, por porto de descarga (progresso pelo CBM; sem CBM na lista, pelos fardos)
+function tabelaDesenho(lista,porPorto,portos,cor){
+  var lin={},ordem=[];
+  function linha(pt){
+    pt=String(pt||'').trim()||'(sem porto)';
+    var k=normAz(pt);
+    if(!lin[k]){lin[k]={porto:pt,lq:0,lc:0,lkg:0,eq:0,ec:0,ekg:0};ordem.push(k);}
+    return lin[k];
+  }
+  portos.forEach(linha);
+  lista.forEach(function(l){
+    var r=linha(l.porto_descarga),q=parseInt(l.quantidade)||0,kg=parseFloat(l.peso_bruto)||0;
+    if(!kg)kg=(parseFloat(l.peso_medio)||0)*q;
+    r.lq+=q;r.lc+=parseFloat(l.cbm_total)||0;r.lkg+=kg;
+  });
+  Object.keys(porPorto).forEach(function(p){var r=linha(p),e=porPorto[p];r.eq+=e.qtd;r.ec+=e.cbm;r.ekg+=e.kg;});
+  var rows=ordem.map(function(k){return lin[k];}).filter(function(r){return r.lq||r.eq;});
+  if(!rows.length)return '';
+  var T={porto:'Total do navio',lq:0,lc:0,lkg:0,eq:0,ec:0,ekg:0};
+  rows.forEach(function(r){['lq','lc','lkg','eq','ec','ekg'].forEach(function(c){T[c]+=r[c];});});
+  function pct(r){return r.lc>0?r.ec/r.lc*100:(r.lq>0?r.eq/r.lq*100:0);}
+  function barra(r){
+    var p=pct(r),w=Math.min(100,p),cl=p>100.5?'#B45309':p>=99.5?'#1E6B45':'#1D4ED8';
+    return '<div style="display:flex;align-items:center;gap:8px;min-width:150px;">'
+      +'<div style="flex:1;height:10px;background:#E3E8E5;border-radius:5px;overflow:hidden;"><div style="width:'+w.toFixed(1)+'%;height:100%;background:'+cl+';"></div></div>'
+      +'<strong style="font-size:12px;min-width:46px;text-align:right;color:'+cl+';">'+fNum(p,1)+'%</strong></div>';
+  }
+  function tr(r,tot){
+    var td='<td style="text-align:right;">',b=tot?' style="font-weight:700;background:var(--s3);"':'';
+    return '<tr'+b+'><td style="white-space:nowrap;">'+(tot?'':'<i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+cor(r.porto)+';margin-right:6px;"></i>')+esc(r.porto)+'</td>'
+      +td+r.lq+'</td>'+td+fNum(r.lc,3)+'</td>'+td+fNum(r.lkg/1000,3)+'</td>'
+      +td+r.eq+'</td>'+td+fNum(r.ec,3)+'</td>'+td+fNum(r.ekg/1000,3)+'</td>'
+      +td+(r.lq-r.eq)+'</td>'+td+fNum(r.lc-r.ec,3)+'</td>'
+      +'<td>'+barra(r)+'</td></tr>';
+  }
+  return '<div class="tw"><table class="dn-tab"><thead>'
+    +'<tr><th rowspan="2" style="text-align:left;">Porto de descarga</th><th colspan="3">Lista de carga</th><th colspan="3">Embarcado</th><th colspan="2">Saldo a embarcar</th><th rowspan="2">Progresso</th></tr>'
+    +'<tr><th>Qtde</th><th>CBM m³</th><th>Peso t</th><th>Qtde</th><th>CBM m³</th><th>Peso t</th><th>Qtde</th><th>CBM m³</th></tr>'
+    +'</thead><tbody>'+rows.map(function(r){return tr(r,false);}).join('')+tr(T,true)+'</tbody></table></div>'
+    +'<div style="font-size:12px;color:var(--ink3);margin-top:6px;">Progresso pelo CBM embarcado ÷ CBM da lista (sem CBM na lista, pela quantidade). Laranja = embarcado acima da lista.</div>';
+}
+function nomeArqDesenho(){
+  var nv=_dn.dados&&_dn.dados.navio;
+  return 'desenho_'+String(nv?nv.nome+(nv.viagem?'_'+nv.viagem:''):'navio').replace(/[^\w-]+/g,'_');
+}
+function baixarDesenhoPng(){
+  var svg=document.querySelector('#dn-svg svg');if(!svg){toast('Abra o desenho primeiro','error');return;}
+  var vb=svg.viewBox.baseVal,esc2=2,img=new Image();
+  img.onload=function(){
+    var cv=document.createElement('canvas');cv.width=vb.width*esc2;cv.height=vb.height*esc2;
+    var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(img,0,0,cv.width,cv.height);
+    cv.toBlob(function(b){
+      var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nomeArqDesenho()+'.png';
+      document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);
+    },'image/png');
+  };
+  img.onerror=function(){toast('Não foi possível gerar a imagem neste navegador','error');};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
+}
+function imprimirDesenho(){
+  var svg=document.querySelector('#dn-svg svg');if(!svg){toast('Abra o desenho primeiro','error');return;}
+  var w=window.open('','_blank');if(!w){toast('O navegador bloqueou a janela de impressão','error');return;}
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(nomeArqDesenho())+'</title>'
+    +'<style>@page{size:landscape;margin:10mm;}body{margin:0;font-family:Arial,sans-serif;}svg{width:100%!important;min-width:0!important;height:auto;}.av{font-size:12px;color:#B45309;margin:6px 0;}table{border-collapse:collapse;width:100%;margin-top:10px;font-size:11px;}th,td{border:1px solid #ccc;padding:4px 6px;}th{background:#eef1ef;}</style></head><body>'
+    +document.getElementById('dn-aviso').innerHTML.replace(/<div style="[^"]*">/g,'<div class="av">')
+    +svg.outerHTML
+    +document.getElementById('dn-tabela').innerHTML
+    +'<script>setTimeout(function(){window.print();},300);<\/script></body></html>');
+  w.document.close();
+}
+
 function renderPeriodoBtns(){
   var sel=document.getElementById('val-periodo'),box=document.getElementById('val-periodo-btns');
   if(!sel||!box)return;
@@ -5174,6 +5441,15 @@ function renderPeriodoBtns(){
   }).join('');
 }
 function escolherPeriodo(v){document.getElementById('val-periodo').value=v;renderPeriodoBtns();}
+var TERNOS=['01','02','03','04'];
+function renderTernoBtns(){
+  var v=document.getElementById('val-terno').value,box=document.getElementById('val-terno-btns');
+  if(!box)return;
+  box.innerHTML=TERNOS.map(function(t){
+    return '<button type="button" class="'+(t===v?'on':'')+'" aria-pressed="'+(t===v)+'" onclick="escolherTerno(\''+t+'\')">'+t+'</button>';
+  }).join('');
+}
+function escolherTerno(t){document.getElementById('val-terno').value=t;renderTernoBtns();}
 // Lista de carga: filtro por situação
 var listaSit='';
 function setListaSit(btn){
@@ -7773,6 +8049,10 @@ function editTicket(id){
         +'</div>'
         +'<div class="fg"><label class="fl">Viagem do Tier</label><input type="text" id="ef-viagem" value="'+esc(tk.viagem)+'"></div>'
       +'</div>'
+      +(tk.status==='validado'
+        ?'<div class="fg"><label class="fl">Terno</label><select id="ef-terno"><option value="">—</option>'
+          +TERNOS.map(function(t){return '<option value="'+t+'"'+(t===tk.terno?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div>'
+        :'')
       +'<div class="fg"><label class="fl">Observações</label><textarea id="ef-observacoes" rows="2">'+esc(tk.observacoes)+'</textarea></div>'
       +(itensHtml?'<div style="font-size:12px;font-weight:600;color:var(--ink3);margin-top:4px;">Itens do Ticket</div>'+itensHtml:'');
 
@@ -7832,7 +8112,9 @@ function editTicket(id){
           if(aumento[l.id]>saldo)estouro.push('Ref '+(l.ref||'—')+' / '+l.lote+': +'+aumento[l.id]+', saldo '+Math.max(0,saldo));
         });
         if(estouro.length){showLd(false);toast('Saldo insuficiente — '+estouro.join(' · '),'error');return;}
-        sb.from('wp_tickets').update({placa,motorista,motorista_cpf:efCpf||null,placa_carreta:efCar?fmtPlacaTxt(efCar):null,porao,tier,viagem,observacoes:obs}).eq('id',id).then(function(r){
+        var upTk={placa,motorista,motorista_cpf:efCpf||null,placa_carreta:efCar?fmtPlacaTxt(efCar):null,porao,tier,viagem,observacoes:obs};
+        var efTerno=document.getElementById('ef-terno');if(efTerno)upTk.terno=efTerno.value||null;
+        sb.from('wp_tickets').update(upTk).eq('id',id).then(function(r){
           if(r.error){showLd(false);toast('Erro: '+r.error.message,'error');return;}
           // atualiza cada item
           var updates=itensPayload.map(function(it){
@@ -7966,7 +8248,7 @@ function deleteSelectedLista(){
   showLd(true);
   sb.from('wp_lista_carga').delete().in('id',ids).select('id').then(function(r){
     showLd(false);
-    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(r.error){toast(erroLotePreso(r.error),'error');return;}
     avisoExclusao((r.data||[]).length,ids.length,'lote(s)');clearListaSelection();loadLista();
   });
 }
@@ -7978,8 +8260,50 @@ function deleteAllNavio(){
   var query=qAz(sb.from('wp_lista_carga').delete().eq('navio_id',navioAtivo.id),'armazem').select('id');
   query.then(function(r){
     showLd(false);
-    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(r.error){toast(erroLotePreso(r.error),'error');return;}
     avisoExclusao((r.data||[]).length,listaAll.length,'lote(s)');loadLista();
+  });
+}
+// lote usado em ticket (mesmo cancelado) não sai: o ticket cancelado fica gravado com os lotes
+function erroLotePreso(e){
+  if(e&&e.code==='23503')return 'Há lotes usados em tickets (mesmo cancelados) — eles ficam gravados no histórico. '
+    +'Para apagar um navio de teste por completo, use o ✕ do navio na tela Navios (administrador).';
+  return 'Erro: '+(e&&e.message);
+}
+// Exclusão completa do navio (teste/lançado errado): tickets cancelados, lista, booking e o navio
+function excluirNavio(id){
+  var n=naviosAll.find(function(x){return x.id===id;});if(!n)return;
+  if(currentUser.perfil!=='admin'){toast('Apenas administradores excluem navios','error');return;}
+  showLd(true);
+  Promise.all([
+    sb.from('wp_tickets').select('status').eq('navio_id',id),
+    sb.from('wp_lista_carga').select('id',{count:'exact',head:true}).eq('navio_id',id)
+  ]).then(function(rs){
+    showLd(false);
+    if(rs[0].error){toast('Erro: '+rs[0].error.message,'error');return;}
+    var tks=rs[0].data||[],ativos=tks.filter(function(t){return t.status!=='cancelado';}).length,lotes=rs[1].count||0;
+    if(ativos){toast('O navio tem '+ativos+' ticket(s) emitido(s)/validado(s). Cancele todos antes de excluir o navio.','error');return;}
+    var txt=prompt('⚠ EXCLUIR O NAVIO "'+n.nome+'" POR COMPLETO\n\n'
+      +'Serão apagados: '+lotes+' lote(s) da lista, '+tks.length+' ticket(s) cancelado(s) com seus itens, booking e plano de estiva.\n'
+      +'Isso não pode ser desfeito. Use só para navio de teste ou lançado errado.\n\n'
+      +'Para confirmar, digite o nome do navio:');
+    if(txt===null)return;
+    if(txt.trim().toUpperCase()!==String(n.nome).trim().toUpperCase()){toast('Nome não confere — nada foi excluído','error');return;}
+    showLd(true);
+    sb.rpc('wp_admin_excluir_navio',{p_navio:id,p_confirma:txt}).then(function(r){
+      showLd(false);
+      if(r.error){
+        toast(/wp_admin_excluir_navio/.test(r.error.message)||r.error.code==='PGRST202'
+          ?'Rode o woodport_excluir_navio.sql no Supabase antes de excluir navios'
+          :'Erro: '+r.error.message,'error');
+        return;
+      }
+      var d=r.data||{};
+      var ou=Object.keys(d.outros||{}).map(function(k){return d.outros[k]+' em '+k.replace(/^public\./,'');}).join(', ');
+      toast('Navio '+n.nome+' excluído ('+(d.lotes||0)+' lote(s), '+(d.tickets||0)+' ticket(s) cancelado(s)'+(ou?'; também '+ou:'')+')','success');
+      if(navioAtivo&&navioAtivo.id===id){document.getElementById('navio-sel').value='';onNavioChange();}
+      loadNavios();loadNaviosSel();
+    });
   });
 }
 
