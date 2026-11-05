@@ -665,9 +665,9 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         </div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn bp" onclick="loadRelatorios()">🔄 Atualizar</button>
-          <button class="btn bs" onclick="exportRelatorio('periodo')">⬇ Export Embarque/Período</button>
-          <button class="btn bs" onclick="exportRelatorio('conferente')">⬇ Export Por Conferente</button>
-          <button class="btn bs" onclick="exportRelatorio('completo')">⬇ Export Completo</button>
+          <button class="btn bs" onclick="exportRelatorio('periodo')">⬇ Excel — Por período</button>
+          <button class="btn bs" onclick="exportRelatorio('conferente')">⬇ Excel — Por conferente</button>
+          <button class="btn bs" onclick="exportRelatorio('completo')" title="Embarques detalhados + por período, conferente e porto">⬇ Excel completo (todas as abas)</button>
         </div>
       </div>
       <div class="sr s4" style="margin-bottom:14px;" id="rl-cards">
@@ -3657,51 +3657,45 @@ function renderRlLista(list){
   }).join('');
 }
 
-// ── Exportar CSV ──
+// ── Exportar Excel (relatório analítico) ──
 function exportRelatorio(tipo){
   if(!rlData.length){ toast('Sem dados para exportar','error'); return; }
-  var rows=[], nomeNavio=navioAtivo?navioAtivo.nome:'—';
   var validados=rlData.filter(function(t){return t.status==='validado';});
-
-  if(tipo==='completo'){
-    rows=[['Ticket','Data Validação','Período','Navio','Porão','Tier','Vgm Tier','Porto Descarga',
-      'Placa','Motorista','Conferente','Armazém','Ref','Lote','Marca','Qtde','CBM','Peso']];
-    validados.forEach(function(t){
-      var valEm=t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'—';
-      (t.wp_ticket_itens||[{ref:'—',lote:'—',marca:'—',quantidade:0,cbm_calculado:0,peso_calculado:0}]).forEach(function(i){
-        rows.push([t.numero,valEm,t.periodo||'—',nomeNavio,t.porao||'—',t.tier||'—',t.viagem||'—',
-          t.porto_descarga||'—',t.placa,t.motorista,t.conferente_nome||'—',t.armazem||'—',
-          i.ref||'—',i.lote||'—',i.marca||'—',i.quantidade||0,
-          parseFloat(i.cbm_calculado||0).toFixed(4),parseFloat(i.peso_calculado||0).toFixed(3)]);
-      });
-    });
-  } else if(tipo==='periodo'){
-    rows=[['Período','Tickets','Fardos','CBM','Peso (kg)']];
-    var map={};
-    validados.forEach(function(t){
-      var p=t.periodo||'—';if(!map[p])map[p]={t:0,f:0,c:0,p:0};
-      map[p].t++;
-      (t.wp_ticket_itens||[]).forEach(function(i){map[p].f+=parseInt(i.quantidade)||0;map[p].c+=parseFloat(i.cbm_calculado)||0;map[p].p+=parseFloat(i.peso_calculado)||0;});
-    });
-    Object.entries(map).sort().forEach(function(e){var d=e[1];rows.push([e[0],d.t,d.f,d.c.toFixed(3),d.p.toFixed(0)]);});
-  } else if(tipo==='conferente'){
-    rows=[['Conferente','Armazém','Tickets','Fardos','CBM']];
-    var map2={};
-    validados.forEach(function(t){
-      var k=(t.conferente_nome||'—')+'|'+(t.armazem||'—');if(!map2[k])map2[k]={n:t.conferente_nome||'—',az:t.armazem||'—',t:0,f:0,c:0};
-      map2[k].t++;
-      (t.wp_ticket_itens||[]).forEach(function(i){map2[k].f+=parseInt(i.quantidade)||0;map2[k].c+=parseFloat(i.cbm_calculado)||0;});
-    });
-    Object.values(map2).sort(function(a,b){return b.c-a.c;}).forEach(function(r){rows.push([r.n,r.az,r.t,r.f,r.c.toFixed(3)]);});
-  }
-
-  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  if(!validados.length){ toast('Nenhum embarque validado no período','error'); return; }
   var de=document.getElementById('rl-de').value, ate=document.getElementById('rl-ate').value;
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
-  a.download='relatorio_'+tipo+'_'+de+'_a_'+ate+'.csv';
-  a.click();
-  toast('Exportando '+rows.length+' linhas...','success');
+  var porto=document.getElementById('rl-porto').value, az=document.getElementById('rl-az').value;
+  function itens(t){return t.wp_ticket_itens||[];}
+  function agrupa(chave,extra){
+    var m={},ord=[];
+    validados.forEach(function(t){
+      var k=chave(t);if(!m[k]){m[k]=Object.assign({k:k,tickets:0,fds:0,cbm:0,peso:0},extra?extra(t):{});ord.push(k);}
+      m[k].tickets++;
+      itens(t).forEach(function(i){m[k].fds+=parseInt(i.quantidade)||0;m[k].cbm+=parseFloat(i.cbm_calculado)||0;m[k].peso+=parseFloat(i.peso_calculado)||0;});
+    });
+    return ord.map(function(k){return m[k];});
+  }
+  var totC=0;validados.forEach(function(t){itens(t).forEach(function(i){totC+=parseFloat(i.cbm_calculado)||0;});});
+  var num=[{h:'Tickets',k:'tickets',w:9,fmt:'int',soma:true},{h:'Qtde (fds)',k:'fds',w:11,fmt:'int',soma:true},
+           {h:'CBM m³',k:'cbm',w:12,fmt:'n3',soma:true},{h:'Peso kg',k:'peso',w:13,fmt:'n1',soma:true}];
+  var abaPeriodo={nome:'Por Período',
+    colunas:[{h:'Período',k:'k',w:12}].concat(num),
+    linhas:agrupa(function(t){return t.periodo||'(sem período)';}).sort(function(a,b){return a.k.localeCompare(b.k);})};
+  var abaConf={nome:'Por Conferente',
+    colunas:[{h:'Conferente',k:'k',w:24},{h:'Armazém',k:'az',w:11}].concat(num),
+    linhas:agrupa(function(t){return (t.conferente_nome||'—')+' · '+(t.armazem||'—');},function(t){return {nome:t.conferente_nome||'—',az:t.armazem||'—'};})
+      .map(function(r){r.k=r.nome;return r;}).sort(function(a,b){return b.cbm-a.cbm;})};
+  var abaPorto={nome:'Por Porto',
+    colunas:[{h:'Porto de descarga',k:'k',w:20}].concat(num).concat([{h:'% do CBM',k:'pct',w:10,fmt:'n1'}]),
+    linhas:agrupa(function(t){return t.porto_descarga||'(sem porto)';}).map(function(r){r.pct=totC?r.cbm/totC*100:0;return r;}).sort(function(a,b){return b.cbm-a.cbm;})};
+  var abaDet={nome:'Embarques',colunas:XL_COLS_EMBARQUE,linhas:xlLinhasEmbarque(validados)};
+  var abas=tipo==='periodo'?[abaPeriodo]:tipo==='conferente'?[abaConf]:[abaDet,abaPeriodo,abaConf,abaPorto];
+  var filtros=[];if(porto)filtros.push('Porto: '+porto);if(az)filtros.push('Armazém: '+az);
+  xlsxRelatorio({
+    arquivo:'woodport_relatorio_'+(tipo==='completo'?'embarques':tipo)+'_'+de+'_a_'+ate+'.xlsx',
+    titulo:tipo==='periodo'?'Embarque por período':tipo==='conferente'?'Embarque por conferente':'Relatório de embarques',
+    info:[xlInfoNavio(),'Período: '+fmtIso(de)+' a '+fmtIso(ate)+(filtros.length?' · '+filtros.join(' · '):'')+' · '+validados.length+' ticket(s) validado(s)'],
+    abas:abas
+  });
 }
 
 // ══════════════════════════════════════════════════
@@ -4789,37 +4783,12 @@ function exportValidados(){
       if(r.error){toast('Erro: '+r.error.message,'error');return;}
       var list=r.data||[];
       if(!list.length){toast('Nenhum embarque validado para exportar','error');return;}
-      var rows=[];
-      var nomeNavio=navioAtivo?navioAtivo.nome:'—';
-      // ordem das colunas definida pela operação (relatório de embarques validados)
-      function linhaExcel(t,it){
-        var em=t.created_at?new Date(t.created_at):null;
-        it=it||{};
-        return {
-          'Ticket':t.numero,'NF':it.nf||'','Placa':t.placa||'','Conferente':t.conferente_nome||'',
-          'Data':em?em.toLocaleDateString('pt-BR'):'',
-          'Horario Emissão':em?em.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'',
-          'Período':t.periodo||'','Viagem':t.viagem||'','Porão':t.porao||'','Terno':t.terno||'','Tier':t.tier||'',
-          'Ref':it.ref||'','Lote':it.lote||'','Shipper':it.shipper||'','Armazém':it.armazem||t.armazem||'',
-          'Porto Descarga':it.porto_descarga||'','Commodity':it.commodity||'','DUE':it.due||'','Marca':it.marca||'',
-          'CBM m³':parseFloat(it.cbm_calculado||0),'Qtde':it.quantidade||0,'Peso kg':parseFloat(it.peso_calculado||0),
-          'Motorista':t.motorista||'','CPF Motorista':t.motorista_cpf?fmtCpf(t.motorista_cpf):'',
-          'Validado em':t.validado_em?new Date(t.validado_em).toLocaleString('pt-BR'):'',
-          'Validado Por':t.validado_por_nome||''
-        };
-      }
-      list.forEach(function(t){
-        var itens=t.wp_ticket_itens||[];
-        if(itens.length)itens.forEach(function(it){rows.push(linhaExcel(t,it));});
-        else rows.push(linhaExcel(t,null));
+      xlsxRelatorio({
+        arquivo:'woodport_embarques_validados_'+String(navioAtivo.nome).replace(/[^\w-]+/g,'_')+'_'+localISODate()+'.xlsx',
+        titulo:'Embarques validados',
+        info:[xlInfoNavio(),list.length+' ticket(s) validado(s)'+(userArmazens()?' · Armazém: '+userArmazens().join(', '):'')],
+        abas:[{nome:'Embarques Validados',colunas:XL_COLS_EMBARQUE,linhas:xlLinhasEmbarque(list)}]
       });
-      var ws=XLSX.utils.json_to_sheet(rows);
-      // auto col width
-      var cols=Object.keys(rows[0]||{}).map(function(k){return{wch:Math.max(k.length,12)};});
-      ws['!cols']=cols;
-      var wb=XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb,ws,'Embarques Validados');
-      XLSX.writeFile(wb,'woodport_embarques_validados_'+new Date().toISOString().split('T')[0]+'.xlsx');
     });
 }
 
@@ -6242,9 +6211,180 @@ function estExportSaldo(){
 }
 function xlsxBaixar(rows,aba,nome){
   if(!rows.length){toast('Nada para exportar','error');return;}
-  var ws=XLSX.utils.json_to_sheet(rows);
-  ws['!cols']=Object.keys(rows[0]).map(function(k){return {wch:Math.max(10,k.length+2)};});
-  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,aba);XLSX.writeFile(wb,nome);
+  var info=[];
+  if(typeof armadorAtual!=='undefined'&&armadorAtual)info.push('Armador: '+armadorAtual);
+  var azSel=document.getElementById('est-az');if(azSel&&azSel.value)info.push('Armazém: '+azSel.value);
+  xlsxRelatorio({arquivo:nome,titulo:aba,info:[info.join(' · ')||'Estoque'],abas:[{nome:aba,colunas:xlColsAuto(rows),linhas:rows}]});
+}
+
+// ══════════════════════════════════════════════════
+// EXCEL FORMATADO (ExcelJS, carregado só na hora de exportar)
+// Cabeçalho com logo e dados do relatório, títulos com filtro, colunas
+// dimensionadas e linha de SUBTOTAL (soma só o que estiver filtrado).
+// ══════════════════════════════════════════════════
+var XL_COR={fundo:'FF13221C',cab:'FF1E3A2F',acento:'FF8B4513',zebra:'FFF3F6F4',linha:'FFD5DBD7',total:'FFE3E8E5',branco:'FFFFFFFF',suave:'FFB9C6BE'};
+var _xlLib=null;
+function carregarExcelJS(){
+  if(window.ExcelJS)return Promise.resolve();
+  if(_xlLib)return _xlLib;
+  _xlLib=new Promise(function(ok,falha){
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    sc.onload=function(){ok();};
+    sc.onerror=function(){_xlLib=null;falha(new Error('não foi possível carregar o gerador de Excel (sem internet?)'));};
+    document.head.appendChild(sc);
+  });
+  return _xlLib;
+}
+function xlLogoB64(){
+  var v=getComputedStyle(document.documentElement).getPropertyValue('--logo-4s-clara')||'';
+  var m=v.match(/base64,([^"')]+)/);return m?m[1]:null;
+}
+// data/hora local → "data do Excel" (o ExcelJS grava em UTC; sem isso a hora sai deslocada)
+function xlData(iso){
+  if(!iso)return '';
+  var d=new Date(iso);if(isNaN(d))return '';
+  return new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds()));
+}
+var XL_FMT={auto:'0',z2:'00',int:'#,##0',n1:'#,##0.0',n2:'#,##0.00',n3:'#,##0.000',n4:'#,##0.0000',brl:'"R$" #,##0.00',data:'dd/mm/yyyy',dataHora:'dd/mm/yyyy hh:mm',hora:'hh:mm'};
+function xlLetra(n){var s='';while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26);}return s;}
+
+// cfg={arquivo, titulo, info:['Navio: …','Período: …'], abas:[{nome, colunas:[{h,k,w,fmt,soma}], linhas:[{}]}]}
+function xlsxRelatorio(cfg){
+  showLd(true);
+  return carregarExcelJS().then(function(){
+    var wb=new ExcelJS.Workbook();wb.creator='WoodPort · 4SIDES';wb.created=new Date();
+    var logo=xlLogoB64(),logoId=logo?wb.addImage({base64:logo,extension:'png'}):null;
+    var emitido='Emitido em '+new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})+(currentUser&&currentUser.nome?' por '+currentUser.nome:'');
+    cfg.abas.forEach(function(aba){
+      var cols=aba.colunas,nc=cols.length,linhas=aba.linhas||[];
+      var nome=String(aba.nome||'Relatório').replace(/[\\\/\?\*\[\]:]/g,' ').slice(0,31);
+      var ws=wb.addWorksheet(nome,{
+        views:[{state:'frozen',ySplit:6,showGridLines:false}],
+        pageSetup:{paperSize:9,orientation:nc>8?'landscape':'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:0.3,right:0.3,top:0.4,bottom:0.5,header:0.2,footer:0.2}},
+        headerFooter:{oddFooter:'&L&8WoodPort · 4SIDES — '+cfg.titulo+'&R&8Página &P de &N'}
+      });
+      // largura: a informada ou pelo maior conteúdo (limite 50)
+      ws.columns=cols.map(function(c,i){
+        var w=c.w;
+        if(!w){
+          w=String(c.h).length+3;
+          linhas.forEach(function(r){var v=r[c.k];var l=v instanceof Date?16:String(v==null?'':v).length+2;if(l>w)w=l;});
+        }
+        var palavra=String(c.h).split(/\s+/).reduce(function(a,x){return Math.max(a,x.length);},0)+5;
+        return {width:Math.min(50,Math.max(i===0?15:8,palavra,w))};
+      });
+      var ultCol=xlLetra(nc);
+      var larg=0,nb=0;while(nb<nc||larg<100){nb++;larg+=(ws.getColumn(nb).width||9);}
+      // faixa do cabeçalho (linhas 1–4) na cor do sistema, com o logo
+      for(var r=1;r<=4;r++){
+        var row=ws.getRow(r);row.height=r===1?26:17;
+        for(var c=1;c<=nb;c++)row.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:XL_COR.fundo}};
+      }
+      // texto começa depois do logo (~95 px)
+      var px=0,ci=1;if(logoId!==null){while(ci<nc&&px<95){px+=(ws.getColumn(ci).width||10)*7;ci++;}}
+      if(logoId!==null)ws.addImage(logoId,{tl:{col:0.15,row:0.15},ext:{width:84,height:76},editAs:'absolute'});
+      var tx=[{v:'WOODPORT · '+String(cfg.titulo).toUpperCase(),f:{bold:true,size:15,color:{argb:XL_COR.branco}}}];
+      (cfg.info||[]).slice(0,2).forEach(function(t){tx.push({v:t,f:{size:10.5,color:{argb:XL_COR.branco}}});});
+      tx.push({v:emitido+(aba.rodape?' · '+aba.rodape:''),f:{size:9.5,italic:true,color:{argb:XL_COR.suave}}});
+      tx.slice(0,4).forEach(function(t,i){var cell=ws.getCell(i+1,ci);cell.value=t.v;cell.font=t.f;cell.alignment={vertical:'middle'};});
+      // filete na cor de destaque
+      var fil=ws.getRow(5);fil.height=5;
+      for(var c2=1;c2<=nb;c2++)fil.getCell(c2).fill={type:'pattern',pattern:'solid',fgColor:{argb:XL_COR.acento}};
+      // títulos das colunas
+      var cab=ws.getRow(6);cab.height=30;
+      cols.forEach(function(c,i){
+        var cell=cab.getCell(i+1);cell.value=c.h;
+        cell.font={bold:true,size:10,color:{argb:XL_COR.branco}};
+        cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:XL_COR.cab}};
+        cell.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+        cell.border={left:{style:'thin',color:{argb:XL_COR.fundo}},right:{style:'thin',color:{argb:XL_COR.fundo}}};
+      });
+      // dados
+      linhas.forEach(function(rw,li){
+        var row=ws.getRow(7+li);
+        cols.forEach(function(c,i){
+          var v=rw[c.k],cell=row.getCell(i+1);
+          if(v===undefined||v===null||v==='—')v='';
+          if(c.fmt==='auto'){if(typeof v==='string'&&/^[1-9]\d{0,14}$/.test(v))v=parseInt(v,10);}
+          else if(c.fmt&&c.fmt!=='txt'&&v!==''&&!(v instanceof Date)&&typeof v!=='number'){var n=parseFloat(String(v).replace(',','.'));if(!isNaN(n))v=n;}
+          cell.value=v;
+          if(c.fmt&&XL_FMT[c.fmt])cell.numFmt=XL_FMT[c.fmt];
+          cell.font={size:10};
+          cell.alignment={vertical:'middle',horizontal:(typeof v==='number'?'right':(v instanceof Date?'center':'left'))};
+          cell.border={bottom:{style:'hair',color:{argb:XL_COR.linha}}};
+          if(li%2)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:XL_COR.zebra}};
+        });
+      });
+      var ini=7,fim=6+Math.max(linhas.length,1);
+      ws.autoFilter={from:{row:6,column:1},to:{row:fim,column:nc}};
+      // SUBTOTAL(9) soma só as linhas visíveis — acompanha o filtro
+      if(linhas.length&&cols.some(function(c){return c.soma;})){
+        var tot=ws.getRow(fim+1);tot.height=20;
+        cols.forEach(function(c,i){
+          var cell=tot.getCell(i+1),L=xlLetra(i+1);
+          cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:XL_COR.total}};
+          cell.border={top:{style:'medium',color:{argb:XL_COR.cab}},bottom:{style:'medium',color:{argb:XL_COR.cab}}};
+          cell.font={bold:true,size:10};
+          if(c.soma){
+            var s=linhas.reduce(function(a,r){var v=parseFloat(r[c.k]);return a+(isNaN(v)?0:v);},0);
+            cell.value={formula:'SUBTOTAL(9,'+L+ini+':'+L+fim+')',result:s};
+            cell.numFmt=XL_FMT[c.fmt]||XL_FMT.n3;cell.alignment={horizontal:'right',vertical:'middle'};
+          } else if(i===0){
+            cell.value={formula:'"Subtotal ("&SUBTOTAL(3,'+L+ini+':'+L+fim+')&")"',result:'Subtotal ('+linhas.length+')'};
+            cell.alignment={vertical:'middle'};
+          }
+        });
+      }
+      ws.pageSetup.printTitlesRow='6:6';
+      ws.pageSetup.printArea='A1:'+xlLetra(nb)+(fim+1);
+    });
+    return wb.xlsx.writeBuffer();
+  }).then(function(buf){
+    showLd(false);
+    downloadBlob(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),cfg.arquivo);
+    toast('Excel gerado: '+cfg.arquivo,'success');
+  }).catch(function(e){showLd(false);console.error(e);toast('Erro ao gerar o Excel: '+e.message,'error');});
+}
+// colunas soma/formato deduzidas pelo nome (exportações genéricas do estoque)
+function xlColsAuto(rows){
+  return Object.keys(rows[0]).map(function(k){
+    var vals=rows.map(function(r){return r[k];}).filter(function(v){return v!==''&&v!=null;});
+    var num=vals.length&&vals.every(function(v){return typeof v==='number';});
+    var dec=num&&vals.some(function(v){return v%1!==0;});
+    var soma=num&&/qt|qtde|quant|fardo|fds|peso|cbm|m³|^t$|\(t\)|saldo|entrad|sa[ií]d|embarc|estoque|lista|diferen|contado|sistema|kg|valor|total|r\$/i.test(k);
+    return {h:k,k:k,fmt:num?(dec?(/r\$|valor|tarifa/i.test(k)?'n2':'n3'):'int'):'txt',soma:soma};
+  });
+}
+function xlInfoNavio(){
+  if(!navioAtivo)return '';
+  return 'Navio: '+navioAtivo.nome+(navioAtivo.viagem?' · Viagem '+navioAtivo.viagem:'');
+}
+// Colunas do relatório de embarques (ordem definida pela operação)
+var XL_COLS_EMBARQUE=[
+  {h:'Ticket',k:'tk',w:17},{h:'NF',k:'nf',w:11,fmt:'auto'},{h:'Placa',k:'placa',w:10},{h:'Conferente',k:'conf',w:18},
+  {h:'Data',k:'data',w:11,fmt:'data'},{h:'Horario Emissão',k:'hora',w:10,fmt:'hora'},{h:'Período',k:'periodo',w:9},
+  {h:'Viagem',k:'viagem',w:10},{h:'Porão',k:'porao',w:8},{h:'Terno',k:'terno',w:8,fmt:'z2'},{h:'Tier',k:'tier',w:6,fmt:'int'},
+  {h:'Ref',k:'ref',w:6,fmt:'int'},{h:'Lote',k:'lote',w:16},{h:'Shipper',k:'shipper',w:20},{h:'Armazém',k:'az',w:10},
+  {h:'Porto Descarga',k:'porto',w:15},{h:'Commodity',k:'comm',w:11},{h:'DUE',k:'due',w:17},{h:'Marca',k:'marca',w:14},
+  {h:'CBM m³',k:'cbm',w:11,fmt:'n3',soma:true},{h:'Qtde (fds)',k:'qtd',w:9,fmt:'int',soma:true},{h:'Peso kg',k:'peso',w:12,fmt:'n1',soma:true},
+  {h:'Motorista',k:'mot',w:22},{h:'CPF Motorista',k:'cpf',w:15},{h:'Validado em',k:'valEm',w:16,fmt:'dataHora'},{h:'Validado Por',k:'valPor',w:18}
+];
+function xlLinhasEmbarque(list){
+  var out=[];
+  list.forEach(function(t){
+    var em=xlData(t.created_at);
+    var itens=(t.wp_ticket_itens&&t.wp_ticket_itens.length)?t.wp_ticket_itens:[{}];
+    itens.forEach(function(it){
+      out.push({tk:t.numero,nf:it.nf||'',placa:t.placa||'',conf:t.conferente_nome||'',
+        data:em,hora:em,periodo:t.periodo||'',viagem:t.viagem||'',porao:t.porao||'',terno:t.terno||'',tier:t.tier||'',
+        ref:it.ref||'',lote:it.lote||'',shipper:it.shipper||'',az:it.armazem||t.armazem||'',
+        porto:it.porto_descarga||t.porto_descarga||'',comm:it.commodity||'',due:it.due||'',marca:it.marca||'',
+        cbm:parseFloat(it.cbm_calculado||0),qtd:parseInt(it.quantidade||0),peso:parseFloat(it.peso_calculado||0),
+        mot:t.motorista||'',cpf:t.motorista_cpf?fmtCpf(t.motorista_cpf):'',valEm:xlData(t.validado_em),valPor:t.validado_por_nome||''});
+    });
+  });
+  return out;
 }
 
 // ── DESCARGAS ──
@@ -7238,13 +7378,21 @@ function relRender(px,rep){
 function relExportar(px){
   var rep=REL[px];
   if(!rep||!rep.rows.length){toast('Gere o relatório primeiro','error');return;}
-  var linhas=rep.rows.concat(rep.total?[rep.total]:[]).map(function(r){
+  // a linha de total do relatório vira o SUBTOTAL do Excel (acompanha o filtro)
+  var cols=rep.cols.map(function(c){
+    var n=c.tipo==='num'||c.tipo==='brl';
+    var tem=rep.total&&rep.total[c.k]!==undefined&&rep.total[c.k]!==''&&rep.total[c.k]!==null&&typeof rep.total[c.k]==='number';
+    return {h:c.t,k:c.k,fmt:c.tipo==='data'?'data':c.tipo==='brl'?'brl':n?(c.dec?(c.dec===1?'n1':c.dec===2?'n2':'n3'):'int'):'txt',soma:n&&tem};
+  });
+  var linhas=rep.rows.map(function(r){
     var o={};rep.cols.forEach(function(c){
       var v=r[c.k];
-      o[c.t]=c.tipo==='data'&&v?fmtIso(v):(c.tipo==='num'||c.tipo==='brl')&&v!==''&&v!=null?+(+v).toFixed(c.dec||(c.tipo==='brl'?2:0)):(v==null?'':v);
+      o[c.k]=c.tipo==='data'&&v?xlData(String(v).length<=10?v+'T00:00:00':v):(v==null?'':v);
     });return o;
   });
-  xlsxBaixar(linhas,rep.titulo.slice(0,31),rep.arquivo||('relatorio_'+localISODate()+'.xlsx'));
+  xlsxRelatorio({arquivo:rep.arquivo||('relatorio_'+localISODate()+'.xlsx'),titulo:rep.titulo,
+    info:[rep.info||((typeof armadorAtual!=='undefined'&&armadorAtual)?'Armador: '+armadorAtual:'')],
+    abas:[{nome:rep.titulo,colunas:cols,linhas:linhas}]});
 }
 function somaTotal(rows,cols,rotuloKey){
   var t={};t[rotuloKey]='TOTAL';
