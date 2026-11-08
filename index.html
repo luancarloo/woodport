@@ -3005,8 +3005,9 @@ function preencherBlk(blk,l){
 
   // busca saldo
   setField(blk,'.lt-saldo-lbl','Consultando saldo...');
-  sb.from('wp_ticket_itens').select('quantidade').eq('lista_id',l.id).then(function(r){
-    var used=(r.data||[]).reduce(function(s,t){return s+(parseInt(t.quantidade)||0);},0);
+  fetchUsadoPorLista([l.id]).then(function(r){ // ticket cancelado não conta: o saldo volta para o lote
+    if(r.error){setField(blk,'.lt-qtd-max',0);setField(blk,'.lt-saldo-lbl','⚠ Erro ao consultar saldo — busque a Ref novamente');return;}
+    var used=r.map[l.id]||0;
     var total=parseInt(l.quantidade)||0;
     var saldo=Math.max(0,total-used);
     var pct=total>0?Math.round(used/total*100):0;
