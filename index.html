@@ -624,7 +624,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div class="tb-title" id="pg-title">Dashboard</div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
-      <label class="navio-chip"><small>NAVIO ATIVO</small><select id="navio-sel" onchange="onNavioChange()" aria-label="Navio ativo"><option value="">— Selecione o Navio —</option></select></label>
+      <label class="navio-chip"><small id="navio-chip-lbl">NAVIO ATIVO</small><select id="navio-sel" onchange="onNavioChange()" aria-label="Navio ativo"><option value="">— Selecione o Navio —</option></select></label>
       <span style="font-size:12px;color:var(--ink4);" id="today-lbl"></span>
     </div>
   </div>
@@ -921,7 +921,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         </div>
         <div class="card">
           <div class="ch"><div class="ct">Navios Cadastrados</div></div>
-          <div class="tw"><table><thead><tr><th>Nome</th><th>Código</th><th>Viagem</th><th>Armador</th><th>Porões</th><th>Plano de estiva</th><th>ETA</th><th></th></tr></thead><tbody id="nv-tb"></tbody></table></div>
+          <div class="tw"><table><thead><tr><th>Nome</th><th>Código</th><th>Viagem</th><th>Armador</th><th>Porões</th><th>Plano de estiva</th><th>ETA</th><th>Situação</th><th></th></tr></thead><tbody id="nv-tb"></tbody></table></div>
           <div id="nv-empty" class="empty" style="display:none;"><div class="ei">⚓</div><h3>Nenhum navio</h3></div>
         </div>
       </div>
@@ -1300,6 +1300,8 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         <div class="spl sp2">
           <div class="card">
             <div class="ch"><div><div class="ct">Lançar descarga</div><div class="cs">Armador: <strong class="arm-nome"></strong></div></div></div>
+            <div id="ed-trava"></div>
+            <div id="ed-caminhao" style="display:none;"></div>
             <div class="gr" style="gap:12px;">
               <div class="gr g2">
                 <div class="fg"><label class="fl" for="ed-data">Data <span class="req">*</span></label><input type="date" id="ed-data"></div>
@@ -1348,7 +1350,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
                 <div id="ed-nc-thumbs" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
               </div>
               <div class="fg"><label class="fl" for="ed-obs">Observação</label><input id="ed-obs"></div>
-              <button class="btn bp" onclick="lancarDescarga()">💾 Lançar</button>
+              <button class="btn bp" id="ed-btn-lancar" onclick="lancarDescarga()">💾 Lançar</button>
               <hr>
               <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Importar do Excel — colunas <strong>Data, NF, Produtor, Marca, Tipo produto, Destino, Quantidade</strong> (Armazém opcional; <strong>CBM total</strong> e <strong>Peso total</strong> cadastram as marcas novas). Na planilha de entrada e saída, só a coluna ENTRADA é usada; as saídas vêm dos embarques.</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -2366,21 +2368,46 @@ function loadNaviosSel(){
   if(!sb)return;
   sb.from('wp_navios').select('*').order('created_at',{ascending:false}).then(function(r){
     naviosAll=r.data||[];
-    var sel=document.getElementById('navio-sel');
-    sel.innerHTML='<option value="">— Selecione o Navio —</option>';
-    naviosAll.forEach(function(n){
-      var o=document.createElement('option');o.value=n.id;
-      o.textContent=n.nome+(n.viagem?' | Vgm '+n.viagem:'');sel.appendChild(o);
-    });
-    var saved=lsGet('wp_navio');
-    if(saved){sel.value=saved;onNavioChange();}
+    var saved=lsGet('wp_navio'),nv=saved&&naviosAll.find(function(n){return n.id===saved;});
+    verFinalizados=!!(nv&&navioFinalizado(nv));
+    navioAtivo=nv||null;
+    renderNavioSel();
+    if(nv)onNavioChange();
   });
 }
+// ── Navios em operação × finalizados ──
+// O seletor do topo mostra só os navios em operação; os finalizados ficam em "📁 Navios finalizados"
+// (consulta: relatórios, lista, tickets e minutas continuam abrindo; emitir/validar/importar ficam bloqueados).
+var verFinalizados=false;
+function navioFinalizado(n){return !!(n&&n.finalizado_em);}
+function dataFinalizado(n){return n&&n.finalizado_em?new Date(n.finalizado_em).toLocaleDateString('pt-BR'):'';}
+function renderNavioSel(){
+  var sel=document.getElementById('navio-sel');if(!sel)return;
+  var ativos=naviosAll.filter(function(n){return !navioFinalizado(n);});
+  var fin=naviosAll.filter(navioFinalizado).sort(function(a,b){return String(b.finalizado_em).localeCompare(String(a.finalizado_em));});
+  function op(n){return '<option value="'+esc(n.id)+'">'+esc(n.nome+(n.viagem?' | Vgm '+n.viagem:'')+(navioFinalizado(n)?' · finalizado '+dataFinalizado(n):''))+'</option>';}
+  sel.innerHTML=verFinalizados
+    ?'<option value="">— Escolha o navio finalizado —</option>'+fin.map(op).join('')+'<option value="__ativos">← Voltar aos navios em operação ('+ativos.length+')</option>'
+    :'<option value="">— Selecione o Navio —</option>'+ativos.map(op).join('')+(fin.length?'<option value="__fin">📁 Navios finalizados ('+fin.length+')…</option>':'');
+  sel.value=navioAtivo&&navioFinalizado(navioAtivo)===verFinalizados?navioAtivo.id:'';
+  var lbl=document.getElementById('navio-chip-lbl');
+  if(lbl){lbl.textContent=verFinalizados?'NAVIO FINALIZADO · SÓ CONSULTA':'NAVIO ATIVO';lbl.style.color=verFinalizados?'#B45309':'';}
+}
 function onNavioChange(){
-  var id=document.getElementById('navio-sel').value;
+  var sel=document.getElementById('navio-sel'),id=sel.value;
+  if(id==='__fin'){verFinalizados=true;renderNavioSel();return;}
+  if(id==='__ativos'){
+    verFinalizados=false;renderNavioSel();
+    if(!navioFinalizado(navioAtivo))return; // continua no navio em operação que já estava
+    id='';
+  }
   navioAtivo=naviosAll.find(function(n){return n.id===id;})||null;
+  if(navioAtivo&&navioFinalizado(navioAtivo)!==verFinalizados){verFinalizados=navioFinalizado(navioAtivo);renderNavioSel();}
   lsSet('wp_navio',id||'');
-  document.getElementById('sb-ship').textContent=navioAtivo?'⚓ '+navioAtivo.nome:'';
+  document.getElementById('sb-ship').textContent=navioAtivo?'⚓ '+navioAtivo.nome+(navioFinalizado(navioAtivo)?' (finalizado)':''):'';
+  // o estoque segue o armador do navio escolhido
+  var armNav=armadorDoNavio();
+  if(armNav&&ARMADORES.indexOf(armNav)>=0&&armNav!==armadorAtual)escolherArmador(armNav);else atualizarTravaArmador();
   // descarta dados do navio anterior (senão o autocomplete do ticket oferecia lotes do navio errado)
   listaAll=[];ticketsAll=[];listaUsed={};rlData=[];hlRawData={};
   // atualiza select de porões no ticket
@@ -2492,13 +2519,46 @@ function loadNavios(){
         +'<td>'+esc(poroesLabel)+'</td>'
         +'<td>'+(planoDe(n)?'<span class="bge ok">Definido</span>':'<span class="bge ntrl">Sem plano</span>')+'</td>'
         +'<td>'+(n.eta?fmtD(n.eta):'—')+'</td>'
+        +'<td>'+(navioFinalizado(n)
+          ?'<span class="bge ntrl">Finalizado</span><div style="font-size:11px;color:var(--ink4);">'+dataFinalizado(n)+(n.finalizado_por_nome?' · '+esc(n.finalizado_por_nome):'')+'</div>'
+          :'<span class="bge ok">Em operação</span>')+'</td>'
         +'<td style="display:flex;gap:4px;">'
+        +(temModulo('navio')?(navioFinalizado(n)
+          ?'<button class="btn bs bsm" onclick="reabrirNavio(\''+n.id+'\')">Reabrir</button>'
+          :'<button class="btn bs bsm" onclick="finalizarNavio(\''+n.id+'\')">✓ Finalizar</button>'):'')
         +'<button class="btn bs bsm" onclick="abrirPlano(\''+n.id+'\')">Plano de estiva</button>'
         +'<button class="btn bs bsm" onclick="editNavio(\''+n.id+'\')" aria-label="Editar navio">✏</button>'
         +(canDelete('wp_navios',{})
           ?'<button class="btn bd bsm" onclick="excluirNavio(\''+n.id+'\')" aria-label="Excluir navio">✕</button>':'')
         +'</td></tr>';
     }).join('');
+  });
+}
+function finalizarNavio(id){
+  var n=naviosAll.find(function(x){return x.id===id;});if(!n)return;
+  showLd(true);
+  sb.from('wp_tickets').select('id',{count:'exact',head:true}).eq('navio_id',id).eq('status','emitido').then(function(r){
+    showLd(false);
+    var pend=r.count||0;
+    if(!confirm('Finalizar o embarque do navio '+n.nome+(n.viagem?' (Vgm '+n.viagem+')':'')+'?\n\n'
+      +(pend?'ATENÇÃO: há '+pend+' ticket(s) emitido(s) e ainda não validado(s) neste navio.\n\n':'')
+      +'• O navio sai da lista de navios em operação no topo.\n'
+      +'• Relatórios, lista de carga, tickets e minutas continuam em "📁 Navios finalizados".\n'
+      +'• Não será mais possível emitir, validar ou importar lista neste navio (dá para reabrir depois).'))return;
+    sb.from('wp_navios').update({finalizado_em:new Date().toISOString(),finalizado_por_nome:currentUser.nome}).eq('id',id).select('id').then(function(r2){
+      if(r2.error){toast('Erro: '+(/finalizado/.test(r2.error.message)?'rode o script woodport_navio_finalizado.sql no Supabase':r2.error.message),'error');return;}
+      if(!r2.data||!r2.data.length){toast('Sem permissão para alterar este navio','error');return;}
+      toast('Embarque do navio '+n.nome+' finalizado','success');loadNavios();loadNaviosSel();
+    });
+  });
+}
+function reabrirNavio(id){
+  var n=naviosAll.find(function(x){return x.id===id;});if(!n)return;
+  if(!confirm('Reabrir o navio '+n.nome+'?\n\nEle volta para a lista de navios em operação e aceita emissão e validação de tickets.'))return;
+  sb.from('wp_navios').update({finalizado_em:null,finalizado_por_nome:null}).eq('id',id).select('id').then(function(r){
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(!r.data||!r.data.length){toast('Sem permissão para alterar este navio','error');return;}
+    toast('Navio '+n.nome+' reaberto','success');loadNavios();loadNaviosSel();
   });
 }
 
@@ -2586,6 +2646,7 @@ function loadUsers(){
 function importXLSX(input){
   if(!temModulo('lista_editar')){toast('Seu usuário não tem permissão para importar a lista de carga','error');input.value='';return;}
   if(!sb||!navioAtivo){toast('Selecione um navio antes de importar','error');return;}
+  if(navioFinalizado(navioAtivo)){toast('Navio com embarque finalizado: a lista de carga é só consulta','error');input.value='';return;}
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
@@ -3225,6 +3286,7 @@ function placaValida(p){
 function emitirTicket(){
   if(!sb){toast('Configure o Supabase','error');return;}
   if(!navioAtivo){toast('Selecione um navio','error');return;}
+  if(navioFinalizado(navioAtivo)){toast('Navio '+navioAtivo.nome+' está com o embarque finalizado (só consulta). Para emitir, reabra em Administração › Navios.','error');return;}
   if(!currentUser){toast('Faça login primeiro','error');return;}
   var placa=document.getElementById('tk-placa').value.trim().toUpperCase();
   var motorista=document.getElementById('tk-motorista').value.trim();
@@ -4785,6 +4847,8 @@ function renderValResult(tk){
   document.getElementById('val-result').style.display='';
 }
 function validarTicket(id){
+  var nvTk=(_valTk&&naviosAll.find(function(n){return n.id===_valTk.navio_id;}))||navioAtivo;
+  if(navioFinalizado(nvTk)){toast('Navio '+nvTk.nome+' está com o embarque finalizado (só consulta). Para validar, reabra em Administração › Navios.','error');return;}
   var periodo=document.getElementById('val-periodo').value;
   if(!periodo){toast('Selecione o período de embarque','error');return;}
   var terno=document.getElementById('val-terno').value;
@@ -6187,6 +6251,27 @@ function escolherArmador(a){
   if(currentPage==='estoque')estRender();
   if(currentPage==='armazenagem'){armRenderTarifas();est.armRes=null;['ar-tb','ar-det'].forEach(function(i){document.getElementById(i).innerHTML='';});document.getElementById('ar-total').textContent='';}
   if(currentPage==='rel-armazem')raGerar();
+  atualizarTravaArmador();
+}
+// ── Navio escolhido manda no armador da descarga: navio da AB só lança no estoque da AB ──
+function armadorDoNavio(){
+  var a=navioAtivo&&!navioFinalizado(navioAtivo)&&navioAtivo.armador;if(!a)return null; // navio finalizado não trava a descarga
+  return ARMADORES.find(function(x){return normAz(x)===normAz(a);})||String(a).trim();
+}
+// mensagem de bloqueio (null = pode lançar no armador atual)
+function travaArmadorMsg(){
+  var an=armadorDoNavio();
+  if(!an||mesmoArmador(an))return null;
+  return 'O navio '+navioAtivo.nome+' é do armador '+an+'. Com ele selecionado, a descarga só pode ser lançada no estoque da '+an+' (você está no estoque da '+armadorAtual+').';
+}
+function atualizarTravaArmador(){
+  var box=document.getElementById('ed-trava');if(!box)return;
+  var msg=travaArmadorMsg(),an=armadorDoNavio();
+  box.innerHTML=msg?'<div class="imp-st err" style="margin-bottom:12px;">⚠<div>'+esc(msg)
+      +(ARMADORES.indexOf(an)>=0?'<div style="margin-top:8px;"><button type="button" class="btn bs bsm" data-arm="'+esc(an)+'" onclick="escolherArmador(this.dataset.arm)">Trocar para '+esc(an)+'</button></div>':'')+'</div></div>'
+    :an?'<div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">Navio ativo <strong>'+esc(navioAtivo.nome)+'</strong> · armador '+esc(an)+' — lançamentos vão para o estoque da '+esc(an)+'.</div>'
+    :'';
+  var bt=document.getElementById('ed-btn-lancar');if(bt)bt.disabled=!!msg;
 }
 
 function nmMarca(s){return String(s||'').toUpperCase().replace(/\s+/g,'');}
@@ -6337,7 +6422,7 @@ function estRender(){
   var az=document.getElementById('est-az').value;
   if(az)document.getElementById('ed-az').value=az;
   if(est.aba==='saldo')estRenderSaldo();
-  if(est.aba==='descargas')estRenderMovs();
+  if(est.aba==='descargas'){estRenderMovs();renderCaminhao();atualizarTravaArmador();}
   if(est.aba==='marcas')estRenderMarcas();
   if(est.aba==='comparar')estRenderComparar();
   if(est.aba==='inventario')estRenderInventario();
@@ -6739,6 +6824,7 @@ function lancarDescarga(){
     nf:v('ed-nf'),produtor:v('ed-prod'),marca:(v('ed-marca')||'').toUpperCase(),produto:(v('ed-produto')||'').toUpperCase()||null,destino:destinoCanon(v('ed-dest')),
     quantidade:parseInt(document.getElementById('ed-qtd').value)||0,obs:v('ed-obs'),
     criado_por:currentUser.id,criado_por_nome:currentUser.nome};
+  var trava=travaArmadorMsg();if(trava){toast(trava,'error');atualizarTravaArmador();return;}
   if(!reg.data||!reg.armazem||!reg.marca||!reg.produtor){toast('Preencha data, armazém, produtor e marca','error');return;}
   if(reg.quantidade<=0){toast('Quantidade de fardos deve ser maior que zero','error');return;}
   if(reg.tipo==='descarga'&&!reg.destino){toast('Informe o destino da carga','error');return;}
@@ -6782,6 +6868,7 @@ function lancarDescarga(){
     showLd(false);
     if(r.error)throw r.error;
     est.movs.push(r.data);
+    if(reg.tipo==='descarga')registrarCaminhao(reg);
     toast('Descarga lançada: '+reg.quantidade+' fds '+reg.marca+(novaMarca?' · marca nova cadastrada':''),'success');
     ['ed-nf','ed-marca','ed-qtd','ed-obs','ed-produto','ed-cbmtot','ed-pesotot','ed-placa','ed-nc-desc'].forEach(function(id){document.getElementById(id).value='';});
     edNc(false);limparEdFotos();
@@ -6789,10 +6876,52 @@ function lancarDescarga(){
     document.getElementById('ed-nova').style.display='none';
     document.getElementById('ed-info').textContent='';
     atualizarListasEstoque();
-    document.getElementById('ed-marca').focus();
     estRender();
+    if(reg.tipo==='descarga'){var cx=document.getElementById('ed-caminhao');if(cx)cx.scrollIntoView({block:'nearest',behavior:'smooth'});}
+    else document.getElementById('ed-marca').focus();
   }).catch(function(e){showLd(false);toast('Erro: '+erroColunaNova(e),'error');});
 }
+// ── Caminhão com várias marcas: cada marca é um lançamento; o quadro guarda os dados do caminhão ──
+var _caminhao=null;
+function registrarCaminhao(reg){
+  var c=_caminhao;
+  var mesmo=c&&c.placa===reg.placa&&c.data===reg.data&&normAz(c.armazem)===normAz(reg.armazem)&&normAz(c.armador)===normAz(reg.armador);
+  if(!mesmo)c=_caminhao={placa:reg.placa,data:reg.data,armazem:reg.armazem,armador:reg.armador,marcas:[]};
+  c.periodo=reg.periodo;c.nf=reg.nf;c.produtor=reg.produtor;c.destino=reg.destino;
+  c.marcas.push({marca:reg.marca,qtd:reg.quantidade});
+  renderCaminhao();
+}
+function renderCaminhao(){
+  var box=document.getElementById('ed-caminhao');if(!box)return;
+  var c=_caminhao;
+  if(!c||!mesmoArmador(c.armador)){box.style.display='none';box.innerHTML='';return;}
+  var tot=c.marcas.reduce(function(a,m){return a+m.qtd;},0);
+  box.style.display='';
+  box.innerHTML='<div style="border:1px solid var(--f100);background:var(--f50);border-radius:10px;padding:12px;margin-bottom:12px;">'
+    +'<div style="font-size:13px;"><strong>🚚 Caminhão '+esc(c.placa)+'</strong> · '+fmtIso(c.data)+(c.periodo?' · '+esc(c.periodo):'')+' · '+esc(c.armazem)+'</div>'
+    +'<div style="font-size:12px;color:var(--ink3);margin:4px 0 10px;">'+c.marcas.length+' marca(s) lançada(s): '
+    +c.marcas.map(function(m){return '<strong class="mono">'+esc(m.marca)+'</strong> ('+m.qtd+' fds)';}).join(' · ')+' — total '+tot+' fds</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+    +'<button type="button" class="btn bp" onclick="outraMarcaCaminhao()">＋ Outra marca neste caminhão</button>'
+    +'<button type="button" class="btn bs" onclick="fecharCaminhao()">Caminhão concluído</button></div></div>';
+}
+// repõe os dados do caminhão no formulário; só falta a marca e os fardos
+function outraMarcaCaminhao(){
+  var c=_caminhao;if(!c)return;
+  document.getElementById('ed-tipo').value='descarga';edTipoMudou();
+  document.getElementById('ed-data').value=c.data;
+  var az=document.getElementById('ed-az');if([].some.call(az.options,function(o){return o.value===c.armazem;}))az.value=c.armazem;
+  if(c.periodo){document.getElementById('ed-periodo').value=c.periodo;renderPeriodoBtns();}
+  document.getElementById('ed-placa').value=c.placa||'';
+  document.getElementById('ed-nf').value=c.nf||'';
+  document.getElementById('ed-prod').value=c.produtor||'';
+  document.getElementById('ed-dest').value=c.destino||'';
+  ['ed-marca','ed-qtd','ed-produto','ed-cbmtot','ed-pesotot','ed-obs','ed-nc-desc'].forEach(function(id){document.getElementById(id).value='';});
+  edNc(false);limparEdFotos();edMarcaInfo();
+  var mk=document.getElementById('ed-marca');mk.scrollIntoView({block:'center'});mk.focus();
+  toast('Caminhão '+c.placa+' preenchido — informe a outra marca e os fardos','success');
+}
+function fecharCaminhao(){_caminhao=null;renderCaminhao();}
 function estRenderMovs(){
   var de=document.getElementById('em-de').value,ate=document.getElementById('em-ate').value;
   var b=(document.getElementById('em-busca').value||'').trim().toLowerCase(),az=document.getElementById('est-az').value;
@@ -6864,6 +6993,7 @@ function dataPlanilha(v,txt){
 function importarMovExcel(input){
   var file=input.files[0];input.value='';if(!file)return;
   var tipo=input.dataset.tipo||'descarga';
+  var trava=travaArmadorMsg();if(trava){toast(trava,'error');return;}
   var azPadrao=document.getElementById('ed-az').value;
   var dataCorte=null;
   if(tipo==='inventario'){
@@ -6873,7 +7003,7 @@ function importarMovExcel(input){
     if(!dataCorte){toast('Data inválida','error');return;}
   }
   lerPlanilha(file,function(abas){
-    var regs=[],ignorados={semMarca:0,semQtd:0,semData:0,saida:0},abaUsada=null;
+    var regs=[],ignorados={semMarca:0,semQtd:0,semData:0,saida:0},abaUsada=null,avisos={perInval:0,placaInval:0,nc:0};
     abas.forEach(function(a){
       if(abaUsada)return;
       var R=a.raw,T=a.txt,h=-1;
@@ -6895,7 +7025,8 @@ function importarMovExcel(input){
           cDest=col(function(c){return c.indexOf('DESTINO')===0||c==='PORTO'||c.indexOf('PORTO DE')===0||c==='POD';}),
           cCbm=col(function(c){return c.indexOf('CBM')===0||c.indexOf('M3')===0||c.indexOf('M³')===0||c.indexOf('VOLUME')===0;}),
           cPeso=col(function(c){return c.indexOf('PESO')===0||c.indexOf('WEIGHT')===0||c.indexOf('TON')===0;});
-      var cPer=col(function(c){return c.indexOf('PERIODO')===0||c==='TURNO';}),cPlaca=col(function(c){return c.indexOf('PLACA')===0;});
+      var cPer=col(function(c){return c.indexOf('PERIODO')===0||c==='TURNO';}),cPlaca=col(function(c){return c.indexOf('PLACA')===0;}),
+          cNc=col(function(c){return c.indexOf('NAO CONFORM')===0||c==='NC'||c.indexOf('AVARIA')===0;});
       // quantidade: coluna "ENTRADA" na linha de baixo (planilha de entrada e saída) ou QUANTIDADE/QTD/SALDO
       var cQtd=H2.indexOf('ENTRADA'),cSai=H2.indexOf('SAIDA'),ini=h+1;
       if(cQtd>=0)ini=h+2;
@@ -6917,8 +7048,14 @@ function importarMovExcel(input){
           _cbm:cCbm>=0?numBR(L[cCbm]):null,_peso:cPeso>=0?numBR(L[cPeso]):null,
           criado_por:currentUser.id,criado_por_nome:currentUser.nome});
         var rg=regs[regs.length-1];
-        if(cPer>=0&&tipo==='descarga')rg.periodo=normPeriodo(LT[cPer]||L[cPer]);
-        if(cPlaca>=0&&tipo==='descarga')rg.placa=fmtPlacaTxt(String(LT[cPlaca]||L[cPlaca]||''))||null;
+        if(tipo==='descarga'){
+          var perTx=cPer>=0?String(LT[cPer]||L[cPer]||'').trim():'';
+          if(perTx){rg.periodo=normPeriodo(perTx);if(!rg.periodo)avisos.perInval++;}
+          var plTx=cPlaca>=0?String(LT[cPlaca]||L[cPlaca]||'').trim():'';
+          if(plTx){rg.placa=fmtPlacaTxt(plTx)||null;if(!placaFormatoOk(plTx))avisos.placaInval++;}
+          var ncTx=cNc>=0?String(LT[cNc]||L[cNc]||'').trim():'';
+          if(ncTx&&!/^(NAO|NÃO|N|-|OK|SEM|NENHUMA)$/i.test(ncTx)){rg.nao_conforme=true;rg.nc_descricao=/^(SIM|S|X)$/i.test(ncTx)?'Não conformidade (importada da planilha)':ncTx;avisos.nc++;}
+        }
       }
     });
     if(!abaUsada){toast('Não encontrei o cabeçalho (precisa de MARCA e DATA'+(tipo==='inventario'?'':'')+')','error');return;}
@@ -6959,6 +7096,9 @@ function importarMovExcel(input){
       +(marcasNovas.length?'\n• '+marcasNovas.length+' marca(s) nova(s) serão cadastradas (CBM e peso por fardo pelos totais): '+marcasNovas.slice(0,10).map(function(m){return m.marca;}).join(', ')+(marcasNovas.length>10?'…':''):'')
       +(semDest?'\n• '+semDest+' descarga(s) sem DESTINO — não abatem booking de porto':'')
       +(semParam.length?'\n• '+semParam.length+' marca(s) sem parâmetro: '+semParam.slice(0,10).join(', ')+(semParam.length>10?'…':''):'')
+      +(avisos.nc?'\n• '+avisos.nc+' com NÃO CONFORMIDADE (fotos podem ser anexadas depois, pela tela)':'')
+      +(avisos.perInval?'\n• '+avisos.perInval+' com PERÍODO não reconhecido — ficam sem período (use 07x13, 13x19, 19x01 ou 01x07)':'')
+      +(avisos.placaInval?'\n• '+avisos.placaInval+' com PLACA fora do padrão (ABC-1234 / ABC1D23) — gravadas como estão':'')
       +'\n\nConfirmar importação?';
     if(!confirm(msg))return;
     var tag=file.name+' · '+new Date().toLocaleString('pt-BR');
@@ -6971,16 +7111,46 @@ function importarMovExcel(input){
   });
 }
 
-// Modelos de planilha para importação (mesmos títulos que o importador procura)
+// Modelos de planilha para importação (mesmos títulos que o importador procura).
+// ⚠ REGRA: campo novo na descarga/inventário → acrescente aqui (cabeçalho, se é texto, exemplo)
+//   E no importarMovExcel (detecção da coluna). O modelo, o exemplo e a ajuda saem desta lista.
+// t = formato texto (não perde zero à esquerda), w = largura, ex1/ex2 = linhas de exemplo
+var MODELO_COLS={
+  descarga:[
+    {h:'DATA',w:12,ex1:'13/10/2026',ex2:'14/10/2026'},
+    {h:'PERÍODO',t:1,w:10,ex1:'07x13',ex2:'19x01'},
+    {h:'PLACA',t:1,w:11,ex1:'ABC-1D23',ex2:'QWE-4567'},
+    {h:'NF',t:1,w:10,ex1:'11116',ex2:'6353'},
+    {h:'PRODUTOR',t:1,w:30,ex1:'Madeireira Exemplo',ex2:'Serraria Modelo'},
+    {h:'MARCA',t:1,w:12,ex1:'404D',ex2:'F99'},
+    {h:'TIPO PRODUTO',t:1,w:14,ex1:'SLBRC',ex2:'SWPLY'},
+    {h:'DESTINO',t:1,w:18,ex1:'Houston',ex2:'Savannah'},
+    {h:'QUANTIDADE',w:12,ex1:'60',ex2:'28'},
+    {h:'CBM TOTAL',w:11,ex1:'',ex2:'64,96'},
+    {h:'PESO TOTAL (t)',w:14,ex1:'',ex2:'33,88'},
+    {h:'ARMAZÉM',t:1,w:12,ex1:'WRC',ex2:''},
+    {h:'NÃO CONFORMIDADE',t:1,w:34,ex1:'',ex2:'2 fardos com cinta rompida'},
+    {h:'OBS',t:1,w:30,ex1:'',ex2:''}],
+  inventario:[
+    {h:'MARCA',t:1,w:12,ex1:'404D',ex2:'F99'},
+    {h:'PRODUTOR',t:1,w:30,ex1:'Madeireira Exemplo',ex2:'Serraria Modelo'},
+    {h:'TIPO PRODUTO',t:1,w:14,ex1:'SLBRC',ex2:'SWPLY'},
+    {h:'DESTINO',t:1,w:18,ex1:'Houston',ex2:'Savannah'},
+    {h:'QUANTIDADE',w:12,ex1:'201',ex2:'40'},
+    {h:'CBM TOTAL',w:11,ex1:'',ex2:'92,8'},
+    {h:'PESO TOTAL (t)',w:14,ex1:'',ex2:'48,4'},
+    {h:'ARMAZÉM',t:1,w:12,ex1:'WRC',ex2:'WRC'},
+    {h:'OBS',t:1,w:30,ex1:'',ex2:''}]
+};
 function baixarModeloEstoque(tipo){
-  var inv=tipo==='inventario';
-  var cab=inv?['MARCA','PRODUTOR','TIPO PRODUTO','DESTINO','QUANTIDADE','CBM TOTAL','PESO TOTAL (t)','ARMAZÉM','OBS']
-    :['DATA','NF','PRODUTOR','MARCA','TIPO PRODUTO','DESTINO','QUANTIDADE','CBM TOTAL','PESO TOTAL (t)','ARMAZÉM','OBS'];
-  var texto=inv?[0,1,2,3,7,8]:[1,2,3,4,5,9,10]; // colunas em formato texto (não perde zero à esquerda da marca/NF)
+  var inv=tipo==='inventario',cols=MODELO_COLS[inv?'inventario':'descarga'];
+  var cab=cols.map(function(c){return c.h;});
   var ws=XLSX.utils.aoa_to_sheet([cab]);
-  for(var r=1;r<=1000;r++)texto.forEach(function(c){ws[XLSX.utils.encode_cell({r:r,c:c})]={t:'s',v:'',z:'@'};});
+  for(var r=1;r<=1000;r++)cols.forEach(function(c,i){if(c.t)ws[XLSX.utils.encode_cell({r:r,c:i})]={t:'s',v:'',z:'@'};});
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:1000,c:cab.length-1}});
-  ws['!cols']=cab.map(function(h){return {wch:h==='PRODUTOR'||h==='OBS'?30:h==='DESTINO'?18:14};});
+  ws['!cols']=cols.map(function(c){return {wch:c.w||14};});
+  var exemplo=[['Exemplo:'],[cab.join(' | ')],
+    [cols.map(function(c){return c.ex1;}).join(' | ')],[cols.map(function(c){return c.ex2;}).join(' | ')]];
   var instr=inv?[
     ['Modelo de importação — INVENTÁRIO DE ABERTURA'],[''],
     ['1. Preencha o saldo atual de cada marca, por produtor, na aba "Inventario". Não altere os títulos da linha 1.'],
@@ -6988,20 +7158,22 @@ function baixarModeloEstoque(tipo){
     ['3. TIPO PRODUTO (SLBRC, SWPLY, MDF, HDF) e DESTINO (porto) — o destino é usado para abater o booking de cada porto.'],
     ['4. Marca que ainda não existe no WoodPort: preencha CBM TOTAL (m³) e PESO TOTAL (t) da linha; o sistema divide pelos fardos e cadastra a marca.'],
     ['5. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
-    ['6. Ao importar, o WoodPort pergunta a DATA DO INVENTÁRIO. Embarques validados a partir dela baixam o estoque; a armazenagem conta a partir dela.'],[''],
-    ['Exemplo:'],['MARCA | PRODUTOR | TIPO PRODUTO | DESTINO | QUANTIDADE | CBM TOTAL | PESO TOTAL (t) | ARMAZÉM'],['404D | Madeireira Exemplo | SLBRC | Houston | 201 | | | WRC'],['F99 | Serraria Modelo | SWPLY | Savannah | 40 | 92,8 | 48,4 | WRC']
-  ]:[
+    ['6. Ao importar, o WoodPort pergunta a DATA DO INVENTÁRIO. Embarques validados a partir dela baixam o estoque; a armazenagem conta a partir dela.'],
+    ['7. As marcas entram na lista do armador selecionado na tela (G2 Ocean ou AB) — importe cada armador separadamente.'],['']
+  ].concat(exemplo):[
     ['Modelo de importação — ENTRADAS (descargas)'],[''],
-    ['1. Uma linha por descarga (caminhão), na aba "Entradas". Não altere os títulos da linha 1.'],
+    ['1. Uma linha por marca descarregada, na aba "Entradas". Caminhão com 2 marcas = 2 linhas com a mesma placa. Não altere os títulos da linha 1.'],
     ['2. Obrigatórios: DATA (dd/mm/aaaa), PRODUTOR, MARCA, DESTINO e QUANTIDADE (fardos). NF e OBS são opcionais.'],
-    ['3. TIPO PRODUTO: SLBRC, SWPLY, MDF ou HDF. Para marca já cadastrada pode ficar em branco (vem da marca).'],
-    ['4. DESTINO: porto de destino da carga. É o que abate o booking do cliente naquele porto.'],
-    ['5. Marca que ainda não existe no WoodPort: preencha CBM TOTAL (m³) e PESO TOTAL (t) da descarga; o sistema divide pelos fardos e cadastra a marca. Para marca já cadastrada, deixe em branco.'],
-    ['6. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
-    ['7. Não lance saídas aqui: o estoque baixa sozinho quando o embarque é validado. Linhas já importadas antes (mesma data, NF, marca e quantidade) são ignoradas.'],[''],
-    ['Exemplo:'],['DATA | NF | PRODUTOR | MARCA | TIPO PRODUTO | DESTINO | QUANTIDADE | CBM TOTAL | PESO TOTAL (t) | ARMAZÉM'],
-    ['13/10/2026 | 11116 | Madeireira Exemplo | 404D | SLBRC | Houston | 60 | | | WRC'],['14/10/2026 | 6353 | Serraria Modelo | F99 | SWPLY | Savannah | 28 | 64,96 | 33,88 |']
-  ];
+    ['3. PERÍODO da descarga: 07x13, 13x19, 19x01 ou 01x07 (também aceita 7-13, 19:00-01:00…). Em branco = sem período.'],
+    ['4. PLACA do caminhão: ABC-1234 ou Mercosul ABC1D23 (com ou sem hífen).'],
+    ['5. TIPO PRODUTO: SLBRC, SWPLY, MDF ou HDF. Para marca já cadastrada pode ficar em branco (vem da marca).'],
+    ['6. DESTINO: porto de destino da carga. É o que abate o booking do cliente naquele porto.'],
+    ['7. Marca que ainda não existe no WoodPort: preencha CBM TOTAL (m³) e PESO TOTAL (t) da descarga; o sistema divide pelos fardos e cadastra a marca. Para marca já cadastrada, deixe em branco.'],
+    ['8. ARMAZÉM é opcional: em branco vale o armazém escolhido na tela ao importar.'],
+    ['9. NÃO CONFORMIDADE: descreva o problema encontrado na carga. Em branco (ou "NÃO") = carga sem não conformidade. As fotos são anexadas depois, pela tela de descargas.'],
+    ['10. As marcas entram na lista do armador selecionado na tela (G2 Ocean ou AB). Com navio selecionado, só é aceito o armador do navio.'],
+    ['11. Não lance saídas aqui: o estoque baixa sozinho quando o embarque é validado. Linhas já importadas antes (mesma data, NF, marca e quantidade) são ignoradas.'],['']
+  ].concat(exemplo);
   var wi=XLSX.utils.aoa_to_sheet(instr);wi['!cols']=[{wch:110}];
   var wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,inv?'Inventario':'Entradas');
