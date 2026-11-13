@@ -1706,6 +1706,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         <div><h2>Painel do embarque</h2><div class="sub">Turno atual <strong id="d-turno">—</strong> · <span id="d-lotes">—</span> lotes na lista</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn bs" onclick="loadDash()" aria-label="Atualizar painel">↻</button>
+          <button class="btn bs" id="d-btn-descarga" onclick="abrirRegistrarDescarga()" style="display:none;">📦 Registrar descarga</button>
           <button class="btn bs" id="d-btn-validar" onclick="go('validar')">Validar por QR</button>
           <button class="btn bp" id="d-btn-emitir" onclick="go('tickets')">+ Emitir ticket</button>
         </div>
@@ -2258,6 +2259,8 @@ function showApp(){
   var dv=document.getElementById('d-btn-validar'),de=document.getElementById('d-btn-emitir');
   if(dv)dv.style.display=podePagina('validar')?'':'none';
   if(de)de.style.display=podePagina('tickets')?'':'none';
+  var dd=document.getElementById('d-btn-descarga');
+  if(dd)dd.style.display=temModulo('estoque')?'':'none';
   var imp=document.getElementById('btn-import-lista');
   if(imp)imp.style.display=temModulo('lista_editar')?'':'none';
   loadNaviosSel();
@@ -6313,6 +6316,14 @@ function estAbrir(forcar){
   var ep=document.getElementById('ed-periodo');if(!ep.value)ep.value=periodoAgora();
   renderPeriodoBtns();edTipoMudou();
   estCarregar(forcar).then(estRender);
+}
+// atalho do painel: abre o Estoque direto no formulário de descarga
+function abrirRegistrarDescarga(){
+  go('estoque');
+  if(currentPage!=='estoque')return;
+  var tp=document.getElementById('ed-tipo');if(tp){tp.value='descarga';edTipoMudou();}
+  estAba('descargas');
+  setTimeout(function(){var c=document.getElementById('est-descargas');if(c)c.scrollIntoView({block:'start',behavior:'smooth'});},120);
 }
 function estAba(a){
   est.aba=a;
