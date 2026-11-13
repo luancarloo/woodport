@@ -601,6 +601,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         <button class="nv" onclick="go('cadastros')"><span class="nv-label">Motoristas e veículos</span></button>
         <button class="nv" onclick="go('backup')"><span class="nv-label">Backup &amp; Restore</span></button>
         <button class="nv" onclick="go('impressoras')"><span class="nv-label">Impressoras</span></button>
+        <button class="nv" onclick="go('armazens')"><span class="nv-label">Armazéns</span></button>
         <button class="nv" onclick="go('rel-admin')"><span class="nv-label">Relatórios</span></button>
       </div>
     </div>
@@ -1224,6 +1225,32 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       </div>
     </div>
 
+    <!-- ARMAZÉNS (admin) -->
+    <div class="page" id="page-armazens">
+      <div class="sh"><h2>Armazéns</h2><button class="btn bs bsm" onclick="loadArmazensPage()">↻ Atualizar</button></div>
+      <div class="spl sp2">
+        <div class="card">
+          <div class="ch"><div class="ct">Novo armazém</div></div>
+          <div class="gr" style="gap:12px;">
+            <div class="fg"><label class="fl" for="az-nome">Nome <span class="req">*</span></label><input id="az-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Santa Rita"></div>
+            <button class="btn bp" onclick="salvarArmazem()">💾 Cadastrar armazém</button>
+            <div style="font-size:12px;color:var(--ink3);line-height:1.6;">Depois de cadastrar:
+              <ol style="padding-left:18px;margin-top:4px;">
+                <li>libere o armazém para cada usuário em <strong>Administração › Usuários</strong>;</li>
+                <li>defina a tarifa em <strong>Armazém › Armazenagem</strong> (para cada armador);</li>
+                <li>se for imprimir tickets lá, cadastre a impressora e o computador em <strong>Impressoras</strong>.</li>
+              </ol>
+              O nome não pode ser trocado depois (fica gravado nos tickets, lotes e descargas). Armazém que não é mais usado pode ser desativado: ele sai das listas de escolha e o histórico continua.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">Armazéns cadastrados</div></div>
+          <div class="tw"><table><thead><tr><th>Armazém</th><th>Situação</th><th></th></tr></thead><tbody id="az-tb"></tbody></table></div>
+          <div id="az-aviso"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ESTOQUE -->
     <div class="page" id="page-estoque">
       <div class="sh" style="align-items:flex-end;">
@@ -1277,8 +1304,13 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
               <div class="gr g2">
                 <div class="fg"><label class="fl" for="ed-data">Data <span class="req">*</span></label><input type="date" id="ed-data"></div>
                 <div class="fg"><label class="fl" for="ed-tipo">Tipo</label>
-                  <select id="ed-tipo"><option value="descarga">Descarga</option><option value="inventario">Inventário de abertura</option></select></div>
+                  <select id="ed-tipo" onchange="edTipoMudou()"><option value="descarga">Descarga</option><option value="inventario">Inventário de abertura</option></select></div>
               </div>
+              <div class="fg ed-so-descarga"><label class="fl">Período da descarga <span class="req">*</span></label>
+                <div class="seg dark cols4" id="ed-periodo-btns" role="group" aria-label="Período da descarga"></div>
+                <input type="hidden" id="ed-periodo" value=""></div>
+              <div class="fg ed-so-descarga"><label class="fl" for="ed-placa">Placa do caminhão <span class="req">*</span></label>
+                <input id="ed-placa" autocomplete="off" maxlength="8" placeholder="ABC-1D23" oninput="fmtPlacaSimples(this)" style="font-family:var(--mono);text-transform:uppercase;"></div>
               <div class="gr g2">
                 <div class="fg"><label class="fl" for="ed-az">Armazém <span class="req">*</span></label><select id="ed-az"></select></div>
                 <div class="fg"><label class="fl" for="ed-nf">NF / Minuta</label><input id="ed-nf" inputmode="numeric"></div>
@@ -1301,6 +1333,20 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
                 <div id="ed-unit" style="font-size:12px;color:var(--ink3);margin-top:6px;"></div>
               </div>
               <div id="ed-info" style="font-size:12px;color:var(--ink3);min-height:16px;"></div>
+              <div class="fg ed-so-descarga"><label class="fl">Não conformidade na carga?</label>
+                <div class="seg dark" id="ed-nc-btns" role="group" aria-label="Não conformidade na carga">
+                  <button type="button" class="on" aria-pressed="true" onclick="edNc(false)">Não</button><button type="button" aria-pressed="false" onclick="edNc(true)">Sim</button></div>
+                <input type="hidden" id="ed-nc" value=""></div>
+              <div id="ed-nc-box" class="gr" style="display:none;gap:10px;border:1px solid #F04438;background:#FEF3F2;border-radius:10px;padding:12px;">
+                <div class="fg"><label class="fl" for="ed-nc-desc">O que foi encontrado <span class="req">*</span></label>
+                  <textarea id="ed-nc-desc" rows="2" placeholder="Ex.: fardos molhados, cintas rompidas, avaria na lateral"></textarea></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <button type="button" class="btn bs" onclick="document.getElementById('ed-nc-file').click()">📷 Tirar foto</button>
+                  <input type="file" id="ed-nc-file" accept="image/*" capture="environment" hidden onchange="edNcFotos(this)">
+                  <span id="ed-nc-qtd" style="font-size:12px;color:var(--ink3);">até 4 fotos</span>
+                </div>
+                <div id="ed-nc-thumbs" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+              </div>
               <div class="fg"><label class="fl" for="ed-obs">Observação</label><input id="ed-obs"></div>
               <button class="btn bp" onclick="lancarDescarga()">💾 Lançar</button>
               <hr>
@@ -1323,10 +1369,10 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                 <input type="date" id="em-de" onchange="estRenderMovs()" aria-label="De" style="width:auto;">
                 <input type="date" id="em-ate" onchange="estRenderMovs()" aria-label="Até" style="width:auto;">
-                <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="em-busca" placeholder="NF, produtor, marca" oninput="estRenderMovs()"></div>
+                <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="em-busca" placeholder="NF, placa, produtor, marca" oninput="estRenderMovs()"></div>
               </div>
             </div>
-            <div class="tw"><table><thead><tr><th>Data</th><th>Tipo</th><th>Armazém</th><th>NF</th><th>Produtor</th><th>Marca</th><th>Produto</th><th>Destino</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th>Lançado por</th><th></th></tr></thead><tbody id="em-tb"></tbody></table></div>
+            <div class="tw"><table><thead><tr><th>Data</th><th>Período</th><th>Tipo</th><th>Armazém</th><th>Placa</th><th>NF</th><th>Produtor</th><th>Marca</th><th>Produto</th><th>Destino</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th>Não conformidade</th><th>Lançado por</th><th></th></tr></thead><tbody id="em-tb"></tbody></table></div>
             <div id="em-info" style="font-size:12px;color:var(--ink3);margin-top:8px;"></div>
           </div>
         </div>
@@ -1336,7 +1382,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
       <div class="est-aba" id="est-marcas" style="display:none;">
         <div class="spl sp2">
           <div class="card">
-            <div class="ch"><div class="ct" id="mc-titulo">Nova marca</div></div>
+            <div class="ch"><div><div class="ct" id="mc-titulo">Nova marca</div><div class="cs">Armador: <strong class="arm-nome"></strong></div></div></div>
             <input type="hidden" id="mc-id">
             <div class="gr" style="gap:12px;">
               <div class="gr g2">
@@ -1369,7 +1415,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
           </div>
           <div class="card">
             <div class="ch">
-              <div class="ct">Marcas cadastradas <span class="cs" id="mc-count"></span></div>
+              <div><div class="ct">Marcas cadastradas <span class="cs" id="mc-count"></span></div><div class="cs">Lista do armador <strong class="arm-nome"></strong> — troque o armador no topo para ver a outra</div></div>
               <div class="sw"><span style="color:var(--ink4);">🔍</span><input id="mc-busca" placeholder="Marca ou exportador" oninput="estRenderMarcas()"></div>
             </div>
             <div class="tw"><table><thead><tr><th>Marca</th><th>Comm.</th><th style="text-align:right">Compr.</th><th style="text-align:right">Larg.</th><th style="text-align:right">Alt.</th><th style="text-align:right">F/L</th><th style="text-align:right">CBM</th><th style="text-align:right">Peso (t)</th><th>Exportador</th><th></th></tr></thead><tbody id="mc-tb"></tbody></table></div>
@@ -1498,7 +1544,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
             </div>
           </div>
           <div id="iv-aviso"></div>
-          <div class="tw"><table><thead><tr><th>Marca</th><th>Produtor(es)</th><th style="text-align:right">Sistema (fds)</th><th style="width:130px;">Contado</th><th style="text-align:right">Diferença</th></tr></thead><tbody id="iv-tb"></tbody></table></div>
+          <div class="tw"><table><thead><tr><th>Marca</th><th>Produtor(es)</th><th style="text-align:right">Sistema (fds)</th><th style="width:130px;" data-fixa="1">Contado</th><th style="text-align:right">Diferença</th></tr></thead><tbody id="iv-tb"></tbody></table></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;">
             <span id="iv-resumo" style="font-size:13px;color:var(--ink3);align-self:center;"></span>
             <button class="btn bp" onclick="lancarAjustesInventario()">Lançar ajustes</button>
@@ -1771,6 +1817,20 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
 </div>
 
 <!-- EDIT MODAL -->
+<div id="nc-modal" style="display:none;" class="ov" onclick="if(event.target===this)fecharFotosNc()">
+  <div class="modal" style="max-width:820px;">
+    <div class="mh">
+      <span class="mt" id="nc-titulo">Não conformidade</span>
+      <button class="mx" onclick="fecharFotosNc()" aria-label="Fechar">×</button>
+    </div>
+    <div id="nc-desc" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
+    <div id="nc-fotos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <button class="btn bs" id="nc-add" onclick="document.getElementById('nc-file').click()">📷 Adicionar foto</button>
+      <input type="file" id="nc-file" accept="image/*" capture="environment" hidden onchange="addFotoNc(this)">
+    </div>
+  </div>
+</div>
 <div id="edit-modal" style="display:none;" class="ov" onclick="if(event.target===this)closeEdit()">
   <div class="modal" style="max-width:600px;">
     <div class="mh">
@@ -2009,7 +2069,7 @@ function modulosEfetivos(u){
 function temModulo(k){return modulosEfetivos(currentUser).indexOf(k)>=0;}
 // página → permissão
 function podePagina(page){
-  if(page==='backup'||page==='cfg'||page==='impressoras'||page==='rel-admin')return isAdmin();
+  if(page==='backup'||page==='cfg'||page==='impressoras'||page==='armazens'||page==='rel-admin')return isAdmin();
   if(page==='rel-armazem')return temModulo('estoque')||temModulo('armazenagem');
   return temModulo(page==='navio'?'navio':page);
 }
@@ -2033,7 +2093,52 @@ function modChkChange(chk){
 }
 function modChecados(wrapId){
   return [].slice.call(document.querySelectorAll('#'+wrapId+' .mod-chk:checked')).map(function(c){return c.value;});
+}// ── Colunas do Estoque escondidas por usuário (o administrador define em Usuários › editar) ──
+// chave = "tabela:Título da coluna"; vale para a tela e para o Excel exportado
+var COL_TABS=[
+  {k:'saldo',tb:'es-tb',n:'Saldo'},
+  {k:'descargas',tb:'em-tb',n:'Descargas (movimentos lançados)'},
+  {k:'marcas',tb:'mc-tb',n:'Marcas'},
+  {k:'comparar',tb:'lc-tb',n:'Lista × Estoque'},
+  {k:'inventario',tb:'iv-tb',n:'Inventário (contagem)'}
+];
+function colsDaTabela(t){
+  var tb=document.getElementById(t.tb);if(!tb)return [];
+  var out=[];
+  tb.closest('table').querySelectorAll('thead th').forEach(function(th,i){
+    var h=th.textContent.replace(/\s+/g,' ').trim();
+    if(h&&!th.hasAttribute('data-fixa'))out.push({i:i,h:h});
+  });
+  return out;
 }
+function colOcultas(){return (currentUser&&currentUser.perfil!=='admin'&&currentUser.colunas_ocultas)||[];}
+function colOculta(tab,h){return colOcultas().indexOf(tab+':'+h)>=0;}
+function aplicarColunas(){
+  var css=[];
+  COL_TABS.forEach(function(t){
+    var tb=document.getElementById(t.tb);if(!tb)return;
+    var tbl=tb.closest('table');if(!tbl.id)tbl.id='tbl-'+t.tb;
+    colsDaTabela(t).forEach(function(c){if(colOculta(t.k,c.h))css.push('#'+tbl.id+' tr>:nth-child('+(c.i+1)+'):not([colspan])');});
+  });
+  var st=document.getElementById('col-ocultas-css');
+  if(!st){st=document.createElement('style');st.id='col-ocultas-css';document.head.appendChild(st);}
+  st.textContent=css.length?css.join(',\n')+'{display:none}':'';
+  // os cartões de total do Saldo acompanham as colunas
+  [['m³','es-m3'],['t','es-t']].forEach(function(p){var el=document.getElementById(p[1]);if(el)el.closest('.sc').style.display=colOculta('saldo',p[0])?'none':'';});
+}
+// tira do Excel as colunas escondidas (mapa: nome no Excel → título na tela, quando diferem)
+function rowsSemOcultas(tab,rows,mapa){
+  var oc=colOcultas();if(!oc.length)return rows;
+  return rows.map(function(r){var o={};Object.keys(r).forEach(function(k){if(oc.indexOf(tab+':'+((mapa&&mapa[k])||k))<0)o[k]=r[k];});return o;});
+}
+function htmlColunasUsuario(ocultas){
+  return COL_TABS.map(function(t){
+    return '<div style="grid-column:1 / -1;font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--ink3);margin-top:6px;">'+esc(t.n.toUpperCase())+'</div>'
+      +colsDaTabela(t).map(function(c){var k=t.k+':'+c.h;
+        return '<label><input type="checkbox" class="col-chk" value="'+esc(k)+'"'+(ocultas.indexOf(k)>=0?'':' checked')+'>'+esc(c.h)+'</label>';}).join('');
+  }).join('');
+}
+
 
 // localStorage pode estar bloqueado (aba anônima, Safari restrito) — nunca deixar isso travar a tela
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
@@ -2087,7 +2192,7 @@ function restaurarSessao(){
 }
 // Busca o cadastro em wp_usuarios ligado à conta do Auth
 function carregarPerfil(authUser){
-  return sb.from('wp_usuarios').select('id,nome,login,perfil,armazem,ativo,modulos')
+  return sb.from('wp_usuarios').select('*')
     .eq('auth_id',authUser.id).maybeSingle().then(function(r){
       var msg=null;
       if(r.error)msg='Erro ao consultar usuário: '+r.error.message;
@@ -2156,6 +2261,7 @@ function showApp(){
   var imp=document.getElementById('btn-import-lista');
   if(imp)imp.style.display=temModulo('lista_editar')?'':'none';
   loadNaviosSel();
+  carregarArmazens();aplicarColunas();
   if(!primeira){
     document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
     document.getElementById('pg-title').textContent='Sem acesso';
@@ -2174,7 +2280,7 @@ function doLogout(){
 // ══════════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════════
-var titles={dashboard:'Painel do embarque',lista:'Lista de carga',tickets:'Emissão de tickets',validar:'Validação de embarque',relatorios:'Relatórios',estoque:'Estoque',armazenagem:'Armazenagem','rel-armazem':'Relatórios',usuarios:'Usuários',navio:'Navios',cadastros:'Motoristas e veículos',backup:'Backup & Restore',impressoras:'Impressoras','rel-admin':'Relatórios',cfg:'Configurar Supabase'};
+var titles={dashboard:'Painel do embarque',lista:'Lista de carga',tickets:'Emissão de tickets',validar:'Validação de embarque',relatorios:'Relatórios',estoque:'Estoque',armazenagem:'Armazenagem','rel-armazem':'Relatórios',usuarios:'Usuários',navio:'Navios',cadastros:'Motoristas e veículos',backup:'Backup & Restore',impressoras:'Impressoras','rel-admin':'Relatórios',cfg:'Configurar Supabase',armazens:'Armazéns'};
 var currentPage='dashboard';
 function go(page){
   if(!podePagina(page)){toast('Sem permissão para acessar esta área','error');return;}
@@ -2202,6 +2308,7 @@ function go(page){
   if(page==='usuarios')loadUsers();
   if(page==='navio')loadNavios();
   if(page==='impressoras')loadImpressorasPage();
+  if(page==='armazens')loadArmazensPage();
   if(page==='estoque')estAbrir();
   if(page==='armazenagem')armAbrir();
   if(page==='rel-armazem')raAbrir();
@@ -2441,7 +2548,7 @@ function loadUsers(){
   if(!sb)return;
   var wrapNovo=document.getElementById('u-mod-wrap');
   if(wrapNovo&&!wrapNovo.children.length)renderModChecks('u-mod-wrap',modulosPadrao(v('u-perfil')),v('u-perfil')==='admin');
-  sb.from('wp_usuarios').select('id,nome,login,perfil,armazem,ativo,modulos,created_at').neq('perfil','agente').order('nome').then(function(r){
+  sb.from('wp_usuarios').select('*').neq('perfil','agente').order('nome').then(function(r){
     if(r.error){toast('Erro ao carregar usuários: '+r.error.message,'error');return;}
     usersAll=r.data||[];
     var tb=document.getElementById('u-tb'),emp=document.getElementById('u-empty');
@@ -5834,6 +5941,73 @@ function qrDataUrl(texto){
 
 // ── Tela Impressoras (admin) ──
 var ARMAZENS=['WRC','Pratico','Global'];
+// Lista de armazéns vem do banco (wp_armazens); sem o script novo continua a lista fixa acima
+var ARMAZENS_TODOS=null; // [{nome,ativo}] — null = tabela ainda não existe
+function carregarArmazens(){
+  if(!sb)return Promise.resolve();
+  return sb.from('wp_armazens').select('nome,ativo').order('nome').then(function(r){
+    if(r.error||!r.data||!r.data.length)return;
+    ARMAZENS_TODOS=r.data;
+    ARMAZENS=r.data.filter(function(a){return a.ativo;}).map(function(a){return a.nome;});
+    preencherSelectsArmazem();
+  });
+}
+function preencherSelectsArmazem(){
+  var opts=ARMAZENS.map(function(a){return '<option>'+esc(a)+'</option>';}).join('');
+  [['imp-az',''],['imp-agente-az',''],['rl-az','<option value="">Todos</option>']].forEach(function(p){
+    var s=document.getElementById(p[0]);if(!s)return;
+    var val=s.value;s.innerHTML=p[1]+opts;if(val&&[].some.call(s.options,function(o){return o.value===val;}))s.value=val;
+  });
+  var w=document.getElementById('u-armazem-wrap');
+  if(w){
+    var lb='<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;">';
+    w.innerHTML=ARMAZENS.map(function(a){return lb+'<input type="checkbox" class="u-az-chk" value="'+esc(a)+'"> '+esc(a)+'</label>';}).join('')
+      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;border-top:1px solid var(--bds);padding-top:5px;margin-top:2px;">'
+      +'<input type="checkbox" class="u-az-chk" value="*" onchange="toggleAllAz(this,\'u-armazem-wrap\')"> Todos (Admin)</label>';
+  }
+}
+// as telas do armazém montam o seletor na primeira abertura: limpar = remontar com a lista nova
+function resetSelectsArmazem(){['est-az','ed-az','ar-az','ra-az'].forEach(function(id){var s=document.getElementById(id);if(s)s.innerHTML='';});}
+function loadArmazensPage(){
+  carregarArmazens().then(function(){
+    var tb=document.getElementById('az-tb'),av=document.getElementById('az-aviso');
+    if(!ARMAZENS_TODOS){
+      av.innerHTML='<div class="imp-st err" style="margin-top:10px;">⚠<div>Rode o script <strong>woodport_armazem_v2.sql</strong> no Supabase para cadastrar armazéns.</div></div>';
+      tb.innerHTML=ARMAZENS.map(function(a){return '<tr><td><strong>'+esc(a)+'</strong></td><td><span class="bge ok">Ativo</span></td><td></td></tr>';}).join('');
+      return;
+    }
+    av.innerHTML='';
+    tb.innerHTML=ARMAZENS_TODOS.map(function(a){
+      return '<tr><td><strong>'+esc(a.nome)+'</strong></td><td>'+(a.ativo?'<span class="bge ok">Ativo</span>':'<span class="bge ntrl">Desativado</span>')+'</td>'
+        +'<td style="text-align:right;"><button class="btn bs bsm" data-az="'+esc(a.nome)+'" onclick="ativarArmazem(this.dataset.az,'+(!a.ativo)+')">'+(a.ativo?'Desativar':'Ativar')+'</button></td></tr>';
+    }).join('');
+  });
+}
+function salvarArmazem(){
+  var nome=(v('az-nome')||'').replace(/\s+/g,' ').trim();
+  if(nome.length<2){toast('Informe o nome do armazém','error');return;}
+  if(/[,*]/.test(nome)){toast('O nome não pode ter vírgula nem asterisco','error');return;}
+  var ex=(ARMAZENS_TODOS||ARMAZENS.map(function(a){return {nome:a,ativo:true};})).find(function(a){return normAz(a.nome)===normAz(nome);});
+  if(ex){toast('Já existe o armazém '+ex.nome+(ex.ativo?'':' (desativado — use Ativar)'),'error');return;}
+  if(!confirm('Cadastrar o armazém "'+nome+'"?\n\nO nome não pode ser trocado depois (fica gravado nos tickets, lotes e descargas).'))return;
+  showLd(true);
+  sb.from('wp_armazens').insert({nome:nome}).then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+(/wp_armazens/.test(r.error.message)?'rode o script woodport_armazem_v2.sql no Supabase':r.error.message),'error');return;}
+    toast('Armazém '+nome+' cadastrado. Libere-o para os usuários em Usuários.','success');
+    document.getElementById('az-nome').value='';
+    resetSelectsArmazem();loadArmazensPage();
+  });
+}
+function ativarArmazem(nome,ativo){
+  if(!ativo&&!confirm('Desativar o armazém '+nome+'?\n\nEle sai das listas de escolha. Tickets, descargas e estoque já lançados continuam aparecendo.'))return;
+  sb.from('wp_armazens').update({ativo:ativo}).eq('nome',nome).then(function(r){
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    toast('Armazém '+nome+(ativo?' ativado':' desativado'),'success');
+    resetSelectsArmazem();loadArmazensPage();
+  });
+}
+
 function loadImpressorasPage(silencioso){
   loadImpressoras().then(function(){
     var cont=document.getElementById('imp-cards');if(!cont)return;
@@ -6006,6 +6180,7 @@ function renderSeletoresArmador(){
 }
 function escolherArmador(a){
   armadorAtual=a;lsSet('wp_armador',a);renderSeletoresArmador();
+  if(est.carregado){atualizarListasEstoque();edMarcaInfo();}
   if(currentPage==='estoque')estRender();
   if(currentPage==='armazenagem'){armRenderTarifas();est.armRes=null;['ar-tb','ar-det'].forEach(function(i){document.getElementById(i).innerHTML='';});document.getElementById('ar-total').textContent='';}
   if(currentPage==='rel-armazem')raGerar();
@@ -6023,7 +6198,10 @@ function numBR(s){ // aceita 0,757 e 0.757
   if(t.indexOf(',')>=0)t=t.replace(/\./g,'').replace(',','.');
   var n=parseFloat(t);return isNaN(n)?null:n;
 }
-function marcaInfo(m){return est.marcas.find(function(x){return nmMarca(x.marca)===nmMarca(m);})||null;}
+// marcas: cada armador tem a sua lista (marca sem armador = gravada antes da separação → G2 Ocean)
+function marcaArm(x){return x.armador||ARMADORES[0];}
+function marcasDoArmador(arm){arm=arm||armadorAtual;return est.marcas.filter(function(x){return normAz(marcaArm(x))===normAz(arm);});}
+function marcaInfo(m,arm){arm=arm||armadorAtual;return est.marcas.find(function(x){return normAz(marcaArm(x))===normAz(arm)&&nmMarca(x.marca)===nmMarca(m);})||null;}
 function armazensUsuario(){var a=userArmazens();return a||ARMAZENS.slice();}
 function azDoMov(s){ // nome canônico do armazém (como está em ARMAZENS)
   var a=ARMAZENS.find(function(x){return normAz(x)===normAz(s);});return a||String(s||'').trim();
@@ -6055,7 +6233,6 @@ function estCarregar(forcar){
     est.clientes=rs[5].data||[];est.booking=rs[6].data||[];
     est.carregado=true;est.grupos=null;
     // listas de apoio para digitação
-    document.getElementById('dl-marcas').innerHTML=est.marcas.map(function(m){return '<option value="'+esc(m.marca)+'">';}).join('');
     var prods=[...new Set(est.movs.map(function(m){return (m.produtor||'').trim();}).filter(Boolean))].sort();
     document.getElementById('dl-produtores').innerHTML=prods.map(function(p){return '<option value="'+esc(p)+'">';}).join('');
     atualizarListasEstoque();
@@ -6133,6 +6310,8 @@ function estAbrir(forcar){
     document.getElementById('em-ate').value=localISODate();
   }
   renderSeletoresArmador();
+  var ep=document.getElementById('ed-periodo');if(!ep.value)ep.value=periodoAgora();
+  renderPeriodoBtns();edTipoMudou();
   estCarregar(forcar).then(estRender);
 }
 function estAba(a){
@@ -6208,7 +6387,7 @@ function estExportSaldo(){
     return {'Armazém':g.az,'Marca':g.marca,'Produtores':produtoresEmEstoque(g).join(', '),'Entradas':g.totEnt,'Saídas':g.totSai,'Saldo (fds)':g.saldo,
       'm³':mi?+(g.saldo*mi.cbm).toFixed(3):'','t':mi?+(g.saldo*mi.peso_t).toFixed(3):'','Embarcado sem entrada':g.deficit||''};
   });
-  xlsxBaixar(rows,'Saldo','estoque_saldo_'+armadorAtual.replace(/\s+/g,'_')+'_'+localISODate()+'.xlsx');
+  xlsxBaixar(rowsSemOcultas('saldo',rows,{'Produtores':'Produtor(es) em estoque','Embarcado sem entrada':'Saldo (fds)'}),'Saldo','estoque_saldo_'+armadorAtual.replace(/\s+/g,'_')+'_'+localISODate()+'.xlsx');
 }
 function xlsxBaixar(rows,aba,nome){
   if(!rows.length){toast('Nada para exportar','error');return;}
@@ -6401,9 +6580,9 @@ function destinosConhecidos(){
 }
 function destinoCanon(s){s=String(s||'').trim();if(!s)return null;return destinosConhecidos().find(function(x){return normAz(x)===normAz(s);})||s;}
 function atualizarListasEstoque(){
-  document.getElementById('dl-marcas').innerHTML=est.marcas.map(function(m){return '<option value="'+esc(m.marca)+'">';}).join('');
+  document.getElementById('dl-marcas').innerHTML=marcasDoArmador().map(function(m){return '<option value="'+esc(m.marca)+'">';}).join('');
   document.getElementById('dl-destinos').innerHTML=destinosConhecidos().map(function(p){return '<option value="'+esc(p)+'">';}).join('');
-  var tps=unicosAz(TIPOS_PRODUTO.concat(est.marcas.map(function(m){return (m.commodity||'').toUpperCase();})));
+  var tps=unicosAz(TIPOS_PRODUTO.concat(marcasDoArmador().map(function(m){return (m.commodity||'').toUpperCase();})));
   document.getElementById('dl-produtos').innerHTML=tps.map(function(p){return '<option value="'+esc(p)+'">';}).join('');
 }
 // marca cadastrada: puxa o tipo do produto; marca nova: pede CBM e peso totais e calcula por fardo
@@ -6425,7 +6604,126 @@ function edMarcaInfo(){
     ?'Por fardo: <strong>'+fNum(cb/q,4)+' m³ · '+fNum(ps/q,4)+' t</strong> — a marca '+esc(marca.toUpperCase())+' será cadastrada com esses valores ao lançar.'
     :'Informe fardos, CBM total e peso total para calcular o valor por fardo.';
 }
+// ── Descarga: período, placa e não conformidade com fotos ──
+var PERIODOS=['07x13','13x19','19x01','01x07'];
+var NC_BUCKET='wp-descargas-nc',NC_MAX_FOTOS=4;
+var _edFotos=[]; // fotos da descarga em lançamento: [{blob,url}]
+function periodoAgora(){var h=new Date().getHours();return h>=7&&h<13?'07x13':h>=13&&h<19?'13x19':(h>=19||h<1)?'19x01':'01x07';}
+function normPeriodo(s){
+  var m=String(s||'').match(/(\d{1,2})(?:[:h]\d{2})?\s*(?:x|-|–|a|as|às|\/)\s*(\d{1,2})/i);if(!m)return null;
+  var p=String(+m[1]).padStart(2,'0')+'x'+String(+m[2]).padStart(2,'0');
+  return PERIODOS.indexOf(p)>=0?p:null;
+}
+function renderPeriodoBtns(){
+  var v=document.getElementById('ed-periodo').value,box=document.getElementById('ed-periodo-btns');if(!box)return;
+  box.innerHTML=PERIODOS.map(function(p){return '<button type="button" class="'+(p===v?'on':'')+'" aria-pressed="'+(p===v)+'" onclick="escolherPeriodo(\''+p+'\')">'+p+'</button>';}).join('');
+}
+function escolherPeriodo(p){document.getElementById('ed-periodo').value=p;renderPeriodoBtns();}
+function edTipoMudou(){
+  var d=document.getElementById('ed-tipo').value==='descarga';
+  document.querySelectorAll('.ed-so-descarga').forEach(function(e){e.style.display=d?'':'none';});
+  if(!d)edNc(false);
+}
+function edNc(on){
+  document.getElementById('ed-nc').value=on?'1':'';
+  document.querySelectorAll('#ed-nc-btns button').forEach(function(b,i){var x=(i===1)===!!on;b.classList.toggle('on',x);b.setAttribute('aria-pressed',x);});
+  document.getElementById('ed-nc-box').style.display=on?'':'none';
+}
+// reduz a foto do celular (vários MB) para no máximo 1600 px em JPEG
+function comprimirFoto(file){
+  return new Promise(function(ok,falha){
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      var s=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');
+      c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      c.toBlob(function(b){b?ok(b):falha(new Error('não foi possível ler a foto'));},'image/jpeg',0.8);
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);falha(new Error('o arquivo não é uma foto'));};
+    img.src=url;
+  });
+}
+function edNcFotos(input){
+  var files=[].slice.call(input.files||[]);input.value='';
+  var cabem=NC_MAX_FOTOS-_edFotos.length;
+  if(files.length>cabem)toast('Máximo de '+NC_MAX_FOTOS+' fotos por descarga','error');
+  if(cabem<=0)return;
+  document.getElementById('ed-nc-qtd').textContent='Processando foto…';
+  // o lançamento espera esta fila: foto tirada e "Lançar" logo em seguida não fica de fora
+  _edFotosPend=files.slice(0,cabem).reduce(function(p,f){
+    return p.then(function(){return comprimirFoto(f).then(function(b){_edFotos.push({blob:b,url:URL.createObjectURL(b)});});});
+  },_edFotosPend).catch(function(e){toast('Foto: '+e.message,'error');}).then(renderEdThumbs);
+}
+var _edFotosPend=Promise.resolve();
+function renderEdThumbs(){
+  document.getElementById('ed-nc-thumbs').innerHTML=_edFotos.map(function(f,i){
+    return '<div style="position:relative;"><img src="'+f.url+'" alt="Foto '+(i+1)+'" style="width:92px;height:92px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr);">'
+      +'<button type="button" class="btn bd bsm" aria-label="Remover foto" onclick="removerEdFoto('+i+')" style="position:absolute;top:2px;right:2px;padding:0 7px;">✕</button></div>';
+  }).join('');
+  document.getElementById('ed-nc-qtd').textContent=_edFotos.length?_edFotos.length+' de '+NC_MAX_FOTOS+' fotos':'até '+NC_MAX_FOTOS+' fotos';
+}
+function removerEdFoto(i){URL.revokeObjectURL(_edFotos[i].url);_edFotos.splice(i,1);renderEdThumbs();}
+function limparEdFotos(){_edFotos.forEach(function(f){URL.revokeObjectURL(f.url);});_edFotos=[];renderEdThumbs();}
+function nomeFotoNc(){
+  var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
+  return localISODate().slice(0,7)+'/'+id+'.jpg';
+}
+function subirFotosNc(blobs){
+  var paths=[];
+  return blobs.reduce(function(p,b){
+    return p.then(function(){
+      var path=nomeFotoNc();
+      return sb.storage.from(NC_BUCKET).upload(path,b,{contentType:'image/jpeg',upsert:false}).then(function(r){
+        if(r.error)throw new Error('foto não enviada ('+r.error.message+')');
+        paths.push(path);
+      });
+    });
+  },Promise.resolve()).then(function(){return paths;});
+}
+// ver / acrescentar fotos de uma descarga já lançada
+var _ncMov=null;
+function verFotosNc(id){
+  var m=est.movs.find(function(x){return x.id===id;});if(!m)return;
+  _ncMov=m;
+  var fotos=m.nc_fotos||[];
+  document.getElementById('nc-titulo').textContent='Não conformidade · '+fmtIso(m.data)+' · '+m.marca;
+  document.getElementById('nc-desc').innerHTML='<strong>'+esc(m.armazem)+'</strong>'+(m.placa?' · placa '+esc(m.placa):'')+(m.periodo?' · período '+esc(m.periodo):'')+(m.nf?' · NF '+esc(m.nf):'')
+    +'<div style="margin-top:6px;white-space:pre-wrap;">'+esc(m.nc_descricao||'(sem descrição)')+'</div>';
+  document.getElementById('nc-add').style.display=temModulo('estoque')&&fotos.length<NC_MAX_FOTOS?'':'none';
+  var box=document.getElementById('nc-fotos');
+  box.innerHTML=fotos.length?'<p style="font-size:12px;color:var(--ink3);">Carregando fotos…</p>':'<p style="font-size:12px;color:var(--ink3);">Nenhuma foto anexada.</p>';
+  document.getElementById('nc-modal').style.display='flex';
+  if(!fotos.length)return;
+  sb.storage.from(NC_BUCKET).createSignedUrls(fotos,3600).then(function(r){
+    if(_ncMov!==m)return;
+    if(r.error){box.innerHTML='<p style="color:#B42318;font-size:13px;">Erro ao abrir as fotos: '+esc(r.error.message)+'</p>';return;}
+    box.innerHTML=(r.data||[]).map(function(f,i){
+      return f.signedUrl?'<a href="'+esc(f.signedUrl)+'" target="_blank" rel="noopener"><img src="'+esc(f.signedUrl)+'" alt="Foto '+(i+1)+'" style="width:100%;border-radius:8px;border:1px solid var(--bdr);display:block;"></a>'
+        :'<p style="font-size:12px;color:#B42318;">Foto '+(i+1)+' indisponível</p>';
+    }).join('');
+  });
+}
+function fecharFotosNc(){document.getElementById('nc-modal').style.display='none';_ncMov=null;}
+function addFotoNc(input){
+  var f=input.files&&input.files[0];input.value='';
+  var m=_ncMov;if(!f||!m)return;
+  showLd(true);
+  comprimirFoto(f).then(function(b){return subirFotosNc([b]);}).then(function(paths){
+    return sb.from('wp_estoque_mov').update({nc_fotos:(m.nc_fotos||[]).concat(paths)}).eq('id',m.id).select('*').single();
+  }).then(function(r){
+    showLd(false);
+    if(r.error)throw r.error;
+    est.movs=est.movs.map(function(x){return x.id===m.id?r.data:x;});
+    toast('Foto anexada','success');estRenderMovs();verFotosNc(m.id);
+  }).catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');});
+}
+// erro de coluna/tabela que só existe depois do script novo → diz o que fazer
+function erroColunaNova(e){
+  var m=(e&&e.message)||String(e);
+  return /periodo|placa|nao_conforme|nc_fotos|nc_descricao|armador|wp-descargas-nc|bucket/i.test(m)?m+' — rode o script woodport_armazem_v2.sql no Supabase':m;
+}
 function lancarDescarga(){
+
   var reg={armador:armadorAtual,armazem:document.getElementById('ed-az').value,data:document.getElementById('ed-data').value,tipo:document.getElementById('ed-tipo').value,
     nf:v('ed-nf'),produtor:v('ed-prod'),marca:(v('ed-marca')||'').toUpperCase(),produto:(v('ed-produto')||'').toUpperCase()||null,destino:destinoCanon(v('ed-dest')),
     quantidade:parseInt(document.getElementById('ed-qtd').value)||0,obs:v('ed-obs'),
@@ -6433,12 +6731,22 @@ function lancarDescarga(){
   if(!reg.data||!reg.armazem||!reg.marca||!reg.produtor){toast('Preencha data, armazém, produtor e marca','error');return;}
   if(reg.quantidade<=0){toast('Quantidade de fardos deve ser maior que zero','error');return;}
   if(reg.tipo==='descarga'&&!reg.destino){toast('Informe o destino da carga','error');return;}
+  if(reg.tipo==='descarga'){
+    reg.periodo=document.getElementById('ed-periodo').value||null;
+    reg.placa=fmtPlacaTxt(v('ed-placa')||'')||null;
+    reg.nao_conforme=document.getElementById('ed-nc').value==='1';
+    reg.nc_descricao=reg.nao_conforme?v('ed-nc-desc'):null;
+    if(!reg.periodo){toast('Escolha o período da descarga','error');return;}
+    if(!reg.placa){toast('Informe a placa do caminhão','error');document.getElementById('ed-placa').focus();return;}
+    if(!placaFormatoOk(reg.placa)&&!confirm('A placa '+reg.placa+' está fora do padrão (ABC-1234 ou ABC-1D23). Lançar assim mesmo?'))return;
+    if(reg.nao_conforme&&!reg.nc_descricao){toast('Descreva a não conformidade encontrada','error');document.getElementById('ed-nc-desc').focus();return;}
+  }
   var mi=marcaInfo(reg.marca),novaMarca=null,tipoNaMarca=null;
   if(!mi){
     var cb=numBR(v('ed-cbmtot')),ps=numBR(v('ed-pesotot'));
     if(!reg.produto){toast('Marca nova: informe o tipo do produto','error');return;}
     if(!(cb>0)||!(ps>0)){toast('Marca nova: informe o CBM total e o peso total desta descarga','error');return;}
-    novaMarca={marca:reg.marca,commodity:reg.produto,cbm:+(cb/reg.quantidade).toFixed(4),peso_t:+(ps/reg.quantidade).toFixed(4),exportador:reg.produtor,updated_at:new Date().toISOString()};
+    novaMarca={armador:armadorAtual,marca:reg.marca,commodity:reg.produto,cbm:+(cb/reg.quantidade).toFixed(4),peso_t:+(ps/reg.quantidade).toFixed(4),exportador:reg.produtor,updated_at:new Date().toISOString()};
     if(!confirm('Cadastrar a marca nova '+reg.marca+' ('+reg.produto+')?\n\n'+fNum(cb,3)+' m³ e '+fNum(ps,3)+' t em '+reg.quantidade+' fardos\n= '+fNum(novaMarca.cbm,4)+' m³ e '+fNum(novaMarca.peso_t,4)+' t por fardo'))return;
   }else if(!reg.produto)reg.produto=mi.commodity||null;
   else if(!mi.commodity)tipoNaMarca=reg.produto;
@@ -6451,40 +6759,54 @@ function lancarDescarga(){
   pm.then(function(rm){
     if(rm&&rm.error)throw rm.error;
     if(rm&&rm.data){est.marcas=est.marcas.filter(function(x){return x.id!==rm.data.id;}).concat([rm.data]);atualizarListasEstoque();}
-    return sb.from('wp_estoque_mov').insert(reg).select('*').single();
+    // fotos da não conformidade sobem antes; o lançamento guarda onde ficaram
+    return _edFotosPend.then(function(){
+      var fotos=reg.nao_conforme?_edFotos.map(function(f){return f.blob;}):[];
+      return fotos.length?subirFotosNc(fotos):[];
+    }).then(function(paths){
+      if(paths.length)reg.nc_fotos=paths;
+      return sb.from('wp_estoque_mov').insert(reg).select('*').single();
+    });
   }).then(function(r){
     showLd(false);
     if(r.error)throw r.error;
     est.movs.push(r.data);
     toast('Descarga lançada: '+reg.quantidade+' fds '+reg.marca+(novaMarca?' · marca nova cadastrada':''),'success');
-    ['ed-nf','ed-marca','ed-qtd','ed-obs','ed-produto','ed-cbmtot','ed-pesotot'].forEach(function(id){document.getElementById(id).value='';});
+    ['ed-nf','ed-marca','ed-qtd','ed-obs','ed-produto','ed-cbmtot','ed-pesotot','ed-placa','ed-nc-desc'].forEach(function(id){document.getElementById(id).value='';});
+    edNc(false);limparEdFotos();
     document.getElementById('ed-produto').readOnly=false;
     document.getElementById('ed-nova').style.display='none';
     document.getElementById('ed-info').textContent='';
     atualizarListasEstoque();
     document.getElementById('ed-marca').focus();
     estRender();
-  }).catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');});
-}function estRenderMovs(){
+  }).catch(function(e){showLd(false);toast('Erro: '+erroColunaNova(e),'error');});
+}
+function estRenderMovs(){
   var de=document.getElementById('em-de').value,ate=document.getElementById('em-ate').value;
   var b=(document.getElementById('em-busca').value||'').trim().toLowerCase(),az=document.getElementById('est-az').value;
   var lin=est.movs.filter(function(m){
     if(!mesmoArmador(m.armador))return false;
     if(az&&normAz(m.armazem)!==normAz(az))return false;
     if(de&&m.data<de)return false;if(ate&&m.data>ate)return false;
-    return !b||[m.nf,m.produtor,m.marca,m.produto,m.destino].join(' ').toLowerCase().indexOf(b)>=0;
+    return !b||[m.nf,m.placa,m.produtor,m.marca,m.produto,m.destino,m.nc_descricao].join(' ').toLowerCase().indexOf(b)>=0;
   }).slice().reverse();
   var tipos={descarga:'Descarga',inventario:'<span class="bge info">Inventário</span>',ajuste:'<span class="bge warn">Ajuste</span>'};
   var tot=0,totM3=0;
   var mostra=lin.slice(0,500);
   document.getElementById('em-tb').innerHTML=mostra.map(function(m){
     var mi=marcaInfo(m.marca),q=+m.quantidade;tot+=q;if(mi)totM3+=q*mi.cbm;
-    return '<tr><td>'+fmtIso(m.data)+'</td><td>'+(tipos[m.tipo]||esc(m.tipo))+'</td><td>'+esc(m.armazem)+'</td><td class="mono">'+esc(m.nf||'—')+'</td><td>'+esc(m.produtor||'—')+'</td>'
+    var dsc=String(m.nc_descricao||'');
+    var nc=m.nao_conforme?'<span class="bge dng">⚠ Sim</span> <span style="font-size:12px;color:var(--ink3);" title="'+esc(dsc)+'">'+esc(dsc.slice(0,50))+(dsc.length>50?'…':'')+'</span>'
+      +' <button class="btn bs bsm" onclick="verFotosNc(\''+m.id+'\')" aria-label="Ver fotos da não conformidade">📷 '+(m.nc_fotos||[]).length+'</button>'
+      :'<span style="color:var(--ink4);">—</span>';
+    return '<tr><td>'+fmtIso(m.data)+'</td><td class="mono">'+esc(m.periodo||'—')+'</td><td>'+(tipos[m.tipo]||esc(m.tipo))+'</td><td>'+esc(m.armazem)+'</td><td class="mono" style="white-space:nowrap;">'+esc(m.placa||'—')+'</td><td class="mono">'+esc(m.nf||'—')+'</td><td>'+esc(m.produtor||'—')+'</td>'
       +'<td class="mono"><strong>'+esc(m.marca)+'</strong></td><td>'+esc(m.produto||(mi&&mi.commodity)||'—')+'</td><td>'+esc(m.destino||'—')+'</td><td class="mono" style="text-align:right">'+q+'</td><td class="mono" style="text-align:right">'+(mi?fNum(q*mi.cbm,3):'—')+'</td>'
+      +'<td style="min-width:130px;">'+nc+'</td>'
       +'<td style="font-size:12px;color:var(--ink3);">'+esc(m.criado_por_nome||'—')+'</td>'
       +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="editarMov(\''+m.id+'\')">✏</button> '
       +'<button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_estoque_mov\',\''+m.id+'\',function(){estAbrir(true);})">✕</button></td></tr>';
-  }).join('')||'<tr><td colspan="12" style="color:var(--ink3);text-align:center;padding:20px;">Nenhum lançamento no período.</td></tr>';
+  }).join('')||'<tr><td colspan="15" style="color:var(--ink3);text-align:center;padding:20px;">Nenhum lançamento no período.</td></tr>';
   document.getElementById('em-info').textContent=lin.length+' lançamento(s) no período'+(lin.length>500?' (mostrando os 500 mais recentes)':'')+' · '+tot.toLocaleString('pt-BR')+' fardos · '+fNum(totM3,1)+' m³';
 }
 function editarMov(id){
@@ -6498,7 +6820,12 @@ function editarMov(id){
     {key:'destino',label:'Destino',val:m.destino},
     {key:'quantidade',label:'Fardos',type:'number',val:m.quantidade},
     {key:'obs',label:'Observação',val:m.obs},
-  ],'wp_estoque_mov',id,function(){estAbrir(true);});
+  ].concat('periodo' in m?[
+    {key:'periodo',label:'Período',type:'select',val:m.periodo||'',options:[{v:'',l:'—'}].concat(PERIODOS.map(function(p){return {v:p,l:p};}))},
+    {key:'placa',label:'Placa do caminhão',val:m.placa},
+    {key:'nao_conforme',label:'Não conformidade',type:'select',val:m.nao_conforme?'true':'false',options:[{v:'false',l:'Não'},{v:'true',l:'Sim'}]},
+    {key:'nc_descricao',label:'O que foi encontrado',type:'textarea',val:m.nc_descricao},
+  ]:[]),'wp_estoque_mov',id,function(){estAbrir(true);});
 }
 
 // ── importação de planilhas ──
@@ -6557,6 +6884,7 @@ function importarMovExcel(input){
           cDest=col(function(c){return c.indexOf('DESTINO')===0||c==='PORTO'||c.indexOf('PORTO DE')===0||c==='POD';}),
           cCbm=col(function(c){return c.indexOf('CBM')===0||c.indexOf('M3')===0||c.indexOf('M³')===0||c.indexOf('VOLUME')===0;}),
           cPeso=col(function(c){return c.indexOf('PESO')===0||c.indexOf('WEIGHT')===0||c.indexOf('TON')===0;});
+      var cPer=col(function(c){return c.indexOf('PERIODO')===0||c==='TURNO';}),cPlaca=col(function(c){return c.indexOf('PLACA')===0;});
       // quantidade: coluna "ENTRADA" na linha de baixo (planilha de entrada e saída) ou QUANTIDADE/QTD/SALDO
       var cQtd=H2.indexOf('ENTRADA'),cSai=H2.indexOf('SAIDA'),ini=h+1;
       if(cQtd>=0)ini=h+2;
@@ -6577,6 +6905,9 @@ function importarMovExcel(input){
           destino:cDest>=0?destinoCanon(LT[cDest]||L[cDest]):null,
           _cbm:cCbm>=0?numBR(L[cCbm]):null,_peso:cPeso>=0?numBR(L[cPeso]):null,
           criado_por:currentUser.id,criado_por_nome:currentUser.nome});
+        var rg=regs[regs.length-1];
+        if(cPer>=0&&tipo==='descarga')rg.periodo=normPeriodo(LT[cPer]||L[cPer]);
+        if(cPlaca>=0&&tipo==='descarga')rg.placa=fmtPlacaTxt(String(LT[cPlaca]||L[cPlaca]||''))||null;
       }
     });
     if(!abaUsada){toast('Não encontrei o cabeçalho (precisa de MARCA e DATA'+(tipo==='inventario'?'':'')+')','error');return;}
@@ -6598,7 +6929,7 @@ function importarMovExcel(input){
       if(x._cbm>0){n.fd+=x.quantidade;n.cbm+=x._cbm;n.peso+=x._peso>0?x._peso:0;}
     });
     var marcasNovas=Object.values(nov).filter(function(n){return n.fd>0&&n.cbm>0;}).map(function(n){
-      return {marca:n.marca,commodity:n.commodity,exportador:n.exportador,cbm:+(n.cbm/n.fd).toFixed(4),peso_t:+(n.peso/n.fd).toFixed(4),updated_at:new Date().toISOString()};});
+      return {armador:armadorAtual,marca:n.marca,commodity:n.commodity,exportador:n.exportador,cbm:+(n.cbm/n.fd).toFixed(4),peso_t:+(n.peso/n.fd).toFixed(4),updated_at:new Date().toISOString()};});
     var novasK={};marcasNovas.forEach(function(m){novasK[nmMarca(m.marca)]=1;});
     regs.forEach(function(x){delete x._cbm;delete x._peso;var n=nov[nmMarca(x.marca)];if(n&&!x.produto)x.produto=n.commodity;});
     var semParam=[...new Set(regs.filter(function(x){return !marcaInfo(x.marca)&&!novasK[nmMarca(x.marca)];}).map(function(x){return x.marca;}))];
@@ -6625,7 +6956,7 @@ function importarMovExcel(input){
     var p=marcasNovas.length?sb.from('wp_marcas').insert(marcasNovas).then(function(r){if(r.error)throw r.error;}):Promise.resolve(),feitos=0;
     for(var i=0;i<regs.length;i+=500)(function(b){p=p.then(function(){return sb.from('wp_estoque_mov').insert(b).then(function(r){if(r.error)throw r.error;feitos+=b.length;});});})(regs.slice(i,i+500));
     p.then(function(){showLd(false);toast(feitos+' lançamento(s) importado(s)','success');estAbrir(true);})
-     .catch(function(e){showLd(false);toast('Importação interrompida após '+feitos+' lançamento(s): '+(e.message||e)+'. Importe o arquivo de novo — os já gravados são ignorados.','error');estAbrir(true);});
+     .catch(function(e){showLd(false);toast('Importação interrompida após '+feitos+' lançamento(s): '+erroColunaNova(e)+'. Importe o arquivo de novo — os já gravados são ignorados.','error');estAbrir(true);});
   });
 }
 
@@ -6670,8 +7001,9 @@ function baixarModeloEstoque(tipo){
 // ── MARCAS ──
 function estRenderMarcas(){
   var b=(document.getElementById('mc-busca').value||'').trim().toLowerCase();
-  var lin=est.marcas.filter(function(m){return !b||[m.marca,m.exportador,m.commodity].join(' ').toLowerCase().indexOf(b)>=0;});
-  document.getElementById('mc-count').textContent=est.marcas.length+' marcas';
+  var doArm=marcasDoArmador();
+  var lin=doArm.filter(function(m){return !b||[m.marca,m.exportador,m.commodity].join(' ').toLowerCase().indexOf(b)>=0;});
+  document.getElementById('mc-count').textContent=doArm.length+' marcas · '+armadorAtual;
   function n(x,d){return x===null||x===undefined||x===''?'—':fNum(x,d);}
   document.getElementById('mc-tb').innerHTML=lin.slice(0,800).map(function(m){
     return '<tr><td class="mono"><strong>'+esc(m.marca)+'</strong></td><td>'+esc(m.commodity||'—')+'</td>'
@@ -6680,7 +7012,7 @@ function estRenderMarcas(){
       +'<td>'+esc(m.exportador||'—')+'</td>'
       +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="editarMarca(\''+m.id+'\')">✏</button>'
       +(isAdmin()?' <button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_marcas\',\''+m.id+'\',function(){estAbrir(true);})">✕</button>':'')+'</td></tr>';
-  }).join('')||'<tr><td colspan="10" style="color:var(--ink3);text-align:center;padding:20px;">Nenhuma marca. Cadastre ao lado ou importe a planilha de parâmetros.</td></tr>';
+  }).join('')||'<tr><td colspan="10" style="color:var(--ink3);text-align:center;padding:20px;">Nenhuma marca de '+esc(armadorAtual)+'. Cadastre ao lado ou importe a planilha de parâmetros.</td></tr>';
 }
 function limparMarcaForm(){
   ['mc-id','mc-marca','mc-comm','mc-comp','mc-larg','mc-alt','mc-fl','mc-mm','mc-exp','mc-cbm','mc-peso'].forEach(function(id){document.getElementById(id).value='';});
@@ -6700,13 +7032,13 @@ function salvarMarca(){
     fl:numBR(v('mc-fl')),mm:numBR(v('mc-mm')),exportador:v('mc-exp'),cbm:numBR(v('mc-cbm')),peso_t:numBR(v('mc-peso'))||0,updated_at:new Date().toISOString()};
   if(!reg.marca){toast('Informe a marca','error');return;}
   if(!reg.cbm||reg.cbm<=0){toast('Informe o CBM por fardo','error');return;}
-  var outra=est.marcas.find(function(m){return nmMarca(m.marca)===nmMarca(reg.marca)&&m.id!==id;});
-  if(outra){toast('A marca '+reg.marca+' já está cadastrada','error');return;}
+  var outra=marcasDoArmador().find(function(m){return nmMarca(m.marca)===nmMarca(reg.marca)&&m.id!==id;});
+  if(outra){toast('A marca '+reg.marca+' já está cadastrada para '+armadorAtual,'error');return;}
   showLd(true);
-  var q=id?sb.from('wp_marcas').update(reg).eq('id',id):sb.from('wp_marcas').insert(reg);
+  var q=id?sb.from('wp_marcas').update(reg).eq('id',id):sb.from('wp_marcas').insert(Object.assign({armador:armadorAtual},reg));
   q.then(function(r){
     showLd(false);
-    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(r.error){toast('Erro: '+erroColunaNova(r.error),'error');return;}
     toast('Marca '+reg.marca+' salva','success');limparMarcaForm();estAbrir(true);
   });
 }
@@ -6737,15 +7069,15 @@ function importarMarcasExcel(input){
     var regs=Object.values(porMarca);
     if(!abaUsada||!regs.length){toast('Não encontrei a tabela (cabeçalho com MARKS/MARCA e CBM)','error');return;}
     var novos=[],atual=[];
-    regs.forEach(function(x){var ex=marcaInfo(x.marca);if(ex)atual.push(Object.assign({id:ex.id},x));else novos.push(x);});
-    if(!confirm('Tabela de marcas (aba '+abaUsada+'):\n\n• '+novos.length+' marca(s) nova(s)\n• '+atual.length+' marca(s) atualizada(s)\n\nConfirmar?'))return;
+    regs.forEach(function(x){var ex=marcaInfo(x.marca);if(ex)atual.push(Object.assign({id:ex.id,armador:marcaArm(ex)},x));else novos.push(Object.assign({armador:armadorAtual},x));});
+    if(!confirm('Tabela de marcas do armador '+armadorAtual+' (aba '+abaUsada+'):\n\n• '+novos.length+' marca(s) nova(s)\n• '+atual.length+' marca(s) atualizada(s)\n\nConfirmar?'))return;
     showLd(true);
     var p=Promise.resolve();
     function lote(fn,arr){for(var i=0;i<arr.length;i+=300)(function(b){p=p.then(function(){return fn(b).then(function(r){if(r.error)throw r.error;});});})(arr.slice(i,i+300));}
     lote(function(b){return sb.from('wp_marcas').upsert(b,{onConflict:'id'});},atual);
     lote(function(b){return sb.from('wp_marcas').insert(b);},novos);
     p.then(function(){showLd(false);toast(novos.length+' novas · '+atual.length+' atualizadas','success');estAbrir(true);})
-     .catch(function(e){showLd(false);toast('Erro: '+(e.message||e),'error');estAbrir(true);});
+     .catch(function(e){showLd(false);toast('Erro: '+erroColunaNova(e),'error');estAbrir(true);});
   });
 }
 
@@ -7174,7 +7506,7 @@ function estRenderComparar(){
   });
 }
 function estExportComparar(){
-  xlsxBaixar(_lcRows.map(function(g){return {'Armazém':g.az,'Marca':g.marca,'Na lista':g.lista,'Embarcado':g.emb,'A embarcar':g.aEmb,'Em estoque':g.est,'Diferença':g.dif};}),
+  xlsxBaixar(rowsSemOcultas('comparar',_lcRows.map(function(g){return {'Armazém':g.az,'Marca':g.marca,'Na lista':g.lista,'Embarcado':g.emb,'A embarcar':g.aEmb,'Em estoque':g.est,'Diferença':g.dif};})),
     'Lista x Estoque','lista_x_estoque_'+(navioAtivo?navioAtivo.nome.replace(/[^\w]+/g,'_'):'')+'.xlsx');
 }
 
@@ -7229,9 +7561,9 @@ function lancarAjustesInventario(){
 function estExportInventario(){
   var az=document.getElementById('est-az').value;
   if(!az){toast('Escolha um armazém no topo','error');return;}
-  xlsxBaixar(gruposFiltrados().filter(function(g){return g.saldo>0;}).sort(function(a,b){return a.marca.localeCompare(b.marca);}).map(function(g){
+  xlsxBaixar(rowsSemOcultas('inventario',gruposFiltrados().filter(function(g){return g.saldo>0;}).sort(function(a,b){return a.marca.localeCompare(b.marca);}).map(function(g){
     return {'Marca':g.marca,'Sistema (fds)':g.saldo,'Contado':'','Diferença':''};
-  }),'Contagem','contagem_'+az+'_'+localISODate()+'.xlsx');
+  })),'Contagem','contagem_'+az+'_'+localISODate()+'.xlsx');
 }
 
 // ── ARMAZENAGEM ──
@@ -7334,7 +7666,7 @@ function exportArmazenagem(){
 // ══════════════════════════════════════════════════
 var MOD_DE_PAGINA={dashboard:'embarque',lista:'embarque',tickets:'embarque',validar:'embarque',relatorios:'embarque',
   estoque:'armazem',armazenagem:'armazem','rel-armazem':'armazem',
-  usuarios:'admin',navio:'admin',cadastros:'admin',backup:'admin',impressoras:'admin','rel-admin':'admin',cfg:'admin'};
+  usuarios:'admin',navio:'admin',cadastros:'admin',backup:'admin',impressoras:'admin','rel-admin':'admin',cfg:'admin',armazens:'admin'};
 var MOD_NOME={embarque:'Embarque',armazem:'Armazém',admin:'Administração'};
 function abrirMod(mod,abrir){
   var el=document.querySelector('.nav-mod[data-mod="'+mod+'"]');if(!el)return;
@@ -7980,6 +8312,8 @@ function saveEdit(){
     payload[key]=el.value.trim()||null;
   });
   if(_editState.table==='wp_impressoras'){var eIp=erroIpImpressora(payload.ip);if(eIp){toast(eIp,'error');return;}}
+  if(_editState.table==='wp_estoque_mov'&&payload.placa)payload.placa=fmtPlacaTxt(payload.placa);
+  if(_editState.table==='wp_estoque_mov'&&payload.nao_conforme==='true'&&!payload.nc_descricao){toast('Descreva a não conformidade encontrada','error');return;}
   showLd(true);
   sb.from(_editState.table).update(payload).eq('id',_editState.id).then(function(r){
     showLd(false);
@@ -8079,9 +8413,9 @@ function editUser(id){
   var isAll=u.armazem==='*';
   azDiv.innerHTML='<label class="fl">Armazém(s) <span class="req">*</span></label>'
     +'<div id="ef-armazem-wrap" style="display:flex;flex-direction:column;gap:5px;background:var(--s2);border:1px solid var(--bds);border-radius:var(--rsm);padding:8px 10px;">'
-      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ef-az-chk" value="WRC"'+((!isAll&&azs.includes('WRC'))?' checked':'')+'>WRC</label>'
-      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ef-az-chk" value="Pratico"'+((!isAll&&azs.includes('Pratico'))?' checked':'')+'>Pratico</label>'
-      +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ef-az-chk" value="Global"'+((!isAll&&azs.includes('Global'))?' checked':'')+'>Global</label>'
+      +ARMAZENS.concat(azs.filter(function(a){return a!=='*'&&!ARMAZENS.some(function(x){return normAz(x)===normAz(a);});})).map(function(a){
+        return '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ef-az-chk" value="'+esc(a)+'"'
+          +((!isAll&&azs.some(function(x){return normAz(x)===normAz(a);}))?' checked':'')+'>'+esc(a)+'</label>';}).join('')
       +'<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;border-top:1px solid var(--bds);padding-top:5px;margin-top:2px;">'
         +'<input type="checkbox" class="ef-az-chk" value="*" onchange="toggleAllAz(this,\'ef-armazem-wrap\')"'+(isAll?' checked':'')+'>Todos (Admin)</label>'
     +'</div>';
@@ -8102,6 +8436,14 @@ function editUser(id){
     };
     document.getElementById('ef-perfil').onchange=atualizaMods;
     atualizaMods();
+    // colunas do Estoque que este usuário enxerga
+    if(u.perfil!=='admin'){
+      var colDiv=document.createElement('div');
+      colDiv.className='fg';colDiv.style.gridColumn='1 / -1';
+      colDiv.innerHTML='<label class="fl">Colunas visíveis no Estoque</label><div id="ef-col-wrap" class="mod-wrap">'+htmlColunasUsuario(u.colunas_ocultas||[])+'</div>'
+        +'<span style="font-size:11px;color:var(--ink4);">Desmarque as colunas que este usuário não deve ver. Vale para a tela e para o Excel. Administrador sempre vê tudo.</span>';
+      editBody.appendChild(colDiv);
+    }
   }
 
   document.getElementById('edit-save-btn').onclick=function(){
@@ -8129,7 +8471,15 @@ function editUser(id){
     sb.rpc('wp_admin_atualizar_usuario',payload).then(function(r){
       showLd(false);
       if(r.error){toast('Erro: '+r.error.message,'error');return;}
-      toast('Usuário atualizado!','success');closeEdit();loadUsers();
+      var colWrap=document.getElementById('ef-col-wrap');
+      if(!colWrap){toast('Usuário atualizado!','success');closeEdit();loadUsers();return;}
+      var oc=[].slice.call(colWrap.querySelectorAll('.col-chk')).filter(function(c){return !c.checked;}).map(function(c){return c.value;});
+      sb.rpc('wp_admin_colunas_usuario',{p_id:id,p_colunas:oc}).then(function(r2){
+        if(r2.error)toast('Usuário salvo, mas as colunas não: '+(/wp_admin_colunas_usuario/.test(r2.error.message)?'rode o script woodport_armazem_v2.sql no Supabase':r2.error.message),'error');
+        else toast('Usuário atualizado!','success');
+        if(currentUser&&currentUser.id===id){currentUser.colunas_ocultas=oc.length?oc:null;aplicarColunas();}
+        closeEdit();loadUsers();
+      });
     });
   };
 }
