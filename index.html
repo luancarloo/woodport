@@ -6286,6 +6286,14 @@ function numBR(s){ // aceita 0,757 e 0.757
   if(t.indexOf(',')>=0)t=t.replace(/\./g,'').replace(',','.');
   var n=parseFloat(t);return isNaN(n)?null:n;
 }
+// Peso sempre em TONELADAS. Madeira pesa 0,3 a 1,2 t por m³: se peso ÷ CBM passa de 20,
+// o valor veio em QUILOS (ex.: 1399 em vez de 1,399) → divide por 1000.
+// Sem CBM, peso acima de 50 também é tratado como quilos. Vale para peso por fardo ou total.
+function pesoEmKg(peso,cbm){
+  if(!(peso>0))return false;
+  return cbm>0?peso/cbm>20:peso>50;
+}
+function pesoTon(peso,cbm){return pesoEmKg(peso,cbm)?+(peso/1000).toFixed(4):peso;}
 // marcas: cada armador tem a sua lista (marca sem armador = gravada antes da separação → G2 Ocean)
 function marcaArm(x){return x.armador||ARMADORES[0];}
 function marcasDoArmador(arm){arm=arm||armadorAtual;return est.marcas.filter(function(x){return normAz(marcaArm(x))===normAz(arm);});}
@@ -6313,7 +6321,9 @@ function estCarregar(forcar){
     showLd(false);
     var err=rs[0].error||rs[1].error||rs[2].error;
     if(err){toast('Erro ao carregar estoque: '+err.message,'error');return;}
-    est.marcas=rs[0].data||[];est.movs=rs[1].data||[];est.saidas=rs[2].data||[];est.tarifas=(rs[3].data||[]);
+    est.marcas=rs[0].data||[];est.movs=rs[1].data||[];
+    // marca gravada com peso em quilos: corrige na tela (os cálculos usam peso_t × fardos) e avisa o admin
+    est.marcasPesoKg=est.marcas.filter(function(m){if(!pesoEmKg(+m.peso_t,+m.cbm))return false;m._pesoOrig=m.peso_t;m.peso_t=pesoTon(+m.peso_t,+m.cbm);return true;});est.saidas=rs[2].data||[];est.tarifas=(rs[3].data||[]);
     est.navArm={};(rs[4].data||[]).forEach(function(n){est.navArm[n.id]=n.armador||'';});
     est.navios=rs[4].data||[];
     // clientes/booking: sem o woodport_booking.sql o resto do estoque continua funcionando
@@ -6695,9 +6705,10 @@ function edMarcaInfo(){
     return;
   }
   nova.style.display='';el.textContent='';
-  var cb=numBR(document.getElementById('ed-cbmtot').value),ps=numBR(document.getElementById('ed-pesotot').value);
+  var cb=numBR(document.getElementById('ed-cbmtot').value),ps0=numBR(document.getElementById('ed-pesotot').value),ps=pesoTon(ps0,cb);
   document.getElementById('ed-unit').innerHTML=q&&cb>0&&ps>0
-    ?'Por fardo: <strong>'+fNum(cb/q,4)+' m³ · '+fNum(ps/q,4)+' t</strong> — a marca '+esc(marca.toUpperCase())+' será cadastrada com esses valores ao lançar.'
+    ?(ps!==ps0?'<span style="color:#B45309;">⚠ '+fNum(ps0,0)+' parece estar em quilos — considerado <strong>'+fNum(ps,3)+' t</strong>.</span><br>':'')
+     +'Por fardo: <strong>'+fNum(cb/q,4)+' m³ · '+fNum(ps/q,4)+' t</strong> — a marca '+esc(marca.toUpperCase())+' será cadastrada com esses valores ao lançar.'
     :'Informe fardos, CBM total e peso total para calcular o valor por fardo.';
 }
 // ── Descarga: período, placa e não conformidade com fotos ──
@@ -6840,7 +6851,7 @@ function lancarDescarga(){
   }
   var mi=marcaInfo(reg.marca),novaMarca=null,tipoNaMarca=null;
   if(!mi){
-    var cb=numBR(v('ed-cbmtot')),ps=numBR(v('ed-pesotot'));
+    var cb=numBR(v('ed-cbmtot')),ps=pesoTon(numBR(v('ed-pesotot')),cb);
     if(!reg.produto){toast('Marca nova: informe o tipo do produto','error');return;}
     if(!(cb>0)||!(ps>0)){toast('Marca nova: informe o CBM total e o peso total desta descarga','error');return;}
     novaMarca={armador:armadorAtual,marca:reg.marca,commodity:reg.produto,cbm:+(cb/reg.quantidade).toFixed(4),peso_t:+(ps/reg.quantidade).toFixed(4),exportador:reg.produtor,updated_at:new Date().toISOString()};
@@ -7003,7 +7014,7 @@ function importarMovExcel(input){
     if(!dataCorte){toast('Data inválida','error');return;}
   }
   lerPlanilha(file,function(abas){
-    var regs=[],ignorados={semMarca:0,semQtd:0,semData:0,saida:0},abaUsada=null,avisos={perInval:0,placaInval:0,nc:0};
+    var regs=[],ignorados={semMarca:0,semQtd:0,semData:0,saida:0},abaUsada=null,avisos={perInval:0,placaInval:0,nc:0,pesoKg:0};
     abas.forEach(function(a){
       if(abaUsada)return;
       var R=a.raw,T=a.txt,h=-1;
@@ -7048,6 +7059,7 @@ function importarMovExcel(input){
           _cbm:cCbm>=0?numBR(L[cCbm]):null,_peso:cPeso>=0?numBR(L[cPeso]):null,
           criado_por:currentUser.id,criado_por_nome:currentUser.nome});
         var rg=regs[regs.length-1];
+        if(pesoEmKg(rg._peso,rg._cbm)){rg._peso=pesoTon(rg._peso,rg._cbm);avisos.pesoKg++;}
         if(tipo==='descarga'){
           var perTx=cPer>=0?String(LT[cPer]||L[cPer]||'').trim():'';
           if(perTx){rg.periodo=normPeriodo(perTx);if(!rg.periodo)avisos.perInval++;}
@@ -7096,6 +7108,7 @@ function importarMovExcel(input){
       +(marcasNovas.length?'\n• '+marcasNovas.length+' marca(s) nova(s) serão cadastradas (CBM e peso por fardo pelos totais): '+marcasNovas.slice(0,10).map(function(m){return m.marca;}).join(', ')+(marcasNovas.length>10?'…':''):'')
       +(semDest?'\n• '+semDest+' descarga(s) sem DESTINO — não abatem booking de porto':'')
       +(semParam.length?'\n• '+semParam.length+' marca(s) sem parâmetro: '+semParam.slice(0,10).join(', ')+(semParam.length>10?'…':''):'')
+      +(avisos.pesoKg?'\n• '+avisos.pesoKg+' linha(s) com PESO em quilos — convertido para toneladas (÷ 1000)':'')
       +(avisos.nc?'\n• '+avisos.nc+' com NÃO CONFORMIDADE (fotos podem ser anexadas depois, pela tela)':'')
       +(avisos.perInval?'\n• '+avisos.perInval+' com PERÍODO não reconhecido — ficam sem período (use 07x13, 13x19, 19x01 ou 01x07)':'')
       +(avisos.placaInval?'\n• '+avisos.placaInval+' com PLACA fora do padrão (ABC-1234 / ABC1D23) — gravadas como estão':'')
@@ -7186,7 +7199,9 @@ function estRenderMarcas(){
   var b=(document.getElementById('mc-busca').value||'').trim().toLowerCase();
   var doArm=marcasDoArmador();
   var lin=doArm.filter(function(m){return !b||[m.marca,m.exportador,m.commodity].join(' ').toLowerCase().indexOf(b)>=0;});
-  document.getElementById('mc-count').textContent=doArm.length+' marcas · '+armadorAtual;
+  var kg=(est.marcasPesoKg||[]).filter(function(m){return doArm.indexOf(m)>=0;});
+  document.getElementById('mc-count').innerHTML=doArm.length+' marcas · '+esc(armadorAtual)
+    +(kg.length?' · <span style="color:#B45309;" title="'+esc(kg.map(function(m){return m.marca+': '+fNum(m._pesoOrig,0)+' → '+fNum(m.peso_t,3)+' t';}).join('\n'))+'">⚠ '+kg.length+' com peso gravado em quilos — já corrigido nos cálculos; abra e salve a marca (ou rode woodport_peso_kg.sql) para gravar o certo</span>':'');
   function n(x,d){return x===null||x===undefined||x===''?'—':fNum(x,d);}
   document.getElementById('mc-tb').innerHTML=lin.slice(0,800).map(function(m){
     return '<tr><td class="mono"><strong>'+esc(m.marca)+'</strong></td><td>'+esc(m.commodity||'—')+'</td>'
@@ -7215,6 +7230,11 @@ function salvarMarca(){
     fl:numBR(v('mc-fl')),mm:numBR(v('mc-mm')),exportador:v('mc-exp'),cbm:numBR(v('mc-cbm')),peso_t:numBR(v('mc-peso'))||0,updated_at:new Date().toISOString()};
   if(!reg.marca){toast('Informe a marca','error');return;}
   if(!reg.cbm||reg.cbm<=0){toast('Informe o CBM por fardo','error');return;}
+  if(pesoEmKg(reg.peso_t,reg.cbm)){
+    var pt=pesoTon(reg.peso_t,reg.cbm);
+    if(!confirm('O peso '+fNum(reg.peso_t,0)+' parece estar em QUILOS (madeira com '+fNum(reg.cbm,3)+' m³ não pesa '+fNum(reg.peso_t,0)+' t).\n\nGravar como '+fNum(pt,3)+' t por fardo?'))return;
+    reg.peso_t=pt;document.getElementById('mc-peso').value=String(pt).replace('.',',');
+  }
   var outra=marcasDoArmador().find(function(m){return nmMarca(m.marca)===nmMarca(reg.marca)&&m.id!==id;});
   if(outra){toast('A marca '+reg.marca+' já está cadastrada para '+armadorAtual,'error');return;}
   showLd(true);
@@ -7246,14 +7266,15 @@ function importarMarcasExcel(input){
         if(!marca||!cbm||cbm<=0)continue; // linhas de título/seção (ex.: nome do exportador) não têm CBM
         function nv(k){return c[k]>=0?numBR(L[c[k]]):null;}
         porMarca[nmMarca(marca)]={marca:marca,commodity:c.comm>=0?String(L[c.comm]||'').trim()||null:null,comprimento:nv('comp'),largura:nv('larg'),altura:nv('alt'),
-          fl:nv('fl'),mm:nv('mm'),cbm:cbm,peso_t:nv('peso')||0,exportador:c.exp>=0?String(L[c.exp]||'').trim()||null:null,updated_at:new Date().toISOString()};
+          fl:nv('fl'),mm:nv('mm'),cbm:cbm,peso_t:pesoTon(nv('peso'),cbm)||0,_kg:pesoEmKg(nv('peso'),cbm),exportador:c.exp>=0?String(L[c.exp]||'').trim()||null:null,updated_at:new Date().toISOString()};
       }
     });
     var regs=Object.values(porMarca);
     if(!abaUsada||!regs.length){toast('Não encontrei a tabela (cabeçalho com MARKS/MARCA e CBM)','error');return;}
-    var novos=[],atual=[];
+    var novos=[],atual=[],nKg=regs.filter(function(x){return x._kg;}).length;
+    regs.forEach(function(x){delete x._kg;});
     regs.forEach(function(x){var ex=marcaInfo(x.marca);if(ex)atual.push(Object.assign({id:ex.id,armador:marcaArm(ex)},x));else novos.push(Object.assign({armador:armadorAtual},x));});
-    if(!confirm('Tabela de marcas do armador '+armadorAtual+' (aba '+abaUsada+'):\n\n• '+novos.length+' marca(s) nova(s)\n• '+atual.length+' marca(s) atualizada(s)\n\nConfirmar?'))return;
+    if(!confirm('Tabela de marcas do armador '+armadorAtual+' (aba '+abaUsada+'):\n\n• '+novos.length+' marca(s) nova(s)\n• '+atual.length+' marca(s) atualizada(s)'+(nKg?'\n• '+nKg+' com PESO em quilos — convertido para toneladas (÷ 1000)':'')+'\n\nConfirmar?'))return;
     showLd(true);
     var p=Promise.resolve();
     function lote(fn,arr){for(var i=0;i<arr.length;i+=300)(function(b){p=p.then(function(){return fn(b).then(function(r){if(r.error)throw r.error;});});})(arr.slice(i,i+300));}
