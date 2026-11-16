@@ -1476,6 +1476,42 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
               <tbody id="bk-tb"></tbody></table></div>
           </div>
         </div>
+        <!-- PRÉ-LISTA do booking selecionado (📋 na tabela) -->
+        <div class="card" id="bk-pl" style="display:none;margin-top:14px;">
+          <div class="ch" style="flex-wrap:wrap;gap:8px;">
+            <div class="ct" id="bk-pl-titulo">Pré-lista</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn bs bsm" onclick="document.getElementById('bk-pl-file').click()">⬆ Importar pré-lista (Excel)</button>
+              <input type="file" id="bk-pl-file" accept=".xlsx,.xls,.csv" hidden onchange="importarPrelistaExcel(this)">
+              <button class="btn bs bsm" onclick="baixarModeloPrelista()">⬇ Modelo</button>
+              <button class="btn bs bsm" onclick="bkPlExportar()">⬇ Excel pré-lista × recebido</button>
+              <button class="btn bd bsm" onclick="bkPlLimparTudo()">Apagar pré-lista</button>
+              <button class="btn bs bsm" aria-label="Fechar" onclick="bkPlFechar()">✕</button>
+            </div>
+          </div>
+          <div id="bk-pl-aviso"></div>
+          <div class="sr" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px;">
+            <div class="sc"><div class="sl">Previsto</div><div class="sv" id="bk-pl-s-prev">—</div></div>
+            <div class="sc"><div class="sl">Recebido</div><div class="sv" id="bk-pl-s-rec">—</div></div>
+            <div class="sc"><div class="sl">Falta receber</div><div class="sv" id="bk-pl-s-falta">—</div></div>
+            <div class="sc"><div class="sl">Marcas completas</div><div class="sv" id="bk-pl-s-ok">—</div></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+            <input type="hidden" id="bk-pl-id">
+            <div class="fg" style="flex:2 1 160px;min-width:0;"><label class="fl" for="bk-pl-marca">Marca <span class="req">*</span></label><input id="bk-pl-marca" list="dl-marcas" autocomplete="off" style="text-transform:uppercase;"></div>
+            <div class="fg" style="flex:1 1 90px;min-width:0;"><label class="fl" for="bk-pl-fd">Fardos <span class="req">*</span></label><input id="bk-pl-fd" inputmode="numeric" style="font-family:var(--mono);"></div>
+            <div class="fg" style="flex:1 1 100px;min-width:0;"><label class="fl" for="bk-pl-m3">m³ total</label><input id="bk-pl-m3" inputmode="decimal" style="font-family:var(--mono);"></div>
+            <div class="fg" style="flex:1 1 100px;min-width:0;"><label class="fl" for="bk-pl-t">Peso total (t)</label><input id="bk-pl-t" inputmode="decimal" style="font-family:var(--mono);"></div>
+            <div class="fg" style="flex:2 1 140px;min-width:0;"><label class="fl" for="bk-pl-obs">Obs</label><input id="bk-pl-obs"></div>
+            <button class="btn bp" id="bk-pl-btn" onclick="bkPlSalvar()">+ Adicionar</button>
+            <button class="btn bs" onclick="bkPlLimparForm()">Limpar</button>
+          </div>
+          <div class="tw"><table><thead><tr><th>Marca</th><th style="text-align:right">Previsto fds</th><th style="text-align:right">Previsto m³</th><th style="text-align:right">Previsto t</th>
+            <th style="text-align:right">Recebido fds</th><th style="text-align:right">Recebido m³</th><th style="text-align:right">Recebido t</th>
+            <th style="text-align:right">Falta fds</th><th style="text-align:right">Falta m³</th><th style="text-align:right">Falta t</th><th style="min-width:100px;">%</th><th></th></tr></thead>
+            <tbody id="bk-pl-tb"></tbody></table></div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:8px;line-height:1.5;">Recebido = descargas deste cliente que abateram este booking (mesmo navio e porto, dentro do período de recebimento). Marca da pré-lista é reconhecida como carga deste cliente mesmo que o produtor venha escrito diferente. Marca sem cadastro usa o m³ e o peso por fardo da pré-lista.</div>
+        </div>
       </div>
 
       <!-- CLIENTES -->
@@ -6317,6 +6353,7 @@ function estCarregar(forcar){
     sb.from('wp_navios').select('*').order('created_at',{ascending:false}),
     sb.from('wp_clientes').select('*').order('nome'),
     sb.from('wp_booking').select('*'),
+    supaAll(function(){return sb.from('wp_booking_prelista').select('*').order('booking_id').order('marca').order('id');}),
   ]).then(function(rs){
     showLd(false);
     var err=rs[0].error||rs[1].error||rs[2].error;
@@ -6329,6 +6366,8 @@ function estCarregar(forcar){
     // clientes/booking: sem o woodport_booking.sql o resto do estoque continua funcionando
     est.semBookingSql=!!(rs[5].error||rs[6].error);
     est.clientes=rs[5].data||[];est.booking=rs[6].data||[];
+    // pré-lista do booking: sem o woodport_prelista.sql o booking continua funcionando
+    est.semPrelistaSql=!!(rs[7]&&rs[7].error);est.prelista=rs[7]&&rs[7].data||[];
     est.carregado=true;est.grupos=null;
     // listas de apoio para digitação
     var prods=[...new Set(est.movs.map(function(m){return (m.produtor||'').trim();}).filter(Boolean))].sort();
@@ -7153,7 +7192,13 @@ var MODELO_COLS={
     {h:'CBM TOTAL',w:11,ex1:'',ex2:'92,8'},
     {h:'PESO TOTAL (t)',w:14,ex1:'',ex2:'48,4'},
     {h:'ARMAZÉM',t:1,w:12,ex1:'WRC',ex2:'WRC'},
-    {h:'OBS',t:1,w:30,ex1:'',ex2:''}]
+    {h:'OBS',t:1,w:30,ex1:'',ex2:''}],
+  prelista:[ // importarPrelistaExcel
+    {h:'MARCA',t:1,w:22,ex1:'SUV629/26A 18MM',ex2:'SUV630/26A 15MM'},
+    {h:'FARDOS',w:10,ex1:'120',ex2:'85'},
+    {h:'CBM TOTAL',w:12,ex1:'258,000',ex2:'176,800'},
+    {h:'PESO TOTAL (t)',w:14,ex1:'167,880',ex2:'114,920'},
+    {h:'OBS',t:1,w:30,ex1:'',ex2:'embarque parcial'}]
 };
 function baixarModeloEstoque(tipo){
   var inv=tipo==='inventario',cols=MODELO_COLS[inv?'inventario':'descarga'];
@@ -7309,8 +7354,18 @@ function cliIndice(){
     (c.marcas||[]).forEach(function(m){if(nmMarca(m))ix.marca[nmMarca(m)]=c;});
     [c.nome].concat(c.apelidos||[]).forEach(function(n){if(nmCli(n))ix.nome[nmCli(n)]=c;});
   });
+  // marca que está na pré-lista de um booking do armador = carga daquele cliente
+  (est.prelista||[]).forEach(function(pl){
+    var b=bookingDe(pl.booking_id),n=b&&navioDe(b.navio_id),k=nmMarca(pl.marca);
+    if(!n||!mesmoArmador(n.armador)||!k||ix.marca[k])return;
+    var c=clienteDe(b.cliente_id);if(c)ix.marca[k]=c;
+  });
   return ix;
 }
+function bookingDe(id){return (est.booking||[]).find(function(b){return b.id===id;})||null;}
+// pré-lista: linhas de um booking / linha de uma marca
+function prelistaDe(bid){return (est.prelista||[]).filter(function(p){return p.booking_id===bid;});}
+function plDe(bid,marca){var k=nmMarca(marca);return (est.prelista||[]).find(function(p){return p.booking_id===bid&&nmMarca(p.marca)===k;})||null;}
 function clienteDaDescarga(m,ix){
   var c=ix.marca[nmMarca(m.marca)];if(c)return c;
   c=ix.nome[nmCli(m.produtor)];if(c)return c;
@@ -7344,9 +7399,16 @@ function bkCalcular(){
         var kp=c.id+'|'+noPer[0].navio.id+'|'+dest,sp=semPorto[kp]||(semPorto[kp]={cli:c,navio_id:noPer[0].navio.id,destino:(m.destino||'').trim(),fd:0});
         sp.fd+=q;return;
       }
+      // marca na pré-lista de um dos bookings candidatos: vai para ele
+      var comPl=cand.filter(function(x){return plDe(x.b.id,m.marca);});
+      if(comPl.length)cand=comPl;
       var r=cand.find(function(x){return x.m3<(+x.b.m3||0);})||cand[cand.length-1];
       var mi=marcaInfo(m.marca),m3=mi?q*mi.cbm:null,t=mi?q*mi.peso_t:null;
-      r.fd+=q;if(mi){r.m3+=m3;r.t+=t;}else r.semParam+=q;
+      if(!mi){ // marca sem cadastro: usa o m³/t por fardo da pré-lista
+        var pl=plDe(r.b.id,m.marca);
+        if(pl&&pl.fardos>0&&+pl.m3>0){m3=q*pl.m3/pl.fardos;t=q*(+pl.t||0)/pl.fardos;}
+      }
+      r.fd+=q;if(m3!==null){r.m3+=m3;r.t+=t;}else r.semParam+=q;
       r.descargas.push({m:m,m3:m3,t:t});
     });
   return {R:R,semCliente:Object.values(semCliente).sort(function(a,b){return b.fd-a.fd;}),semPorto:Object.values(semPorto)};
@@ -7380,7 +7442,11 @@ function estRenderBooking(){
     tB+=bm;tR+=r.m3;tBt+=bt;tRt+=r.t;tF+=Math.max(0,fm);tFt+=Math.max(0,ft);
     var cor=pc>100?'#B45309':pc>=95?'#1e7e34':'var(--acc,#8B4513)';
     var cli=r.cli||{nome:'(cliente excluído)'};
-    return '<tr><td><strong>'+esc(cli.nome)+'</strong>'+(r.b.obs?'<div style="font-size:11px;color:var(--ink4);">'+esc(r.b.obs)+'</div>':'')
+    var pls=prelistaDe(r.b.id),plTx='';
+    if(pls.length){var pc2=bkPlComparar(r.b.id);
+      plTx='<div style="font-size:11px;margin-top:2px;"><a href="#" onclick="bkPrelista(\''+r.b.id+'\');return false;" style="color:var(--acc,#8B4513);">📋 pré-lista: '+pls.length+' marca(s) · '
+        +(pc2.tot.faltaFd>0?'faltam '+pc2.tot.faltaFd.toLocaleString('pt-BR')+' fds':'✔ completa')+'</a></div>';}
+    return '<tr'+(est.bkPl===r.b.id?' style="background:var(--s2);"':'')+'><td><strong>'+esc(cli.nome)+'</strong>'+(r.b.obs?'<div style="font-size:11px;color:var(--ink4);">'+esc(r.b.obs)+'</div>':'')+plTx
       +(r.semParam?' <span class="bge warn" title="Marca sem parâmetro: fardos sem m³/t">'+r.semParam+' fds sem m³</span>':'')+'</td>'
       +'<td>'+(r.b.porto?esc(r.b.porto):'<span style="color:var(--ink4);">qualquer</span>')+'</td>'
       +'<td class="mono" style="text-align:right">'+fNum(bm,3)+'</td><td class="mono" style="text-align:right">'+fNum(bt,3)+'</td>'
@@ -7389,7 +7455,8 @@ function estRenderBooking(){
       +'<td class="mono" style="text-align:right;font-weight:600;'+(fm<0?'color:#B45309;':'')+'">'+fNum(fm,3)+'</td>'
       +'<td class="mono" style="text-align:right;'+(ft<0?'color:#B45309;':'')+'">'+fNum(ft,3)+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;min-width:50px;"><div style="height:100%;width:'+Math.min(100,pc).toFixed(1)+'%;background:'+cor+';"></div></div><span class="mono" style="font-size:12px;">'+pc.toFixed(0)+'%</span></div></td>'
-      +'<td style="white-space:nowrap;"><button class="btn bs bsm" title="Relatório para o cliente" aria-label="Relatório" onclick="bkRelatorio(\''+r.b.id+'\')">📄</button>'
+      +'<td style="white-space:nowrap;"><button class="btn bs bsm" title="Pré-lista da carga (por marca)" aria-label="Pré-lista" onclick="bkPrelista(\''+r.b.id+'\')">📋'+(pls.length?' '+pls.length:'')+'</button>'
+      +' <button class="btn bs bsm" title="Relatório para o cliente" aria-label="Relatório" onclick="bkRelatorio(\''+r.b.id+'\')">📄</button>'
       +(r.cli&&r.cli.email?' <button class="btn bs bsm" title="E-mail para '+esc(r.cli.email)+'" aria-label="E-mail" onclick="bkEmail(\''+r.b.id+'\')">✉</button>':'')
       +' <button class="btn bs bsm" aria-label="Editar" onclick="bkEditar(\''+r.b.id+'\')">✏</button>'
       +' <button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_booking\',\''+r.b.id+'\',function(){est.booking=est.booking.filter(function(x){return x.id!==\''+r.b.id+'\';});estRender();})">✕</button></td></tr>';
@@ -7411,6 +7478,8 @@ function estRenderBooking(){
   if(spN.length)av.innerHTML+='<div class="imp-st err" style="margin-bottom:12px;">⚠<div><strong>Descargas sem booking para o destino</strong> (não abatem nenhum booking deste navio): '
     +esc(spN.slice(0,8).map(function(x){return x.cli.nome+' → '+(x.destino||'sem destino')+' ('+x.fd+' fds)';}).join(' · '))+(spN.length>8?' …':'')+'</div></div>';
   if(nav&&!nav.receb_inicio&&lin.length)av.innerHTML+='<div class="imp-st err" style="margin-bottom:12px;">⚠<div>Defina o <strong>período de recebimento</strong> deste navio — sem ele nenhuma descarga abate o booking.</div></div>';
+  if(est.bkPl&&!lin.some(function(r){return r.b.id===est.bkPl;}))est.bkPl='';
+  bkRenderPrelista();
 }
 function bkLimparForm(){
   ['bk-id','bk-m3','bk-t','bk-obs','bk-porto'].forEach(function(id){document.getElementById(id).value='';});
@@ -7525,12 +7594,233 @@ function bkExportar(){
   var lin=Object.values(est.bk.R).filter(function(r){return r.b.navio_id===nav.id;}).sort(function(a,b){return String(a.cli&&a.cli.nome||'').localeCompare(String(b.cli&&b.cli.nome||''));});
   if(!lin.length){toast('Nada para exportar','error');return;}
   var wb=XLSX.utils.book_new();
-  [['Resumo',lin.map(bkLinhaResumo)],['Descargas',[].concat.apply([],lin.map(bkLinhasDescarga))]].forEach(function(x){
+  [['Resumo',lin.map(bkLinhaResumo)],['Pré-lista',[].concat.apply([],lin.map(function(r){return bkPlLinhas(r.b.id);}))],['Descargas',[].concat.apply([],lin.map(bkLinhasDescarga))]].forEach(function(x){
     if(!x[1].length)return;
     var ws=XLSX.utils.json_to_sheet(x[1]);ws['!cols']=Object.keys(x[1][0]).map(function(k){return {wch:Math.max(10,k.length+2)};});
     XLSX.utils.book_append_sheet(wb,ws,x[0]);
   });
   XLSX.writeFile(wb,'booking_'+(nav.nome+'_'+(nav.viagem||'')).replace(/[^\w]+/g,'_')+'_'+localISODate()+'.xlsx');
+}
+// ── PRÉ-LISTA do booking: carga prevista por marca × descargas ──
+function bkPlComparar(bid){
+  var r=est.bk&&est.bk.R[bid],rec={},rows=[],tot={pFd:0,pM3:0,pT:0,rFd:0,rM3:0,rT:0,faltaFd:0,faltaM3:0,faltaT:0,ok:0,n:0};
+  (r?r.descargas:[]).forEach(function(d){
+    var k=nmMarca(d.m.marca),x=rec[k]||(rec[k]={marca:d.m.marca,fd:0,m3:0,t:0,semParam:false});
+    x.fd+=+d.m.quantidade||0;if(d.m3===null)x.semParam=true;else{x.m3+=d.m3;x.t+=d.t||0;}
+  });
+  prelistaDe(bid).forEach(function(pl){
+    var k=nmMarca(pl.marca),x=rec[k]||{fd:0,m3:0,t:0,semParam:false};delete rec[k];
+    var row={pl:pl,marca:pl.marca,pFd:+pl.fardos||0,pM3:pl.m3===null?null:+pl.m3,pT:pl.t===null?null:+pl.t,rFd:x.fd,rM3:x.m3,rT:x.t,semParam:x.semParam};
+    row.fFd=row.pFd-row.rFd;row.fM3=row.pM3===null?null:row.pM3-row.rM3;row.fT=row.pT===null?null:row.pT-row.rT;
+    tot.pFd+=row.pFd;tot.pM3+=row.pM3||0;tot.pT+=row.pT||0;tot.rFd+=row.rFd;tot.rM3+=row.rM3;tot.rT+=row.rT;
+    tot.faltaFd+=Math.max(0,row.fFd);tot.faltaM3+=Math.max(0,row.fM3||0);tot.faltaT+=Math.max(0,row.fT||0);
+    tot.n++;if(row.fFd<=0)tot.ok++;rows.push(row);
+  });
+  rows.sort(function(a,b){return String(a.marca).localeCompare(String(b.marca),'pt-BR',{numeric:true});});
+  var fora=Object.values(rec).sort(function(a,b){return String(a.marca).localeCompare(String(b.marca));}); // recebido sem estar na pré-lista
+  return {rows:rows,fora:fora,tot:tot};
+}
+function bkPrelista(bid){
+  if(est.semPrelistaSql){toast('Rode o script woodport_prelista.sql no Supabase para usar a pré-lista','error');return;}
+  est.bkPl=bid;bkPlLimparForm();estRender();
+  var el=document.getElementById('bk-pl');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function bkPlFechar(){est.bkPl='';estRender();}
+function bkRenderPrelista(){
+  var box=document.getElementById('bk-pl');if(!box)return;
+  var r=est.bkPl&&est.bk&&est.bk.R[est.bkPl];
+  if(!r){box.style.display='none';return;}
+  box.style.display='';
+  document.getElementById('bk-pl-titulo').innerHTML='📋 Pré-lista — '+esc(r.cli?r.cli.nome:'')+' · '+esc(r.b.porto||'qualquer porto')+' <span class="cs">'+esc(navioNome(r.navio))+'</span>';
+  var C=bkPlComparar(r.b.id),T=C.tot;
+  function n3(x){return x===null||x===undefined?'—':fNum(x,3);}
+  function falta(x,d){if(x===null)return '<td class="mono" style="text-align:right">—</td>';
+    return '<td class="mono" style="text-align:right;'+(x<0?'color:#B45309;':x>0?'font-weight:600;':'color:#1e7e34;')+'">'+(d?fNum(x,d):x.toLocaleString('pt-BR'))+'</td>';}
+  var html=C.rows.map(function(x){
+    var pc=x.pFd?x.rFd/x.pFd*100:0,cor=pc>100?'#B45309':pc>=100?'#1e7e34':'var(--acc,#8B4513)';
+    var semCad=!marcaInfo(x.marca)?' <span class="bge warn" title="Marca sem cadastro: m³/t por fardo vêm da pré-lista">sem cadastro</span>':'';
+    return '<tr'+(est.bkPlEdit===x.pl.id?' style="background:var(--s2);"':'')+'><td><strong class="mono">'+esc(x.marca)+'</strong>'+semCad+(x.pl.obs?'<div style="font-size:11px;color:var(--ink4);">'+esc(x.pl.obs)+'</div>':'')+'</td>'
+      +'<td class="mono" style="text-align:right">'+x.pFd.toLocaleString('pt-BR')+'</td><td class="mono" style="text-align:right">'+n3(x.pM3)+'</td><td class="mono" style="text-align:right">'+n3(x.pT)+'</td>'
+      +'<td class="mono" style="text-align:right">'+x.rFd.toLocaleString('pt-BR')+'</td><td class="mono" style="text-align:right">'+fNum(x.rM3,3)+(x.semParam?' <span title="Parte sem parâmetro de m³">*</span>':'')+'</td><td class="mono" style="text-align:right">'+fNum(x.rT,3)+'</td>'
+      +falta(x.fFd)+falta(x.fM3,3)+falta(x.fT,3)
+      +'<td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;min-width:40px;"><div style="height:100%;width:'+Math.min(100,pc).toFixed(1)+'%;background:'+cor+';"></div></div><span class="mono" style="font-size:12px;">'+(x.fFd<=0&&x.pFd?'✔':pc.toFixed(0)+'%')+'</span></div></td>'
+      +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="bkPlEditar(\''+x.pl.id+'\')">✏</button> <button class="btn bd bsm" aria-label="Excluir" onclick="bkPlExcluir(\''+x.pl.id+'\')">✕</button></td></tr>';
+  }).join('');
+  if(C.rows.length)html+='<tr style="font-weight:700;background:var(--s2);"><td>Total</td><td class="mono" style="text-align:right">'+T.pFd.toLocaleString('pt-BR')+'</td><td class="mono" style="text-align:right">'+fNum(T.pM3,3)+'</td><td class="mono" style="text-align:right">'+fNum(T.pT,3)+'</td>'
+    +'<td class="mono" style="text-align:right">'+T.rFd.toLocaleString('pt-BR')+'</td><td class="mono" style="text-align:right">'+fNum(T.rM3,3)+'</td><td class="mono" style="text-align:right">'+fNum(T.rT,3)+'</td>'
+    +'<td class="mono" style="text-align:right">'+T.faltaFd.toLocaleString('pt-BR')+'</td><td class="mono" style="text-align:right">'+fNum(T.faltaM3,3)+'</td><td class="mono" style="text-align:right">'+fNum(T.faltaT,3)+'</td><td colspan="2"></td></tr>';
+  if(C.fora.length)html+='<tr><td colspan="12" style="background:#FEF3C7;color:#92400E;font-size:12px;font-weight:600;">Recebido fora da pré-lista (marca não prevista para este booking)</td></tr>'
+    +C.fora.map(function(x){return '<tr style="color:#92400E;"><td class="mono">'+esc(x.marca)+' <button class="btn bs bsm" title="Incluir na pré-lista" onclick="bkPlIncluirFora(\''+esc(x.marca).replace(/'/g,"\\'")+'\','+x.fd+')">+ incluir</button></td><td colspan="3"></td>'
+      +'<td class="mono" style="text-align:right">'+x.fd.toLocaleString('pt-BR')+'</td><td class="mono" style="text-align:right">'+fNum(x.m3,3)+'</td><td class="mono" style="text-align:right">'+fNum(x.t,3)+'</td><td colspan="5"></td></tr>';}).join('');
+  document.getElementById('bk-pl-tb').innerHTML=html||'<tr><td colspan="12" style="color:var(--ink3);text-align:center;padding:20px;">Nenhuma marca na pré-lista. Adicione acima ou importe a planilha enviada pelo cliente.</td></tr>';
+  document.getElementById('bk-pl-s-prev').innerHTML=T.pFd.toLocaleString('pt-BR')+' <small>fds</small><div style="font-size:12px;color:var(--ink3);font-weight:400;">'+fNum(T.pM3,1)+' m³ · '+fNum(T.pT,1)+' t</div>';
+  document.getElementById('bk-pl-s-rec').innerHTML=T.rFd.toLocaleString('pt-BR')+' <small>fds</small><div style="font-size:12px;color:var(--ink3);font-weight:400;">'+fNum(T.rM3,1)+' m³ · '+fNum(T.rT,1)+' t'+(T.pFd?' · '+(T.rFd/T.pFd*100).toFixed(0)+'%':'')+'</div>';
+  document.getElementById('bk-pl-s-falta').innerHTML=T.faltaFd.toLocaleString('pt-BR')+' <small>fds</small><div style="font-size:12px;color:var(--ink3);font-weight:400;">'+fNum(T.faltaM3,1)+' m³ · '+fNum(T.faltaT,1)+' t</div>';
+  document.getElementById('bk-pl-s-ok').innerHTML=T.ok+' <small>de '+T.n+'</small>';
+  var bm=+r.b.m3||0,av='';
+  if(T.pM3&&bm&&Math.abs(T.pM3-bm)/bm>0.02)av='<div class="imp-st err" style="margin-bottom:10px;">⚠<div>A pré-lista soma <strong>'+fNum(T.pM3,3)+' m³</strong> e o booking é de <strong>'+fNum(bm,3)+' m³</strong> ('+(T.pM3>bm?'+':'')+fNum(T.pM3-bm,3)+' m³).</div></div>';
+  document.getElementById('bk-pl-aviso').innerHTML=av;
+}
+function bkPlLimparForm(){
+  ['bk-pl-id','bk-pl-marca','bk-pl-fd','bk-pl-m3','bk-pl-t','bk-pl-obs'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  est.bkPlEdit='';var b=document.getElementById('bk-pl-btn');if(b)b.textContent='+ Adicionar';
+}
+function bkPlEditar(id){
+  var p=(est.prelista||[]).find(function(x){return x.id===id;});if(!p)return;
+  est.bkPlEdit=id;
+  document.getElementById('bk-pl-id').value=p.id;document.getElementById('bk-pl-marca').value=p.marca;
+  document.getElementById('bk-pl-fd').value=p.fardos||'';
+  document.getElementById('bk-pl-m3').value=p.m3===null?'':String(p.m3).replace('.',',');
+  document.getElementById('bk-pl-t').value=p.t===null?'':String(p.t).replace('.',',');
+  document.getElementById('bk-pl-obs').value=p.obs||'';
+  document.getElementById('bk-pl-btn').textContent='💾 Salvar';
+  document.getElementById('bk-pl-fd').focus();
+}
+function bkPlIncluirFora(marca,fd){
+  bkPlLimparForm();document.getElementById('bk-pl-marca').value=marca;document.getElementById('bk-pl-fd').value=fd;
+  var mi=marcaInfo(marca);
+  if(mi){document.getElementById('bk-pl-m3').value=fNum(fd*mi.cbm,3);document.getElementById('bk-pl-t').value=fNum(fd*mi.peso_t,3);}
+  document.getElementById('bk-pl-fd').focus();
+}
+function bkPlGravar(regs){ // upsert por booking+marca; atualiza a lista local
+  return sb.from('wp_booking_prelista').upsert(regs,{onConflict:'booking_id,marca'}).select('*').then(function(r){
+    if(r.error)throw r.error;
+    var ids={};(r.data||[]).forEach(function(p){ids[p.id]=1;});
+    est.prelista=est.prelista.filter(function(p){return !ids[p.id];}).concat(r.data||[]);
+    return r.data||[];
+  });
+}
+function bkPlSalvar(){
+  var bid=est.bkPl;if(!bid)return;
+  var id=document.getElementById('bk-pl-id').value,marca=(v('bk-pl-marca')||'').toUpperCase().replace(/\s+/g,' ');
+  var fd=parseInt(String(v('bk-pl-fd')||'').replace(/\D/g,''))||0,m3=numBR(v('bk-pl-m3')),t0=numBR(v('bk-pl-t')),t=pesoTon(t0,m3);
+  if(!marca){toast('Informe a marca','error');return;}
+  if(fd<=0){toast('Informe a quantidade de fardos prevista','error');return;}
+  if(t!==t0&&!confirm('O peso '+fNum(t0,0)+' parece estar em QUILOS. Gravar como '+fNum(t,3)+' t?'))return;
+  var ja=plDe(bid,marca);
+  if(ja&&ja.id!==id&&!confirm('A marca '+ja.marca+' já está na pré-lista ('+ja.fardos+' fds). Substituir pelos valores novos?'))return;
+  var reg={booking_id:bid,marca:ja?ja.marca:marca,fardos:fd,m3:m3,t:t,obs:v('bk-pl-obs'),updated_at:new Date().toISOString(),criado_por_nome:currentUser.nome};
+  showLd(true);
+  var p=id&&!ja?sb.from('wp_booking_prelista').update(reg).eq('id',id).select('*').then(function(r){if(r.error)throw r.error;
+      est.prelista=est.prelista.filter(function(x){return x.id!==id;}).concat(r.data||[]);}) // marca renomeada
+    :bkPlGravar([reg]).then(function(){if(id&&ja&&ja.id!==id)return sb.from('wp_booking_prelista').delete().eq('id',id).then(function(){est.prelista=est.prelista.filter(function(x){return x.id!==id;});});});
+  p.then(function(){showLd(false);toast('Marca '+reg.marca+' na pré-lista','success');bkPlLimparForm();estRender();document.getElementById('bk-pl-marca').focus();})
+   .catch(function(e){showLd(false);toast('Erro: '+erroColunaNova(e),'error');});
+}
+function bkPlExcluir(id){
+  var p=(est.prelista||[]).find(function(x){return x.id===id;});if(!p)return;
+  if(!confirm('Tirar a marca '+p.marca+' da pré-lista?'))return;
+  sb.from('wp_booking_prelista').delete().eq('id',id).select('id').then(function(r){
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(!r.data||!r.data.length){toast('Nada foi excluído — sem permissão','error');return;}
+    est.prelista=est.prelista.filter(function(x){return x.id!==id;});toast('Marca retirada','success');estRender();
+  });
+}
+function bkPlLimparTudo(){
+  var bid=est.bkPl,n=prelistaDe(bid).length;if(!bid||!n){toast('A pré-lista já está vazia','error');return;}
+  if(!confirm('Apagar a pré-lista inteira deste booking ('+n+' marca(s))?\nAs descargas não são afetadas.'))return;
+  showLd(true);
+  sb.from('wp_booking_prelista').delete().eq('booking_id',bid).select('id').then(function(r){
+    showLd(false);
+    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    var ids={};(r.data||[]).forEach(function(x){ids[x.id]=1;});
+    est.prelista=est.prelista.filter(function(x){return !ids[x.id];});avisoExclusao((r.data||[]).length,n,'marca(s)');estRender();
+  });
+}
+function importarPrelistaExcel(input){
+  var file=input.files[0];input.value='';if(!file)return;
+  var bid=est.bkPl,r0=bid&&est.bk&&est.bk.R[bid];if(!r0){toast('Abra a pré-lista de um booking (📋) antes de importar','error');return;}
+  lerPlanilha(file,function(abas){
+    var soma={},abaUsada=null,ign=0,kg=0;
+    abas.forEach(function(a){
+      if(abaUsada)return;
+      var R=a.raw,T=a.txt,h=-1,c={};
+      for(var i=0;i<Math.min(R.length,40)&&h<0;i++){
+        var H=R[i].map(hdr);
+        c.marca=H.findIndex(function(x){return x==='MARCA'||x==='MARCAS'||x==='MARKS'||x==='MARK';});
+        c.fd=H.findIndex(function(x){return /^(FARDOS?|QUANT|QTD|QTDE|BUNDLES?|BDLS?|PACKAGES?|PKGS?|VOLUMES?$)/.test(x)||x.indexOf('FARDO')>=0;});
+        if(c.marca>=0&&c.fd>=0){h=i;
+          c.m3=H.findIndex(function(x){return /^(CBM|M3|M³|M 3)/.test(x);});
+          c.t=H.findIndex(function(x){return /^(PESO|WEIGHT|TON|GROSS|NET|KG)/.test(x);});
+          c.obs=H.findIndex(function(x){return /^(OBS|NOTA|REMARK)/.test(x);});
+          c.kg=c.t>=0&&/KG|QUILO/.test(H[c.t]);}
+      }
+      if(h<0)return;abaUsada=a.nome;
+      for(var r=h+1;r<R.length;r++){
+        var L=R[r],LT=T[r]||[];
+        var marca=String(LT[c.marca]||L[c.marca]||'').trim().toUpperCase().replace(/\s+/g,' ');
+        var fd=Math.round(numBR(L[c.fd])||0);
+        if(!marca||/^(TOTAL|SUBTOTAL)/.test(hdr(marca))){continue;}
+        if(fd<=0){ign++;continue;}
+        var k=nmMarca(marca),s=soma[k]||(soma[k]={marca:marca,fardos:0,m3:0,t:0,temM3:false,temT:false,obs:[]});
+        s.fardos+=fd;
+        var m3=c.m3>=0?numBR(L[c.m3]):null,t=c.t>=0?numBR(L[c.t]):null;
+        if(m3>0){s.m3+=m3;s.temM3=true;}
+        if(t>0){if(c.kg)t=t/1000;s.t+=t;s.temT=true;}
+        if(c.obs>=0&&String(LT[c.obs]||'').trim())s.obs.push(String(LT[c.obs]).trim());
+      }
+    });
+    var linhas=Object.values(soma);
+    if(!abaUsada||!linhas.length){toast('Não encontrei a tabela (cabeçalho com MARCA e FARDOS/QUANTIDADE)','error');return;}
+    linhas.forEach(function(l){if(l.temT&&pesoEmKg(l.t,l.temM3?l.m3:null)){l.t=pesoTon(l.t,l.temM3?l.m3:null);kg++;}});
+    var atuais=prelistaDe(bid),ks={};linhas.forEach(function(l){ks[nmMarca(l.marca)]=1;});
+    var sobra=atuais.filter(function(p){return !ks[nmMarca(p.marca)];});
+    var atualiza=linhas.filter(function(l){return plDe(bid,l.marca);}).length;
+    var tf=linhas.reduce(function(a,l){return a+l.fardos;},0),tm=linhas.reduce(function(a,l){return a+l.m3;},0),tt=linhas.reduce(function(a,l){return a+l.t;},0);
+    var semCad=linhas.filter(function(l){return !marcaInfo(l.marca);}).length;
+    if(!confirm('Pré-lista de '+(r0.cli?r0.cli.nome:'')+' · '+(r0.b.porto||'qualquer porto')+' — '+navioNome(r0.navio)+'\nAba: '+abaUsada
+      +'\n\n• '+linhas.length+' marca(s) · '+tf.toLocaleString('pt-BR')+' fardos · '+fNum(tm,3)+' m³ · '+fNum(tt,3)+' t'
+      +'\n• '+(linhas.length-atualiza)+' nova(s), '+atualiza+' atualizada(s)'
+      +(semCad?'\n• '+semCad+' marca(s) ainda sem cadastro (o m³/t por fardo da pré-lista é usado nas descargas)':'')
+      +(kg?'\n• '+kg+' com PESO em quilos — convertido para toneladas (÷ 1000)':'')
+      +(ign?'\n• '+ign+' linha(s) sem fardos — ignoradas':'')
+      +'\n\nConfirmar?'))return;
+    var tirar=sobra.length&&confirm(sobra.length+' marca(s) da pré-lista atual não estão nesta planilha:\n'+sobra.slice(0,12).map(function(p){return p.marca;}).join(', ')+(sobra.length>12?'…':'')
+      +'\n\nOK = REMOVER essas marcas (a planilha substitui a pré-lista)\nCancelar = manter');
+    var agora=new Date().toISOString();
+    var regs=linhas.map(function(l){var ja=plDe(bid,l.marca);
+      return {booking_id:bid,marca:ja?ja.marca:l.marca,fardos:l.fardos,m3:l.temM3?+l.m3.toFixed(3):null,t:l.temT?+l.t.toFixed(3):null,
+        obs:l.obs.length?[...new Set(l.obs)].join('; '):(ja?ja.obs:null),updated_at:agora,criado_por_nome:currentUser.nome};});
+    showLd(true);
+    var p=Promise.resolve();
+    for(var i=0;i<regs.length;i+=300)(function(b){p=p.then(function(){return bkPlGravar(b);});})(regs.slice(i,i+300));
+    if(tirar)p=p.then(function(){var ids=sobra.map(function(x){return x.id;});
+      return sb.from('wp_booking_prelista').delete().in('id',ids).select('id').then(function(r){if(r.error)throw r.error;var f={};(r.data||[]).forEach(function(x){f[x.id]=1;});est.prelista=est.prelista.filter(function(x){return !f[x.id];});});});
+    p.then(function(){showLd(false);toast('Pré-lista importada: '+regs.length+' marca(s)','success');estRender();})
+     .catch(function(e){showLd(false);toast('Erro: '+erroColunaNova(e),'error');estAbrir(true);});
+  });
+}
+function bkPlLinhas(bid){
+  var r=est.bk.R[bid],C=bkPlComparar(bid),cli=r.cli?r.cli.nome:'',porto=r.b.porto||'qualquer';
+  if(!C.rows.length)return [];
+  return C.rows.map(function(x){return {'Cliente':cli,'Porto':porto,'Marca':x.marca,'Previsto fardos':x.pFd,'Previsto m³':x.pM3===null?'':+x.pM3.toFixed(3),'Previsto t':x.pT===null?'':+x.pT.toFixed(3),
+      'Recebido fardos':x.rFd,'Recebido m³':+x.rM3.toFixed(3),'Recebido t':+x.rT.toFixed(3),'Falta fardos':x.fFd,'Falta m³':x.fM3===null?'':+x.fM3.toFixed(3),'Falta t':x.fT===null?'':+x.fT.toFixed(3),
+      'Situação':x.fFd<0?'Recebido acima':x.fFd===0?'Completa':x.rFd?'Parcial':'Não recebida','Obs':x.pl.obs||''};})
+    .concat(C.fora.map(function(x){return {'Cliente':cli,'Porto':porto,'Marca':x.marca,'Previsto fardos':'','Previsto m³':'','Previsto t':'','Recebido fardos':x.fd,'Recebido m³':+x.m3.toFixed(3),'Recebido t':+x.t.toFixed(3),
+      'Falta fardos':'','Falta m³':'','Falta t':'','Situação':'Fora da pré-lista','Obs':''};}));
+}
+function bkPlExportar(){
+  var r=est.bkPl&&est.bk&&est.bk.R[est.bkPl];if(!r)return;
+  var rows=bkPlLinhas(r.b.id);if(!rows.length){toast('Pré-lista vazia','error');return;}
+  xlsxBaixar(rows,'Pré-lista','prelista_'+((r.cli?r.cli.nome:'')+'_'+(r.b.porto||'')+'_'+r.navio.nome).replace(/[^\w]+/g,'_')+'_'+localISODate()+'.xlsx');
+}
+function baixarModeloPrelista(){
+  var cols=MODELO_COLS.prelista,cab=cols.map(function(c){return c.h;});
+  var ws=XLSX.utils.aoa_to_sheet([cab]);
+  for(var r=1;r<=1000;r++)cols.forEach(function(c,i){if(c.t)ws[XLSX.utils.encode_cell({r:r,c:i})]={t:'s',v:'',z:'@'};});
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:1000,c:cab.length-1}});
+  ws['!cols']=cols.map(function(c){return {wch:c.w||14};});
+  var wi=XLSX.utils.aoa_to_sheet([['Modelo de importação — PRÉ-LISTA DO BOOKING'],[''],
+    ['1. Uma linha por marca prevista para o cliente neste navio/porto. Não altere os títulos da linha 1.'],
+    ['2. Obrigatórios: MARCA e FARDOS (quantidade de fardos prevista). CBM TOTAL e PESO TOTAL (t) são os totais previstos da marca.'],
+    ['3. Importe pelo botão 📋 do booking (cliente + porto) no WoodPort › Armazém › Booking. A mesma marca repetida na planilha é somada.'],
+    ['4. Marca que já está na pré-lista é atualizada. Se a planilha não tiver alguma marca da pré-lista atual, o WoodPort pergunta se remove.'],
+    ['5. Peso em toneladas (1,399). Se vier em quilos (1399), o WoodPort converte sozinho.'],
+    ['6. Marca ainda sem cadastro: as descargas usam o m³ e o peso por fardo da pré-lista (CBM TOTAL ÷ FARDOS).'],[''],
+    ['Exemplo:'],[cab.join(' | ')],[cols.map(function(c){return c.ex1;}).join(' | ')],[cols.map(function(c){return c.ex2;}).join(' | ')]]);
+  wi['!cols']=[{wch:110}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Pre-lista');XLSX.utils.book_append_sheet(wb,wi,'Como preencher');
+  XLSX.writeFile(wb,'WoodPort - modelo de pre-lista do booking.xlsx');
 }
 // todos os bookings do cliente no navio (um por porto), somados
 function bkDoCliente(id){
@@ -7573,6 +7863,15 @@ function bkRelatorio(id){
     +'<div style="margin-top:8px;">'+pc.toFixed(1)+'% do booking recebido<div class="bar"><div style="width:'+Math.min(100,pc).toFixed(1)+'%"></div></div></div>'
     +'<p style="color:#555;font-size:12px;">Valor negativo em "Falta" = recebido acima do booking.</p>'
     +(T.semParam?'<p style="color:#B45309;">'+T.semParam+' fardo(s) de marca sem parâmetro cadastrado não entraram no m³/t.</p>':'')
+    +D.rs.filter(function(x){return prelistaDe(x.b.id).length;}).map(function(x){
+      var C=bkPlComparar(x.b.id),P=C.tot;
+      return '<h2>Pré-lista × recebido por marca'+(D.rs.length>1?' — '+esc(x.b.porto||'qualquer porto'):'')+'</h2><table><tr><th>Marca</th><th style="text-align:right">Previsto fardos</th><th style="text-align:right">Previsto m³</th>'
+        +'<th style="text-align:right">Recebido fardos</th><th style="text-align:right">Recebido m³</th><th style="text-align:right">Falta fardos</th><th style="text-align:right">Falta m³</th><th>Situação</th></tr>'
+        +C.rows.map(function(r){return '<tr>'+td(esc(r.marca))+td(r.pFd.toLocaleString('pt-BR'),1)+td(r.pM3===null?'—':fNum(r.pM3,3),1)+td(r.rFd.toLocaleString('pt-BR'),1)+td(fNum(r.rM3,3),1)
+          +td(r.fFd.toLocaleString('pt-BR'),1)+td(r.fM3===null?'—':fNum(r.fM3,3),1)+td(r.fFd<0?'Recebido acima':r.fFd===0?'Completa':r.rFd?'Parcial':'Não recebida')+'</tr>';}).join('')
+        +C.fora.map(function(r){return '<tr>'+td(esc(r.marca))+td('—',1)+td('—',1)+td(r.fd.toLocaleString('pt-BR'),1)+td(fNum(r.m3,3),1)+td('—',1)+td('—',1)+td('Fora da pré-lista')+'</tr>';}).join('')
+        +'<tr class="tot">'+td('Total')+td(P.pFd.toLocaleString('pt-BR'),1)+td(fNum(P.pM3,3),1)+td(P.rFd.toLocaleString('pt-BR'),1)+td(fNum(P.rM3,3),1)+td(P.faltaFd.toLocaleString('pt-BR'),1)+td(fNum(P.faltaM3,3),1)+td('')+'</tr></table>';
+    }).join('')
     +'<h2>Descargas no período</h2>'+(linhas?'<table><tr><th>Data</th><th>Armazém</th><th>NF</th><th>Marca</th><th>Produto</th><th>Destino</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th style="text-align:right">t</th></tr>'+linhas
     +'<tr class="tot"><td colspan="6">Total</td><td style="text-align:right">'+T.fd.toLocaleString('pt-BR')+'</td><td style="text-align:right">'+fNum(T.m3,3)+'</td><td style="text-align:right">'+fNum(T.t,3)+'</td></tr></table>':'<p>Nenhuma descarga no período.</p>')
     +'</body></html>';
