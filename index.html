@@ -1445,6 +1445,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
           <div class="sc"><div class="sl">Clientes</div><div class="sv" id="bk-s-cli">—</div></div>
         </div>
         <div id="bk-portos" style="margin-bottom:14px;"></div>
+        <div id="bk-conc" style="margin-bottom:14px;"></div>
         <div class="spl sp2">
           <div class="card">
             <div class="ch"><div class="ct" id="bk-titulo">Lançar booking</div></div>
@@ -1629,11 +1630,37 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
     <div class="page" id="page-rel-armazem">
       <div class="sh" style="align-items:flex-end;"><div><h2>Relatórios do armazém</h2><div class="sub">Movimentação, entradas por produtor e idade do estoque</div></div><div class="seg arm-sel" role="group" aria-label="Armador"></div></div>
       <div class="tabs" role="tablist" id="ra-tabs">
+        <button role="tab" data-rel="dash" onclick="raAba('dash')">📊 Dashboard (m³)</button>
         <button role="tab" data-rel="mov" class="on" onclick="raAba('mov')">Movimentação do período</button>
         <button role="tab" data-rel="prod" onclick="raAba('prod')">Entradas por produtor</button>
         <button role="tab" data-rel="idade" onclick="raAba('idade')">Posição e idade do estoque</button>
       </div>
-      <div class="card" style="margin-bottom:14px;">
+      <!-- DASHBOARD em m³: booking × recebido × saldo, por cliente e por porto -->
+      <div id="ra-dash" style="display:none;">
+        <div class="card" style="margin-bottom:14px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="fg" style="flex:2 1 260px;min-width:0;"><label class="fl" for="rd-navio">Navio</label><select id="rd-navio" onchange="rdFiltro.portos=null;rdFiltro.clientes=null;raDashRender()"></select></div>
+            <button class="btn bp" onclick="raDashExcel()">⬇ Excel (dashboard + descargas)</button>
+            <button class="btn bs" onclick="raDashImprimir()">🖨 Imprimir / PDF</button>
+          </div>
+          <div style="margin-top:12px;"><div class="fl" style="margin-bottom:4px;">Portos <a href="#" style="font-weight:400;" onclick="rdTodos('portos');return false;">todos</a></div><div id="rd-portos" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+          <div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;">Clientes <a href="#" style="font-weight:400;" onclick="rdTodos('clientes');return false;">todos</a></div><div id="rd-clientes" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:10px;">Tudo em m³. Recebido = descargas que abateram o booking do cliente neste navio (mesma regra da aba Booking). O Excel e a impressão saem com os portos e clientes marcados aqui.</div>
+        </div>
+        <div class="sr" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;">
+          <div class="sc"><div class="sl">Booking total</div><div class="sv" id="rd-s-book">—</div></div>
+          <div class="sc"><div class="sl">Recebido</div><div class="sv" id="rd-s-rec">—</div></div>
+          <div class="sc"><div class="sl">Saldo a receber</div><div class="sv" id="rd-s-saldo">—</div></div>
+          <div class="sc"><div class="sl">% recebido</div><div class="sv" id="rd-s-pc">—</div></div>
+        </div>
+        <div class="spl sp2" style="margin-bottom:14px;">
+          <div class="card"><div class="ch"><div class="ct">Por porto (m³)</div></div><canvas id="rd-g-porto" style="width:100%;display:block;"></canvas></div>
+          <div class="card"><div class="ch"><div class="ct">Por cliente (m³)</div></div><canvas id="rd-g-cli" style="width:100%;display:block;"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:14px;"><div class="ch"><div class="ct">Por porto</div></div><div class="tw"><table id="rd-t-porto"></table></div></div>
+        <div class="card"><div class="ch"><div class="ct">Por cliente (booking)</div></div><div class="tw"><table id="rd-t-cli"></table></div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px;" id="ra-filtros">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
           <div class="fg" id="ra-de-wrap"><label class="fl" for="ra-de">De</label><input type="date" id="ra-de" style="width:auto;"></div>
           <div class="fg"><label class="fl" for="ra-ate" id="ra-ate-lbl">Até</label><input type="date" id="ra-ate" style="width:auto;"></div>
@@ -1643,7 +1670,7 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
         </div>
         <div id="ra-desc" style="font-size:12px;color:var(--ink3);margin-top:10px;"></div>
       </div>
-      <div class="card">
+      <div class="card" id="ra-res">
         <div class="ch"><div class="ct" id="ra-titulo">—</div><span class="cs" id="ra-info"></span></div>
         <div class="tw"><table id="ra-tab"><thead></thead><tbody></tbody></table></div>
       </div>
@@ -6662,7 +6689,16 @@ function xlsxRelatorio(cfg){
         });
       }
       ws.pageSetup.printTitlesRow='6:6';
-      ws.pageSetup.printArea='A1:'+xlLetra(nb)+(fim+1);
+      // gráficos (PNG) abaixo da tabela: aba.imagens=[{b64,w,h,titulo}]
+      var ultLinha=fim+1;
+      (aba.imagens||[]).forEach(function(im){
+        var r0=ultLinha+2;
+        if(im.titulo){var tc=ws.getCell(r0,1);tc.value=im.titulo;tc.font={bold:true,size:12,color:{argb:XL_COR.cab}};r0++;}
+        var id=wb.addImage({base64:im.b64,extension:'png'});
+        ws.addImage(id,{tl:{col:0,row:r0},ext:{width:im.w,height:im.h},editAs:'oneCell'});
+        ultLinha=r0+Math.ceil(im.h/20)+1;
+      });
+      ws.pageSetup.printArea='A1:'+xlLetra(nb)+ultLinha;
     });
     return wb.xlsx.writeBuffer();
   }).then(function(buf){
@@ -6982,10 +7018,13 @@ function estRenderMovs(){
     return !b||[m.nf,m.placa,m.produtor,m.marca,m.produto,m.destino,m.nc_descricao].join(' ').toLowerCase().indexOf(b)>=0;
   }).slice().reverse();
   var tipos={descarga:'Descarga',inventario:'<span class="bge info">Inventário</span>',ajuste:'<span class="bge warn">Ajuste</span>'};
-  var tot=0,totM3=0;
+  // totais sobre TODOS os lançamentos filtrados (não só os 500 mostrados), separados por tipo
+  var porTipo={},semM3=0;
+  lin.forEach(function(m){var mi=marcaInfo(m.marca),q=+m.quantidade||0,x=porTipo[m.tipo]||(porTipo[m.tipo]={n:0,fd:0,m3:0});
+    x.n++;x.fd+=q;if(mi)x.m3+=q*mi.cbm;else if(m.tipo==='descarga')semM3+=q;});
   var mostra=lin.slice(0,500);
   document.getElementById('em-tb').innerHTML=mostra.map(function(m){
-    var mi=marcaInfo(m.marca),q=+m.quantidade;tot+=q;if(mi)totM3+=q*mi.cbm;
+    var mi=marcaInfo(m.marca),q=+m.quantidade;
     var dsc=String(m.nc_descricao||'');
     var nc=m.nao_conforme?'<span class="bge dng">⚠ Sim</span> <span style="font-size:12px;color:var(--ink3);" title="'+esc(dsc)+'">'+esc(dsc.slice(0,50))+(dsc.length>50?'…':'')+'</span>'
       +' <button class="btn bs bsm" onclick="verFotosNc(\''+m.id+'\')" aria-label="Ver fotos da não conformidade">📷 '+(m.nc_fotos||[]).length+'</button>'
@@ -6995,9 +7034,14 @@ function estRenderMovs(){
       +'<td style="min-width:130px;">'+nc+'</td>'
       +'<td style="font-size:12px;color:var(--ink3);">'+esc(m.criado_por_nome||'—')+'</td>'
       +'<td style="white-space:nowrap;"><button class="btn bs bsm" aria-label="Editar" onclick="editarMov(\''+m.id+'\')">✏</button> '
+      +(ARMADORES.length>1?'<button class="btn bs bsm" title="Transferir para outro armador (descarga lançada no estoque errado)" aria-label="Transferir de armador" onclick="transferirMov(\''+m.id+'\')">⇄</button> ':'')
       +'<button class="btn bd bsm" aria-label="Excluir" onclick="confirmDel(\'wp_estoque_mov\',\''+m.id+'\',function(){estAbrir(true);})">✕</button></td></tr>';
   }).join('')||'<tr><td colspan="15" style="color:var(--ink3);text-align:center;padding:20px;">Nenhum lançamento no período.</td></tr>';
-  document.getElementById('em-info').textContent=lin.length+' lançamento(s) no período'+(lin.length>500?' (mostrando os 500 mais recentes)':'')+' · '+tot.toLocaleString('pt-BR')+' fardos · '+fNum(totM3,1)+' m³';
+  var nomesTipo={descarga:'Descargas',inventario:'Inventário',ajuste:'Ajustes'};
+  document.getElementById('em-info').innerHTML=lin.length+' lançamento(s) no período'+(lin.length>500?' (mostrando os 500 mais recentes; totais abaixo são de todos)':'')+'<br>'
+    +['descarga','inventario','ajuste'].filter(function(t){return porTipo[t];}).map(function(t){var x=porTipo[t];
+      return '<strong>'+nomesTipo[t]+':</strong> '+x.n+' · '+x.fd.toLocaleString('pt-BR')+' fds · '+fNum(x.m3,1)+' m³';}).join(' &nbsp;|&nbsp; ')
+    +(semM3?' &nbsp;|&nbsp; <span style="color:#B45309;">'+semM3.toLocaleString('pt-BR')+' fds de descarga sem m³ (marca sem cadastro)</span>':'');
 }
 function editarMov(id){
   var m=est.movs.find(function(x){return x.id===id;});if(!m)return;
@@ -7016,6 +7060,48 @@ function editarMov(id){
     {key:'nao_conforme',label:'Não conformidade',type:'select',val:m.nao_conforme?'true':'false',options:[{v:'false',l:'Não'},{v:'true',l:'Sim'}]},
     {key:'nc_descricao',label:'O que foi encontrado',type:'textarea',val:m.nc_descricao},
   ]:[]),'wp_estoque_mov',id,function(){estAbrir(true);});
+}
+// Descarga lançada no armador errado (ex.: caminhão da G2 Ocean lançado na AB): muda o armador do lançamento.
+// Leva junto as outras marcas do mesmo caminhão (mesma placa e data), se o usuário quiser,
+// e cadastra a marca no armador de destino quando ela ainda não existe lá (mesmo CBM e peso por fardo).
+function transferirMov(id){
+  var m=est.movs.find(function(x){return x.id===id;});if(!m)return;
+  var origem=marcaArm(m),outros=ARMADORES.filter(function(a){return normAz(a)!==normAz(origem);});
+  if(!outros.length)return;
+  var dest=outros[0];
+  if(outros.length>1){
+    var esc0=prompt('Transferir para qual armador?\n'+outros.map(function(a,i){return (i+1)+' = '+a;}).join('\n'),'1');
+    if(!esc0)return;dest=outros[(parseInt(esc0)||0)-1];if(!dest){toast('Opção inválida','error');return;}
+  }
+  var ids=[m.id];
+  var mesmoCam=m.placa?est.movs.filter(function(x){return x.id!==m.id&&x.tipo===m.tipo&&x.data===m.data&&nPlaca(x.placa||'')===nPlaca(m.placa)&&normAz(marcaArm(x))===normAz(origem);}):[];
+  if(mesmoCam.length&&confirm('O caminhão '+m.placa+' de '+fmtIso(m.data)+' tem mais '+mesmoCam.length+' descarga(s) em '+origem+':\n'
+      +mesmoCam.map(function(x){return '• '+x.marca+' — '+x.quantidade+' fds';}).join('\n')+'\n\nOK = transferir o caminhão inteiro\nCancelar = só a marca '+m.marca))
+    ids=ids.concat(mesmoCam.map(function(x){return x.id;}));
+  var movs=est.movs.filter(function(x){return ids.indexOf(x.id)>=0;});
+  // marcas que não existem no armador de destino: copia o cadastro da origem
+  var novas={};
+  movs.forEach(function(x){
+    var k=nmMarca(x.marca);if(novas[k]||marcaInfo(x.marca,dest))return;
+    var o=marcaInfo(x.marca,origem);
+    novas[k]=o?{armador:dest,marca:o.marca,commodity:o.commodity,comprimento:o.comprimento,largura:o.largura,altura:o.altura,fl:o.fl,mm:o.mm,exportador:o.exportador,cbm:o.cbm,peso_t:o.peso_t,updated_at:new Date().toISOString()}:null;
+  });
+  var copiar=Object.values(novas).filter(Boolean),semCad=Object.keys(novas).filter(function(k){return !novas[k];}).length;
+  var fd=movs.reduce(function(a,x){return a+(+x.quantidade||0);},0);
+  if(!confirm('Transferir de '+origem+' para '+dest+':\n\n'+movs.map(function(x){return '• '+fmtIso(x.data)+' · '+x.marca+' · '+x.quantidade+' fds'+(x.nf?' · NF '+x.nf:'');}).join('\n')
+    +'\n\nTotal: '+fd.toLocaleString('pt-BR')+' fardos'
+    +(copiar.length?'\n• '+copiar.length+' marca(s) serão cadastradas em '+dest+' com o mesmo CBM e peso: '+copiar.map(function(x){return x.marca;}).join(', '):'')
+    +(semCad?'\n• '+semCad+' marca(s) sem cadastro em nenhum dos dois armadores (ficam sem m³)':'')
+    +'\n\nO estoque, o booking e a armazenagem passam a contar em '+dest+'. Confirmar?'))return;
+  var nota='Transferida de '+origem+' para '+dest+' por '+currentUser.nome+' em '+new Date().toLocaleString('pt-BR');
+  showLd(true);
+  var p=copiar.length?sb.from('wp_marcas').insert(copiar).select('*').then(function(r){if(r.error)throw r.error;est.marcas=est.marcas.concat(r.data||[]);}):Promise.resolve();
+  movs.forEach(function(x){p=p.then(function(){
+    return sb.from('wp_estoque_mov').update({armador:dest,obs:(x.obs?x.obs+' · ':'')+nota}).eq('id',x.id).select('id').then(function(r){
+      if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error('sem permissão para alterar o lançamento '+x.marca);
+      x.armador=dest;x.obs=(x.obs?x.obs+' · ':'')+nota;});});});
+  p.then(function(){showLd(false);toast(movs.length+' lançamento(s) transferido(s) para '+dest,'success');estAbrir(true);})
+   .catch(function(e){showLd(false);toast('Transferência interrompida: '+erroColunaNova(e),'error');estAbrir(true);});
 }
 
 // ── importação de planilhas ──
@@ -7373,7 +7459,7 @@ function clienteDaDescarga(m,ix){
   return mi&&mi.exportador?ix.nome[nmCli(mi.exportador)]||null:null;
 }
 function bkCalcular(){
-  var ix=cliIndice(),R={},porCli={},semCliente={},semPorto={};
+  var ix=cliIndice(),R={},porCli={},semCliente={},semPorto={},motivo={}; // motivo[mov.id] = por que abateu ou não abateu
   (est.booking||[]).forEach(function(b){
     var n=navioDe(b.navio_id);if(!n||!mesmoArmador(n.armador))return;
     var r=R[b.id]={b:b,navio:n,cli:clienteDe(b.cliente_id),fd:0,m3:0,t:0,semParam:0,descargas:[]};
@@ -7387,17 +7473,17 @@ function bkCalcular(){
       var c=clienteDaDescarga(m,ix),q=parseInt(m.quantidade)||0;
       if(!c){
         var p=(m.produtor||'').trim()||'(sem produtor)',s=semCliente[nmCli(p)]||(semCliente[nmCli(p)]={produtor:p,fd:0,n:0,ultima:''});
-        s.fd+=q;s.n++;if(m.data>s.ultima)s.ultima=m.data;return;
+        s.fd+=q;s.n++;if(m.data>s.ultima)s.ultima=m.data;motivo[m.id]={k:'sem_cliente'};return;
       }
       var noPer=(porCli[c.id]||[]).filter(function(r){var n=r.navio;return n.receb_inicio&&m.data>=n.receb_inicio&&(!n.receb_fim||m.data<=n.receb_fim);});
-      if(!noPer.length)return;
+      if(!noPer.length){motivo[m.id]={k:'sem_booking',cli:c};return;}
       // booking do porto de destino da descarga; booking sem porto aceita qualquer destino
       var dest=normAz(m.destino);
       var cand=dest?noPer.filter(function(r){return normAz(r.b.porto)===dest;}):[];
       if(!cand.length)cand=noPer.filter(function(r){return !r.b.porto;});
       if(!cand.length){
         var kp=c.id+'|'+noPer[0].navio.id+'|'+dest,sp=semPorto[kp]||(semPorto[kp]={cli:c,navio_id:noPer[0].navio.id,destino:(m.destino||'').trim(),fd:0});
-        sp.fd+=q;return;
+        sp.fd+=q;motivo[m.id]={k:'sem_porto',cli:c,navio_id:noPer[0].navio.id};return;
       }
       // marca na pré-lista de um dos bookings candidatos: vai para ele
       var comPl=cand.filter(function(x){return plDe(x.b.id,m.marca);});
@@ -7410,8 +7496,9 @@ function bkCalcular(){
       }
       r.fd+=q;if(m3!==null){r.m3+=m3;r.t+=t;}else r.semParam+=q;
       r.descargas.push({m:m,m3:m3,t:t});
+      motivo[m.id]={k:'abateu',cli:c,navio_id:r.navio.id,b:r.b,m3:m3};
     });
-  return {R:R,semCliente:Object.values(semCliente).sort(function(a,b){return b.fd-a.fd;}),semPorto:Object.values(semPorto)};
+  return {R:R,semCliente:Object.values(semCliente).sort(function(a,b){return b.fd-a.fd;}),semPorto:Object.values(semPorto),motivo:motivo};
 }
 
 // ── BOOKING ──
@@ -7480,6 +7567,73 @@ function estRenderBooking(){
   if(nav&&!nav.receb_inicio&&lin.length)av.innerHTML+='<div class="imp-st err" style="margin-bottom:12px;">⚠<div>Defina o <strong>período de recebimento</strong> deste navio — sem ele nenhuma descarga abate o booking.</div></div>';
   if(est.bkPl&&!lin.some(function(r){return r.b.id===est.bkPl;}))est.bkPl='';
   bkRenderPrelista();
+  bkRenderConciliacao(nav,tR);
+}
+// ── Conciliação: total de descargas × recebido no booking (por que uma descarga não abate) ──
+var BK_CONC=[
+  {k:'este',n:'Abateram o booking deste navio',d:'= "Recebido" acima'},
+  {k:'outro',n:'Abateram o booking de outro navio',d:'cliente com booking em outro navio que recebia na mesma data'},
+  {k:'sem_cliente',n:'Sem cliente identificado',d:'produtor/marca não ligados a nenhum cliente — cadastre o apelido ou a marca em Clientes'},
+  {k:'sem_booking',n:'Cliente sem booking neste período',d:'o cliente não tem booking em navio que recebia nesta data'},
+  {k:'sem_porto',n:'Destino sem booking',d:'o cliente tem booking, mas não para o destino desta descarga'},
+  {k:'fora',n:'Fora do período de recebimento',d:'descargas antes do início / depois do fim do recebimento deste navio'}];
+function bkConcClassificar(nav){
+  var ini=nav.receb_inicio,fim=nav.receb_fim||'9999-12-31',G={},mot=est.bk.motivo||{};
+  BK_CONC.forEach(function(c){G[c.k]={n:0,fd:0,m3:0,semM3:0,itens:[]};});
+  var tot={n:0,fd:0,m3:0,semM3:0};
+  est.movs.filter(function(m){return m.tipo==='descarga'&&mesmoArmador(m.armador);}).forEach(function(m){
+    var q=+m.quantidade||0,mi=marcaInfo(m.marca),mo=mot[m.id]||{k:'sem_cliente'};
+    var m3=mi?q*mi.cbm:(mo.m3!=null?mo.m3:null);
+    var k=!ini||m.data<ini||m.data>fim?'fora':mo.k==='abateu'?(mo.navio_id===nav.id?'este':'outro'):mo.k;
+    var g=G[k];g.n++;g.fd+=q;if(m3===null)g.semM3+=q;else g.m3+=m3;
+    g.itens.push({m:m,m3:m3,cli:mo.cli,navio:mo.navio_id?navioDe(mo.navio_id):null,porto:mo.b?mo.b.porto:''});
+    tot.n++;tot.fd+=q;if(m3===null)tot.semM3+=q;else tot.m3+=m3;
+  });
+  return {G:G,tot:tot};
+}
+function bkRenderConciliacao(nav,recebido){
+  var box=document.getElementById('bk-conc');if(!box)return;
+  if(!nav||!est.bk){box.innerHTML='';return;}
+  var C=bkConcClassificar(nav),T=C.tot,ab=est.bkConcAberto||'';
+  function lin(c){
+    var g=C.G[c.k];if(!g.n&&c.k!=='este')return '';
+    var dentro=c.k!=='fora';
+    return '<tr'+(c.k==='este'?' style="font-weight:600;"':'')+'><td>'+(dentro&&c.k!=='este'?'&nbsp;&nbsp;– ':'')+esc(c.n)+'<div style="font-size:11px;color:var(--ink4);font-weight:400;">'+esc(c.d)+'</div></td>'
+      +'<td class="mono" style="text-align:right">'+g.n+'</td><td class="mono" style="text-align:right">'+g.fd.toLocaleString('pt-BR')+'</td>'
+      +'<td class="mono" style="text-align:right">'+fNum(g.m3,1)+(g.semM3?'<div style="font-size:11px;color:#B45309;">+ '+g.semM3.toLocaleString('pt-BR')+' fds sem m³</div>':'')+'</td>'
+      +'<td>'+(g.n?'<button class="btn bs bsm" onclick="est.bkConcAberto=est.bkConcAberto===\''+c.k+'\'?\'\':\''+c.k+'\';bkRenderConciliacao(navioDe(est.bkNavio))">'+(ab===c.k?'ocultar':'ver')+'</button>':'')+'</td></tr>';
+  }
+  var det='';
+  if(ab&&C.G[ab]&&C.G[ab].n){
+    var it=C.G[ab].itens.slice().sort(function(a,b){return a.m.data<b.m.data?1:-1;});
+    det='<div class="tw" style="max-height:340px;overflow:auto;margin-top:8px;"><table><thead><tr><th>Data</th><th>Produtor</th><th>Marca</th><th>Destino</th><th>Cliente</th>'+(ab==='outro'?'<th>Navio</th>':'')+'<th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th></th></tr></thead><tbody>'
+      +it.slice(0,300).map(function(x){return '<tr><td>'+fmtIso(x.m.data)+'</td><td>'+esc(x.m.produtor||'—')+'</td><td class="mono">'+esc(x.m.marca)+'</td><td>'+esc(x.m.destino||'—')+'</td><td>'+esc(x.cli?x.cli.nome:'—')+'</td>'
+        +(ab==='outro'?'<td>'+esc(navioNome(x.navio))+'</td>':'')+'<td class="mono" style="text-align:right">'+x.m.quantidade+'</td><td class="mono" style="text-align:right">'+(x.m3===null?'<span style="color:#B45309;">sem m³</span>':fNum(x.m3,3))+'</td>'
+        +'<td><button class="btn bs bsm" title="Editar a descarga" onclick="editarMov(\''+x.m.id+'\')">✏</button></td></tr>';}).join('')
+      +'</tbody></table></div>'+(it.length>300?'<div style="font-size:12px;color:var(--ink3);">mostrando 300 de '+it.length+' — baixe o Excel para ver todas</div>':'');
+  }
+  var dentroM3=T.m3-C.G.fora.m3;
+  box.innerHTML='<details class="card" style="padding:12px 16px;"'+(ab||est.bkConcOpen?' open':'')+' ontoggle="est.bkConcOpen=this.open">'
+    +'<summary style="cursor:pointer;font-weight:600;">🔎 Conciliação: descargas × recebido no booking <span style="font-weight:400;color:var(--ink3);font-size:13px;">— '
+      +fNum(T.m3,1)+' m³ lançados em descargas ('+esc(armadorAtual)+', todas as datas) · '+fNum(C.G.este.m3,1)+' m³ abateram este navio</span></summary>'
+    +'<div style="display:flex;justify-content:flex-end;margin:6px 0;"><button class="btn bs bsm" onclick="bkConcExportar()">⬇ Excel da conciliação</button></div>'
+    +'<div class="tw"><table><thead><tr><th></th><th style="text-align:right">Descargas</th><th style="text-align:right">Fardos</th><th style="text-align:right">m³</th><th></th></tr></thead><tbody>'
+    +'<tr style="background:var(--s2);font-weight:700;"><td>Total de descargas lançadas ('+esc(armadorAtual)+')</td><td class="mono" style="text-align:right">'+T.n+'</td><td class="mono" style="text-align:right">'+T.fd.toLocaleString('pt-BR')+'</td><td class="mono" style="text-align:right">'+fNum(T.m3,1)+(T.semM3?'<div style="font-size:11px;color:#B45309;font-weight:400;">+ '+T.semM3.toLocaleString('pt-BR')+' fds sem m³ (marca sem cadastro)</div>':'')+'</td><td></td></tr>'
+    +lin(BK_CONC[5])
+    +'<tr style="background:var(--s2);font-weight:600;"><td>Dentro do período de recebimento ('+(nav.receb_inicio?fmtIso(nav.receb_inicio)+' a '+(nav.receb_fim?fmtIso(nav.receb_fim):'hoje'):'não definido')+')</td><td></td><td></td><td class="mono" style="text-align:right">'+fNum(dentroM3,1)+'</td><td></td></tr>'
+    +BK_CONC.slice(0,5).map(lin).join('')
+    +'</tbody></table></div>'+det
+    +(recebido!=null&&Math.abs(recebido-C.G.este.m3)>0.05?'<div style="font-size:12px;color:#B45309;margin-top:6px;">Obs.: '+fNum(recebido,1)+' m³ no quadro Recebido (inclui bookings de todos os portos deste navio).</div>':'')
+    +'<div style="font-size:12px;color:var(--ink3);margin-top:8px;line-height:1.5;">A aba Descargas soma tudo o que foi lançado no período filtrado. O booking só conta a descarga que é de um cliente com booking neste navio, para o mesmo destino, dentro do período de recebimento. Marca sem cadastro não tem m³.</div>'
+    +'</details>';
+}
+function bkConcExportar(){
+  var nav=navioDe(est.bkNavio);if(!nav||!est.bk)return;
+  var C=bkConcClassificar(nav),rows=[];
+  BK_CONC.forEach(function(c){C.G[c.k].itens.forEach(function(x){
+    rows.push({'Situação':c.n,'Data':fmtIso(x.m.data),'Armazém':x.m.armazem,'Placa':x.m.placa||'','NF':x.m.nf||'','Produtor':x.m.produtor||'','Marca':x.m.marca,'Destino':x.m.destino||'',
+      'Cliente':x.cli?x.cli.nome:'','Navio do booking':x.navio?navioNome(x.navio):'','Porto do booking':x.porto||'','Fardos':+x.m.quantidade,'m³':x.m3===null?'':+x.m3.toFixed(3)});});});
+  xlsxBaixar(rows,'Conciliação','conciliacao_booking_'+(nav.nome+'_'+(nav.viagem||'')).replace(/[^\w]+/g,'_')+'_'+localISODate()+'.xlsx');
 }
 function bkLimparForm(){
   ['bk-id','bk-m3','bk-t','bk-obs','bk-porto'].forEach(function(id){document.getElementById(id).value='';});
@@ -8236,6 +8390,163 @@ function somaTotal(rows,cols,rotuloKey){
   return t;
 }
 
+// ── Armazém › Relatórios › DASHBOARD (m³): booking × recebido × saldo, por porto e por cliente ──
+var rdFiltro={portos:null,clientes:null}; // null = todos
+function rdPortoNome(r){return r.b.porto||'(qualquer porto)';}
+function rdNavios(){
+  var ids={};(est.booking||[]).forEach(function(b){ids[b.navio_id]=1;});
+  return (est.navios||[]).filter(function(n){return mesmoArmador(n.armador)&&ids[n.id];})
+    .sort(function(a,b){return (navioFinalizado(a)?1:0)-(navioFinalizado(b)?1:0)||String(b.eta||b.created_at||'').localeCompare(String(a.eta||a.created_at||''));});
+}
+function rdDados(){
+  var nav=navioDe(document.getElementById('rd-navio').value);if(!nav)return null;
+  est.bk=bkCalcular();
+  var todas=Object.values(est.bk.R).filter(function(r){return r.b.navio_id===nav.id;});
+  var portos=unicosAz(todas.map(rdPortoNome)).sort(),clientes=unicosAz(todas.map(function(r){return r.cli?r.cli.nome:'(cliente excluído)';})).sort();
+  // filtro de outro navio/armador: fica só com o que existe aqui (nada sobrando = todos)
+  ['portos','clientes'].forEach(function(k){var lista=k==='portos'?portos:clientes;
+    if(rdFiltro[k]){rdFiltro[k]=rdFiltro[k].filter(function(v){return lista.indexOf(v)>=0;});if(!rdFiltro[k].length)rdFiltro[k]=null;}});
+  var fp=rdFiltro.portos,fc=rdFiltro.clientes;
+  var lin=todas.filter(function(r){return (!fp||fp.indexOf(rdPortoNome(r))>=0)&&(!fc||fc.indexOf(r.cli?r.cli.nome:'(cliente excluído)')>=0);})
+    .map(function(r){var bk=+r.b.m3||0;return {r:r,cli:r.cli?r.cli.nome:'(cliente excluído)',porto:rdPortoNome(r),book:bk,rec:r.m3,saldo:bk-r.m3,fd:r.fd,semParam:r.semParam};})
+    .sort(function(a,b){return a.porto.localeCompare(b.porto)||a.cli.localeCompare(b.cli);});
+  var P={},T={book:0,rec:0,falta:0,exc:0,fd:0};
+  lin.forEach(function(x){
+    var p=P[x.porto]||(P[x.porto]={porto:x.porto,book:0,rec:0,falta:0,exc:0,fd:0,n:0});
+    [p,T].forEach(function(o){o.book+=x.book;o.rec+=x.rec;o.fd+=x.fd;if(x.saldo>0)o.falta+=x.saldo;else o.exc-=x.saldo;});p.n++;
+  });
+  return {nav:nav,lin:lin,porPorto:Object.values(P),tot:T,portos:portos,clientes:clientes};
+}
+function rdTodos(k){rdFiltro[k]=null;raDashRender();}
+function rdMarcar(k,v){
+  var D=rdDados();if(!D)return;var all=k==='portos'?D.portos:D.clientes,sel=rdFiltro[k]?rdFiltro[k].slice():all.slice();
+  // primeiro clique com "todos" marcados = escolher só aquele; depois liga/desliga
+  if(!rdFiltro[k])sel=[v];
+  else{var i=sel.indexOf(v);if(i>=0)sel.splice(i,1);else sel.push(v);}
+  if(!sel.length){rdFiltro[k]=null;raDashRender();return;}
+  rdFiltro[k]=sel.length===all.length?null:sel;raDashRender();
+}
+// gráfico de barras horizontais: barra clara = booking; escura = recebido; laranja = recebido acima do booking
+function rdDesenhar(cv,itens,o){
+  o=o||{};var dpr=o.png?2:(window.devicePixelRatio||1);
+  var W=o.w||Math.max(280,cv.parentNode&&cv.parentNode.clientWidth?cv.parentNode.clientWidth-4:600),rowH=30,top=8,legH=W<420?40:24,H=Math.max(60,top+itens.length*rowH+legH+4);
+  cv.width=W*dpr;cv.height=H*dpr;if(!o.png){cv.style.width=W+'px';cv.style.height=H+'px';}
+  var g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  var cs=getComputedStyle(document.body),ink=o.png?'#1a1a1a':(cs.color||'#222'),ink3=o.png?'#666':'#8a8a8a';
+  if(o.png){g.fillStyle='#fff';g.fillRect(0,0,W,H);}else g.clearRect(0,0,W,H);
+  g.font='12px Arial, sans-serif';
+  var labW=Math.min(W*0.32,Math.max(80,itens.reduce(function(a,x){return Math.max(a,g.measureText(x.label).width);},0)+12));
+  var valW=Math.min(150,W*0.36),bx=labW,bw=Math.max(50,W-labW-valW-8);
+  var max=itens.reduce(function(a,x){return Math.max(a,x.book,x.rec);},0)||1;
+  if(!itens.length){g.fillStyle=ink3;g.fillText('Nada para mostrar',10,30);return cv;}
+  itens.forEach(function(x,i){
+    var y=top+i*rowH,bh=16,yb=y+(rowH-bh)/2-2;
+    g.fillStyle=ink;g.textAlign='right';g.textBaseline='middle';
+    var lb=x.label;while(g.measureText(lb).width>labW-10&&lb.length>4)lb=lb.slice(0,-2);if(lb!==x.label)lb+='…';
+    g.fillText(lb,labW-8,yb+bh/2);
+    g.fillStyle='#E6D5BF';g.fillRect(bx,yb,bw*x.book/max,bh);                         // booking
+    g.fillStyle='#8B4513';g.fillRect(bx,yb,bw*Math.min(x.rec,x.book)/max,bh);         // recebido
+    if(x.rec>x.book){g.fillStyle='#E07B00';g.fillRect(bx+bw*x.book/max,yb,bw*(x.rec-x.book)/max,bh);}
+    var pc=x.book?x.rec/x.book*100:0;
+    g.textAlign='left';g.fillStyle=ink;
+    g.fillText(fNum(x.rec,1)+' / '+fNum(x.book,1)+'  '+pc.toFixed(0)+'%',bx+bw+8,yb+bh/2);
+  });
+  // legenda
+  var ly=H-legH+12,lx=W<420?10:bx;g.textAlign='left';g.font='11px Arial, sans-serif';
+  [['#8B4513','Recebido'],['#E6D5BF','Saldo a receber'],['#E07B00','Acima do booking']].forEach(function(l){
+    var lw=g.measureText(l[1]).width+34;if(lx+lw>W){lx=W<420?10:bx;ly+=16;}
+    g.fillStyle=l[0];g.fillRect(lx,ly-5,10,10);g.fillStyle=ink3;g.fillText(l[1],lx+14,ly);lx+=lw;});
+  return cv;
+}
+function rdGraficos(D){
+  rdDesenhar(document.getElementById('rd-g-porto'),D?rdItensPorto(D):[]);
+  rdDesenhar(document.getElementById('rd-g-cli'),D?rdItensCli(D):[]);
+}
+var _rdResize=null;
+window.addEventListener('resize',function(){clearTimeout(_rdResize);_rdResize=setTimeout(function(){
+  var box=document.getElementById('ra-dash');if(box&&box.offsetParent&&raAtual==='dash'&&est.carregado)rdGraficos(rdDados());},200);});
+function rdItensPorto(D){return D.porPorto.map(function(p){return {label:p.porto,book:p.book,rec:p.rec};});}
+function rdItensCli(D){ // cliente somando os portos (o detalhe por porto fica na tabela)
+  var C={};D.lin.forEach(function(x){var c=C[x.cli]||(C[x.cli]={label:x.cli,book:0,rec:0});c.book+=x.book;c.rec+=x.rec;});
+  return Object.values(C).sort(function(a,b){return b.book-a.book;});
+}
+function raDashRender(){
+  var sel=document.getElementById('rd-navio'),navs=rdNavios(),cur=sel.value;
+  sel.innerHTML=navs.length?navs.map(function(n){return '<option value="'+n.id+'">'+esc(navioNome(n))+(navioFinalizado(n)?' (finalizado)':'')+(n.eta?' — ETA '+fmtIso(n.eta):'')+'</option>';}).join('')
+    :'<option value="">Nenhum navio de '+esc(armadorAtual)+' com booking</option>';
+  if(!cur||!navs.some(function(n){return n.id===cur;}))cur=(navioAtivo&&navs.some(function(n){return n.id===navioAtivo.id;}))?navioAtivo.id:(navs[0]&&navs[0].id)||'';
+  sel.value=cur;
+  var D=rdDados();
+  function chips(id,k,lista){
+    var f=rdFiltro[k];
+    document.getElementById(id).innerHTML=lista.map(function(v){var on=!f||f.indexOf(v)>=0;
+      return '<button type="button" class="btn bsm '+(on?'bp':'bs')+'" aria-pressed="'+on+'" onclick="rdMarcar(\''+k+'\',\''+esc(v).replace(/'/g,"\\'")+'\')">'+(on?'✓ ':'')+esc(v)+'</button>';}).join('')||'<span style="color:var(--ink4);font-size:12px;">—</span>';
+  }
+  chips('rd-portos','portos',D?D.portos:[]);chips('rd-clientes','clientes',D?D.clientes:[]);
+  var T=D?D.tot:{book:0,rec:0,falta:0,exc:0};
+  document.getElementById('rd-s-book').innerHTML=fNum(T.book,1)+' <small>m³</small>';
+  document.getElementById('rd-s-rec').innerHTML=fNum(T.rec,1)+' <small>m³</small>';
+  document.getElementById('rd-s-saldo').innerHTML=fNum(T.falta,1)+' <small>m³</small>'+(T.exc>0.05?'<div style="font-size:12px;color:#B45309;font-weight:400;">'+fNum(T.exc,1)+' m³ recebidos acima do booking</div>':'');
+  document.getElementById('rd-s-pc').innerHTML=(T.book?fNum(T.rec/T.book*100,1):'0')+' <small>%</small>';
+  rdGraficos(D);requestAnimationFrame(function(){rdGraficos(D);}); // de novo quando o painel já está visível (largura certa)
+  function th(c){return '<th'+(c.r?' style="text-align:right"':'')+'>'+c.t+'</th>';}
+  function tdN(v,d,neg){return '<td class="mono" style="text-align:right;'+(neg&&v<0?'color:#B45309;':'')+'">'+fNum(v,d==null?1:d)+'</td>';}
+  function pc(b,r){return '<td class="mono" style="text-align:right">'+(b?fNum(r/b*100,1)+'%':'—')+'</td>';}
+  var tp=document.getElementById('rd-t-porto'),tc=document.getElementById('rd-t-cli');
+  if(!D){tp.innerHTML='';tc.innerHTML='';return;}
+  tp.innerHTML='<thead><tr>'+[{t:'Porto'},{t:'Clientes',r:1},{t:'Booking m³',r:1},{t:'Recebido m³',r:1},{t:'Saldo m³',r:1},{t:'%',r:1}].map(th).join('')+'</tr></thead><tbody>'
+    +D.porPorto.map(function(p){return '<tr><td><strong>'+esc(p.porto)+'</strong></td><td class="mono" style="text-align:right">'+p.n+'</td>'+tdN(p.book)+tdN(p.rec)+tdN(p.book-p.rec,1,1)+pc(p.book,p.rec)+'</tr>';}).join('')
+    +'<tr style="font-weight:700;background:var(--s2);"><td>Total</td><td></td>'+tdN(T.book)+tdN(T.rec)+tdN(T.book-T.rec,1,1)+pc(T.book,T.rec)+'</tr></tbody>';
+  tc.innerHTML='<thead><tr>'+[{t:'Cliente'},{t:'Porto'},{t:'Booking m³',r:1},{t:'Recebido m³',r:1},{t:'Saldo m³',r:1},{t:'%',r:1},{t:'Fardos',r:1}].map(th).join('')+'</tr></thead><tbody>'
+    +(D.lin.map(function(x){return '<tr><td><strong>'+esc(x.cli)+'</strong>'+(x.semParam?' <span class="bge warn" title="fardos de marca sem cadastro: sem m³">'+x.semParam+' fds sem m³</span>':'')+'</td><td>'+esc(x.porto)+'</td>'+tdN(x.book)+tdN(x.rec)+tdN(x.saldo,1,1)+pc(x.book,x.rec)
+      +'<td class="mono" style="text-align:right">'+x.fd.toLocaleString('pt-BR')+'</td></tr>';}).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:18px;">Nada com estes filtros.</td></tr>')
+    +'<tr style="font-weight:700;background:var(--s2);"><td colspan="2">Total</td>'+tdN(T.book)+tdN(T.rec)+tdN(T.book-T.rec,1,1)+pc(T.book,T.rec)+'<td class="mono" style="text-align:right">'+T.fd.toLocaleString('pt-BR')+'</td></tr></tbody>';
+}
+function rdFiltroTxt(D){
+  return 'Portos: '+(rdFiltro.portos?rdFiltro.portos.join(', '):'todos')+' · Clientes: '+(rdFiltro.clientes?rdFiltro.clientes.join(', '):'todos');
+}
+function rdPng(itens){var cv=document.createElement('canvas');rdDesenhar(cv,itens,{png:1,w:900});return {b64:cv.toDataURL('image/png').split(',')[1],w:900,h:cv.height/2,url:cv.toDataURL('image/png')};}
+function raDashExcel(){
+  var D=rdDados();if(!D||!D.lin.length){toast('Nada para exportar com estes filtros','error');return;}
+  var n=D.nav,gp=rdPng(rdItensPorto(D)),gc=rdPng(rdItensCli(D));
+  var dash=D.lin.map(function(x){return {porto:x.porto,cli:x.cli,book:+x.book.toFixed(3),rec:+x.rec.toFixed(3),saldo:+x.saldo.toFixed(3),pc:x.book?+(x.rec/x.book*100).toFixed(1):'',fd:x.fd};});
+  var porto=D.porPorto.map(function(p){return {porto:p.porto,n:p.n,book:+p.book.toFixed(3),rec:+p.rec.toFixed(3),saldo:+(p.book-p.rec).toFixed(3),pc:p.book?+(p.rec/p.book*100).toFixed(1):''};});
+  var desc=[];D.lin.forEach(function(x){x.r.descargas.forEach(function(d){var m=d.m;
+    desc.push({data:xlData(m.data+'T00:00:00'),per:m.periodo||'',placa:m.placa||'',nf:m.nf||'',az:m.armazem||'',prod:m.produtor||'',cli:x.cli,marca:m.marca,dest:m.destino||'',porto:x.porto,fd:+m.quantidade||0,m3:d.m3===null?'':+d.m3.toFixed(3)});});});
+  desc.sort(function(a,b){return a.data-b.data;});
+  var cM3=function(h,k){return {h:h,k:k,fmt:'n3',soma:true};};
+  return xlsxRelatorio({arquivo:'dashboard_m3_'+(n.nome+'_'+(n.viagem||'')).replace(/[^\w]+/g,'_')+'_'+localISODate()+'.xlsx',
+    titulo:'Dashboard m³ — '+navioNome(n),
+    info:['Navio: '+navioNome(n)+' · Armador: '+(n.armador||armadorAtual)+' · Recebimento: '+(n.receb_inicio?fmtIso(n.receb_inicio)+' a '+(n.receb_fim?fmtIso(n.receb_fim):'em aberto'):'não definido'),rdFiltroTxt(D)],
+    abas:[
+      {nome:'Dashboard',colunas:[{h:'Porto',k:'porto',fmt:'txt'},{h:'Cliente',k:'cli',fmt:'txt'},cM3('Booking m³','book'),cM3('Recebido m³','rec'),cM3('Saldo a receber m³','saldo'),{h:'% recebido',k:'pc',fmt:'n1'},{h:'Fardos recebidos',k:'fd',fmt:'int',soma:true}],
+        linhas:dash,imagens:[{b64:gp.b64,w:gp.w,h:gp.h,titulo:'Por porto (m³) — recebido / booking'},{b64:gc.b64,w:gc.w,h:gc.h,titulo:'Por cliente (m³) — recebido / booking'}]},
+      {nome:'Por porto',colunas:[{h:'Porto',k:'porto',fmt:'txt'},{h:'Clientes',k:'n',fmt:'int'},cM3('Booking m³','book'),cM3('Recebido m³','rec'),cM3('Saldo a receber m³','saldo'),{h:'% recebido',k:'pc',fmt:'n1'}],linhas:porto},
+      {nome:'Descargas',colunas:[{h:'Data',k:'data',fmt:'data'},{h:'Período',k:'per',fmt:'txt'},{h:'Placa',k:'placa',fmt:'txt'},{h:'NF',k:'nf',fmt:'txt'},{h:'Armazém',k:'az',fmt:'txt'},{h:'Produtor',k:'prod',fmt:'txt'},{h:'Cliente',k:'cli',fmt:'txt'},
+        {h:'Marca',k:'marca',fmt:'txt'},{h:'Destino',k:'dest',fmt:'txt'},{h:'Porto do booking',k:'porto',fmt:'txt'},{h:'Fardos',k:'fd',fmt:'int',soma:true},cM3('m³','m3')],linhas:desc}
+    ]});
+}
+function raDashImprimir(){
+  var D=rdDados();if(!D||!D.lin.length){toast('Nada para imprimir com estes filtros','error');return;}
+  var w=window.open('','_blank');if(!w){toast('O navegador bloqueou a janela — libere pop-ups para este site','error');return;}
+  var n=D.nav,T=D.tot,gp=rdPng(rdItensPorto(D)),gc=rdPng(rdItensCli(D));
+  function td(x,r){return '<td'+(r?' style="text-align:right"':'')+'>'+x+'</td>';}
+  var html='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Dashboard m³ — '+esc(navioNome(n))+'</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#111;font-size:13px;background:#fff;}'
+    +'h1{font-size:18px;margin:0;}h2{font-size:14px;margin:20px 0 8px;}.meta{color:#555;margin:4px 0 14px;line-height:1.5;}.cards{display:flex;gap:10px;}.card{flex:1;border:1px solid #ccc;border-radius:6px;padding:10px;}'
+    +'.card b{display:block;font-size:20px;margin-top:4px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #bbb;padding:5px 7px;}th{background:#eee;text-align:left;}tr.tot td{font-weight:bold;background:#f5f5f5;}img{max-width:100%;}'
+    +'.acoes{margin-bottom:14px;}@media print{.acoes{display:none;}body{margin:10mm;}h2{break-after:avoid;}}</style></head><body>'
+    +'<div class="acoes"><button onclick="window.print()">🖨 Imprimir / salvar PDF</button></div>'
+    +'<h1>Dashboard m³ — '+esc(navioNome(n))+'</h1><div class="meta">Armador: '+esc(n.armador||armadorAtual)+' · '+esc(rdFiltroTxt(D))+'<br>Posição em '+new Date().toLocaleString('pt-BR')+'</div>'
+    +'<div class="cards"><div class="card">Booking total<b>'+fNum(T.book,1)+' m³</b></div><div class="card">Recebido<b>'+fNum(T.rec,1)+' m³</b></div><div class="card">Saldo a receber<b>'+fNum(T.falta,1)+' m³</b></div><div class="card">% recebido<b>'+(T.book?fNum(T.rec/T.book*100,1):'0')+'%</b></div></div>'
+    +'<h2>Por porto</h2><img src="'+gp.url+'"><table><tr><th>Porto</th><th style="text-align:right">Booking m³</th><th style="text-align:right">Recebido m³</th><th style="text-align:right">Saldo m³</th><th style="text-align:right">%</th></tr>'
+    +D.porPorto.map(function(p){return '<tr>'+td(esc(p.porto))+td(fNum(p.book,3),1)+td(fNum(p.rec,3),1)+td(fNum(p.book-p.rec,3),1)+td(p.book?fNum(p.rec/p.book*100,1)+'%':'—',1)+'</tr>';}).join('')
+    +'<tr class="tot">'+td('Total')+td(fNum(T.book,3),1)+td(fNum(T.rec,3),1)+td(fNum(T.book-T.rec,3),1)+td(T.book?fNum(T.rec/T.book*100,1)+'%':'—',1)+'</tr></table>'
+    +'<h2>Por cliente</h2><img src="'+gc.url+'"><table><tr><th>Cliente</th><th>Porto</th><th style="text-align:right">Booking m³</th><th style="text-align:right">Recebido m³</th><th style="text-align:right">Saldo m³</th><th style="text-align:right">%</th></tr>'
+    +D.lin.map(function(x){return '<tr>'+td(esc(x.cli))+td(esc(x.porto))+td(fNum(x.book,3),1)+td(fNum(x.rec,3),1)+td(fNum(x.saldo,3),1)+td(x.book?fNum(x.rec/x.book*100,1)+'%':'—',1)+'</tr>';}).join('')
+    +'</table></body></html>';
+  w.document.open();w.document.write(html);w.document.close();
+}
+
 // ── Armazém › Relatórios ──
 var raAtual='mov';
 var RA_DESC={
@@ -8256,12 +8567,18 @@ function raAbrir(){
 function raAba(a){
   raAtual=a;
   document.querySelectorAll('#ra-tabs button').forEach(function(b){var on=b.getAttribute('data-rel')===a;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+  var dash=a==='dash';
+  document.getElementById('ra-dash').style.display=dash?'':'none';
+  document.getElementById('ra-filtros').style.display=dash?'none':'';
+  document.getElementById('ra-res').style.display=dash?'none':'';
+  if(dash){estCarregar().then(raDashRender);return;}
   document.getElementById('ra-de-wrap').style.display=a==='idade'?'none':'';
   document.getElementById('ra-ate-lbl').textContent=a==='idade'?'Posição em':'Até';
   document.getElementById('ra-desc').textContent=RA_DESC[a];
   estCarregar().then(raGerar);
 }
 function raGerar(){
+  if(raAtual==='dash')return raDashRender();
   var de=document.getElementById('ra-de').value,ate=document.getElementById('ra-ate').value,az=document.getElementById('ra-az').value;
   if(!ate||(raAtual!=='idade'&&(!de||de>ate))){toast('Informe o período','error');return;}
   var okAz=function(x){return !az||normAz(x)===normAz(az);};
