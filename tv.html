@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>WoodPort · Dashboard m³</title>
+<link rel="icon" href="icone-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  WoodPort — página pública do Dashboard (m³) para TV / outro painel. Sem login.
+  Uso: tv.html?t=TOKEN   (o token sai em Relatórios do armazém › Dashboard › 🔗 Link público)
+  Opções: &tema=escuro  (fundo escuro)   &embed=1  (sem cabeçalho, para iframe)   &lang=en|pt
+  Lê os números já calculados pelo app (função wp_dash_publico_ler) e confere de novo a cada minuto.
+-->
+<style>
+:root{--bg:#F6F3EE;--card:#FFFFFF;--ink:#1B1A17;--ink2:#4A463F;--ink3:#7A746A;--bdr:#E4DDD2;--acc:#8B4513;--book:#E6D5BF;--over:#E07B00;--ok:#2E7D32;--warn:#B45309;--track:#F0EAE1;}
+:root[data-tema="escuro"]{--bg:#121110;--card:#1D1B19;--ink:#F3EFE8;--ink2:#D5CEC3;--ink3:#A39B8F;--bdr:#34302B;--acc:#C8743A;--book:#5A4836;--over:#F59E0B;--ok:#4CAF50;--warn:#F59E0B;--track:#2A2622;}
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',Arial,sans-serif;}
+body{padding:clamp(12px,1.6vw,32px);min-height:100vh;display:flex;flex-direction:column;gap:clamp(10px,1.2vw,22px);font-size:clamp(14px,1.05vw,22px);}
+.mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.marca{font-size:.8em;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;font-weight:600;}
+h1{margin:2px 0 0;font-size:clamp(22px,2.2vw,46px);line-height:1.1;}
+.sub{color:var(--ink3);margin-top:4px;font-size:.9em;}
+.relogio{text-align:right;}
+.relogio .h{font-size:clamp(22px,2.2vw,46px);font-weight:600;}
+.estado{font-size:.85em;color:var(--ink3);}
+.estado.velho{color:var(--warn);font-weight:600;}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(8px,1vw,20px);}
+.kpi{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:clamp(10px,1.1vw,22px);min-width:0;}
+.kpi .l{color:var(--ink3);font-size:.9em;font-weight:500;}
+.kpi .v{font-size:clamp(24px,2.6vw,56px);font-weight:600;margin-top:4px;white-space:nowrap;}
+.kpi .v small{font-size:.45em;color:var(--ink3);font-weight:500;margin-left:4px;}
+.kpi .s{font-size:.8em;color:var(--ink3);margin-top:2px;}
+.paineis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,1vw,20px);flex:1;}
+.painel{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:clamp(10px,1.1vw,22px);min-width:0;}
+.painel h2{margin:0 0 clamp(8px,.8vw,16px);font-size:1.05em;font-weight:600;}
+.barra{display:grid;grid-template-columns:minmax(80px,26%) 1fr auto;gap:clamp(8px,.8vw,16px);align-items:center;margin-bottom:clamp(6px,.6vw,12px);}
+.barra .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;text-align:right;}
+.trilho{position:relative;height:clamp(14px,1.3vw,28px);background:var(--track);border-radius:6px;overflow:hidden;}
+.trilho i{position:absolute;top:0;bottom:0;left:0;display:block;}
+.barra .x{white-space:nowrap;text-align:right;font-size:.92em;}
+.barra .x b{font-weight:600;}
+.barra .x span{color:var(--ink3);}
+.leg{display:flex;gap:16px;flex-wrap:wrap;font-size:.8em;color:var(--ink3);margin-top:6px;}
+.leg i{display:inline-block;width:.9em;height:.9em;border-radius:3px;vertical-align:-.1em;margin-right:5px;}
+.comm{grid-column:1/-1;}
+.msg{margin:auto;text-align:center;max-width:640px;color:var(--ink2);font-size:1.2em;line-height:1.5;}
+body.embed header .marca{display:none;}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.paineis{grid-template-columns:1fr;}.barra{grid-template-columns:minmax(70px,30%) 1fr;}.barra .x{grid-column:2;text-align:left;}}
+</style>
+</head>
+<body>
+<div class="msg" id="msg">Carregando…</div>
+<script>
+var WP_SB_URL='https://jtmmgisxeqcaqayhbxob.supabase.co';
+var WP_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0bW1naXN4ZXFjYXFheWhieG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTY2NDksImV4cCI6MjA5MDUzMjY0OX0.9O-OWxCP2cj9nTbA-CXyfokfJq5js_sCneKsxulgSSo';
+var Q=new URLSearchParams(location.search),TOKEN=Q.get('t')||'',ULT=null,DADOS=null;
+if(Q.get('tema')==='escuro')document.documentElement.setAttribute('data-tema','escuro');
+if(Q.get('embed')==='1')document.body.classList.add('embed');
+var L={
+  pt:{titulo:'Dashboard m³',book:'Booking total',rec:'Recebido',saldo:'Saldo a receber',pc:'% recebido',cam:'Caminhões hoje',porto:'Por porto (m³)',cli:'Por cliente (m³)',comm:'Por Comm — m³ recebido',
+    legRec:'Recebido',legSaldo:'Saldo a receber',legAcima:'Acima do booking',dados:'Dados de',velho:'Sem atualização desde',receb:'Recebimento',ate:' a ',aberto:'em aberto',rot:'Rotação',
+    acima:'m³ acima do booking',qualquer:'(qualquer porto)',excl:'(cliente excluído)',semTipo:'(sem tipo)',semToken:'Link incompleto: falta o código (?t=…) no endereço.',
+    invalido:'Este link não existe ou foi desativado. Peça um link novo em WoodPort › Relatórios do armazém › Dashboard.',erro:'Sem conexão com o servidor. Tentando de novo…',vazio:'Ainda sem números para este link.',
+    filtro:'Filtro',portos:'Portos',clientes:'Clientes',finalizado:'finalizado'},
+  en:{titulo:'m³ Dashboard',book:'Total booking',rec:'Received',saldo:'Balance to receive',pc:'% received',cam:'Trucks today',porto:'By port (m³)',cli:'By client (m³)',comm:'By Comm — m³ received',
+    legRec:'Received',legSaldo:'Balance to receive',legAcima:'Over booking',dados:'Data as of',velho:'Not updated since',receb:'Receiving window',ate:' to ',aberto:'open',rot:'Rotation',
+    acima:'m³ over booking',qualquer:'(any port)',excl:'(deleted client)',semTipo:'(no type)',semToken:'Incomplete link: the code (?t=…) is missing.',
+    invalido:'This link does not exist or was disabled. Ask for a new link in WoodPort.',erro:'No connection to the server. Retrying…',vazio:'No figures for this link yet.',
+    filtro:'Filter',portos:'Ports',clientes:'Clients',finalizado:'closed'}
+};
+var LANG=Q.get('lang')||'pt';
+function t(k){return (L[LANG]||L.pt)[k]||L.pt[k]||k;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function n1(v,d){d=d==null?1:d;return (+v||0).toLocaleString(LANG==='en'?'en-US':'pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function tx(v){return v==='(qualquer porto)'?t('qualquer'):v==='(cliente excluído)'?t('excl'):/^\(sem tipo\)$/i.test(v)?t('semTipo'):v;}
+function dataTxt(iso){if(!iso)return '—';var p=String(iso).slice(0,10).split('-');
+  return LANG==='en'?(+p[2])+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1]+' '+p[0]:p[2]+'/'+p[1]+'/'+p[0];}
+function hora(d){return d.toLocaleTimeString(LANG==='en'?'en-GB':'pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function msg(s){document.body.innerHTML='<div class="msg">'+esc(s)+'</div>';}
+function barras(itens,simples,total){
+  var max=itens.reduce(function(a,x){return Math.max(a,x.book||0,x.rec||0);},0)||1;
+  return itens.map(function(x){
+    var b=(x.book||0)/max*100,r=Math.min(x.rec,simples?x.rec:x.book)/max*100,o=!simples&&x.rec>x.book?(x.rec-x.book)/max*100:0,pc=x.book?x.rec/x.book*100:0;
+    return '<div class="barra"><div class="n" title="'+esc(tx(x.label))+'">'+esc(tx(x.label))+'</div><div class="trilho">'
+      +(simples?'':'<i style="width:'+b.toFixed(2)+'%;background:var(--book)"></i>')
+      +'<i style="width:'+r.toFixed(2)+'%;background:var(--acc)"></i>'
+      +(o?'<i style="left:'+b.toFixed(2)+'%;width:'+o.toFixed(2)+'%;background:var(--over)"></i>':'')+'</div>'
+      +'<div class="x mono">'+(simples?'<b>'+n1(x.rec)+'</b> <span>m³ · '+(total?n1(x.rec/total*100)+'%':'')+'</span>'
+        :'<b>'+n1(x.rec)+'</b> <span>/ '+n1(x.book)+' · '+pc.toFixed(0)+'%</span>')+'</div></div>';
+  }).join('')||'<div style="color:var(--ink3)">—</div>';
+}
+function render(){
+  var D=DADOS;if(!D){msg(t('vazio'));return;}
+  if(!Q.get('lang')&&D.lang)LANG=D.lang;
+  document.documentElement.lang=LANG==='en'?'en':'pt-BR';
+  var n=D.navio||{},T=D.tot||{},at=ULT?new Date(ULT):null,velho=at&&Date.now()-at>30*60*1000;
+  document.title='WoodPort · '+t('titulo')+' — '+(n.nome||'');
+  var sub=[esc(D.armador||''),t('receb')+': '+(n.receb_inicio?dataTxt(n.receb_inicio)+t('ate')+(n.receb_fim?dataTxt(n.receb_fim):t('aberto')):'—')];
+  if(n.rotacao&&n.rotacao.length)sub.push(t('rot')+': '+n.rotacao.map(esc).join(' → '));
+  var f=D.filtro||{},ft=[];if(f.portos)ft.push(t('portos')+': '+f.portos.map(tx).join(', '));if(f.clientes)ft.push(t('clientes')+': '+f.clientes.join(', '));
+  if(ft.length)sub.push(t('filtro')+' — '+esc(ft.join(' · ')));
+  var pc=T.book?T.rec/T.book*100:0;
+  var h='<header><div><div class="marca">WoodPort · 4SIDES — '+esc(t('titulo'))+'</div><h1>'+esc(n.nome||'')+(n.viagem?' · '+esc(n.viagem):'')+(n.finalizado?' <span style="font-size:.5em;color:var(--ink3)">('+t('finalizado')+')</span>':'')+'</h1><div class="sub">'+sub.join(' · ')+'</div></div>'
+    +'<div class="relogio"><div class="h mono" id="relogio">'+hora(new Date())+'</div><div class="estado'+(velho?' velho':'')+'">'+(at?(velho?'⚠ '+t('velho'):t('dados'))+' '+dataTxt(at.toISOString().slice(0,10)===new Date().toISOString().slice(0,10)?'':at.toISOString()).replace('—','')+' '+hora(at):'')+'</div></div></header>'
+    +'<section class="kpis">'
+    +'<div class="kpi"><div class="l">'+t('book')+'</div><div class="v mono">'+n1(T.book)+'<small>m³</small></div></div>'
+    +'<div class="kpi"><div class="l">'+t('rec')+'</div><div class="v mono" style="color:var(--acc)">'+n1(T.rec)+'<small>m³</small></div></div>'
+    +'<div class="kpi"><div class="l">'+t('saldo')+'</div><div class="v mono">'+n1(T.falta)+'<small>m³</small></div>'+(T.exc>0.05?'<div class="s" style="color:var(--warn)">'+n1(T.exc)+' '+t('acima')+'</div>':'')+'</div>'
+    +'<div class="kpi"><div class="l">'+t('pc')+'</div><div class="v mono" style="color:'+(pc>=100?'var(--ok)':'var(--ink)')+'">'+n1(pc)+'<small>%</small></div></div>'
+    +'<div class="kpi"><div class="l">'+t('cam')+'</div><div class="v mono">'+((D.cam&&D.cam.n)||0)+'</div><div class="s mono">'+n1(D.cam&&D.cam.m3)+' m³</div></div>'
+    +'</section><section class="paineis">'
+    +'<div class="painel"><h2>'+t('porto')+'</h2>'+barras((D.porPorto||[]).map(function(p){return {label:p.porto,book:p.book,rec:p.rec};}))+'</div>'
+    +'<div class="painel"><h2>'+t('cli')+'</h2>'+barras((D.porCliente||[]).map(function(c){return {label:c.cli,book:c.book,rec:c.rec};}))+'</div>'
+    +(D.comm&&D.comm.lista&&D.comm.lista.length?'<div class="painel comm"><h2>'+t('comm')+'</h2>'+barras(D.comm.lista.map(function(c,i){return {label:c,rec:D.comm.tot[i],book:0};}),true,D.comm.total)+'</div>':'')
+    +'</section>'
+    +'<div class="leg"><span><i style="background:var(--acc)"></i>'+t('legRec')+'</span><span><i style="background:var(--book)"></i>'+t('legSaldo')+'</span><span><i style="background:var(--over)"></i>'+t('legAcima')+'</span></div>';
+  document.body.innerHTML=h;
+}
+function carregar(){
+  if(!TOKEN||TOKEN.length<20){msg(t('semToken'));return;}
+  fetch(WP_SB_URL+'/rest/v1/rpc/wp_dash_publico_ler',{method:'POST',cache:'no-store',
+    headers:{'apikey':WP_SB_KEY,'Authorization':'Bearer '+WP_SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:TOKEN})})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+  .then(function(j){
+    if(!j){DADOS=null;msg(t('invalido'));return;}
+    DADOS=j.dados;ULT=j.atualizado_em;render();
+  })
+  .catch(function(e){console.warn(e);if(!DADOS)msg(t('erro'));});
+}
+carregar();
+setInterval(carregar,60*1000);
+setInterval(function(){var r=document.getElementById('relogio');if(r)r.textContent=hora(new Date());if(DADOS&&ULT&&Date.now()-new Date(ULT)>30*60*1000&&!document.querySelector('.estado.velho'))render();},15*1000);
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 // Páginas: REDE PRIMEIRO. A publicação é subir um index.html novo por cima; servir
 // cópia guardada congelaria a versão antiga no aparelho. O cache só entra sem internet.
 // Supabase (dados) e CDNs nunca são guardados.
-var VERSAO = 'woodport-2026-11-18.1'; // suba junto com APP_VERSAO do index.html
+var VERSAO = 'woodport-2026-11-18.3'; // suba junto com APP_VERSAO do index.html
 var BASICOS = ['./', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

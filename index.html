@@ -1647,11 +1647,10 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
 
     <!-- ARMAZÉM › RELATÓRIOS -->
     <div class="page" id="page-rel-armazem">
-      <div class="sh" style="align-items:flex-end;"><div><h2>Relatórios do armazém</h2><div class="sub">Movimentação, entradas por produtor e idade do estoque</div></div><div class="seg arm-sel" role="group" aria-label="Armador"></div></div>
+      <div class="sh" style="align-items:flex-end;"><div><h2>Relatórios do armazém</h2><div class="sub">Dashboard em m³, relatório personalizado e idade do estoque</div></div><div class="seg arm-sel" role="group" aria-label="Armador"></div></div>
       <div class="tabs" role="tablist" id="ra-tabs">
         <button role="tab" data-rel="dash" onclick="raAba('dash')">📊 Dashboard (m³)</button>
-        <button role="tab" data-rel="mov" class="on" onclick="raAba('mov')">Movimentação do período</button>
-        <button role="tab" data-rel="prod" onclick="raAba('prod')">Entradas por produtor</button>
+        <button role="tab" data-rel="pers" class="on" onclick="raAba('pers')">📑 Relatório personalizado</button>
         <button role="tab" data-rel="idade" onclick="raAba('idade')">Posição e idade do estoque</button>
       </div>
       <!-- DASHBOARD em m³: booking × recebido × saldo, por cliente e por porto (PT / EN) -->
@@ -1664,6 +1663,15 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
             <button class="btn bs" onclick="raDashImprimir()" data-rd="btnPrint">🖨 Imprimir / PDF</button>
             <button class="btn bs bsm" id="rd-btn-comm" style="align-self:center;" onclick="rdToggleComm()">+ Adicionar visão por Comm (tipo de produto)</button>
           </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+            <button class="btn bs bsm" onclick="rdAtualizar()">↻ <span data-rd="btnAtualizar">Atualizar</span></button>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="rd-auto" onchange="rdAutoMudou()" style="width:auto;margin:0;"> <span data-rd="auto5">Atualizar sozinho a cada 5 min</span></label>
+            <span id="rd-atualizado" style="font-size:12px;color:var(--ink3);"></span>
+            <span style="flex:1;"></span>
+            <button class="btn bs bsm" onclick="rdTelaCheia()">⛶ <span data-rd="telaCheia">Tela cheia (TV)</span></button>
+            <button class="btn bs bsm" id="rd-btn-pub" onclick="rdPubAbrir()">🔗 <span data-rd="linkPub">Link público (TV)</span></button>
+          </div>
+          <div id="rd-pub" style="display:none;margin-top:12px;"></div>
           <div style="margin-top:12px;"><div class="fl" style="margin-bottom:4px;"><span data-rd="portos">Portos</span> <a href="#" style="font-weight:400;" onclick="rdTodos('portos');return false;" data-rd="todos">todos</a> <span style="font-weight:400;color:var(--ink4);" data-rd="ordemRot">— na ordem da rotação do navio</span></div><div id="rd-portos" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
           <div style="margin-top:10px;"><div class="fl" style="margin-bottom:4px;"><span data-rd="clientes">Clientes</span> <a href="#" style="font-weight:400;" onclick="rdTodos('clientes');return false;" data-rd="todos">todos</a></div><div id="rd-clientes" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
           <div style="font-size:12px;color:var(--ink3);margin-top:10px;" data-rd="nota">Tudo em m³. Recebido = descargas que abateram o booking do cliente neste navio (mesma regra da aba Booking). O Excel e a impressão saem com os portos e clientes marcados aqui, no idioma escolhido.</div>
@@ -1689,7 +1697,41 @@ html,body{overflow-x:clip;} /* avisos entram deslizando de fora da tela; clip n�
           <div style="font-size:12px;color:var(--ink3);margin-top:8px;" data-rd="notaComm">Tipo de cada descarga = o informado na descarga ou, se em branco, o Comm da marca. Considera as descargas que abateram o booking (com os portos e clientes marcados acima).</div>
         </div>
       </div>
+      <!-- RELATÓRIO PERSONALIZADO: escolhe o tipo, os filtros e como agrupar -->
+      <div class="card" style="margin-bottom:14px;display:none;" id="ra-pers">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="fg"><label class="fl">O que mostrar</label><div role="group" aria-label="Tipo de relatório" id="rp-tipo" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+          <div class="fg" id="rp-de-wrap"><label class="fl" for="rp-de">De</label><input type="date" id="rp-de" style="width:auto;"></div>
+          <div class="fg"><label class="fl" for="rp-ate" id="rp-ate-lbl">Até</label><input type="date" id="rp-ate" style="width:auto;"></div>
+          <div class="fg" style="display:flex;gap:6px;flex-wrap:wrap;align-self:flex-end;">
+            <button type="button" class="btn bs bsm" onclick="rpPeriodo('hoje')">Hoje</button>
+            <button type="button" class="btn bs bsm" onclick="rpPeriodo('7')">7 dias</button>
+            <button type="button" class="btn bs bsm" onclick="rpPeriodo('mes')">Este mês</button>
+            <button type="button" class="btn bs bsm" onclick="rpPeriodo('navio')" title="Período de recebimento do navio escolhido">Recebimento do navio</button>
+          </div>
+        </div>
+        <div style="margin-top:12px;"><div class="fl" style="margin-bottom:4px;">Armazéns <a href="#" style="font-weight:400;" onclick="rpAz=null;rpRenderAz();return false;">todos</a></div><div id="rp-az" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px;">
+          <div class="fg" style="min-width:0;"><label class="fl" for="rp-navio">Navio</label><select id="rp-navio"></select></div>
+          <div class="fg" style="min-width:0;"><label class="fl" for="rp-cli">Cliente</label><input id="rp-cli" list="rp-dl-cli" autocomplete="off" placeholder="todos"><datalist id="rp-dl-cli"></datalist></div>
+          <div class="fg" style="min-width:0;"><label class="fl" for="rp-exp">Exportador / produtor</label><input id="rp-exp" list="rp-dl-exp" autocomplete="off" placeholder="todos"><datalist id="rp-dl-exp"></datalist></div>
+          <div class="fg" style="min-width:0;"><label class="fl" for="rp-marca">Marca</label><input id="rp-marca" list="rp-dl-marca" autocomplete="off" placeholder="todas (pode ser parte)" style="text-transform:uppercase;"><datalist id="rp-dl-marca"></datalist></div>
+          <div class="fg" style="min-width:0;"><label class="fl" for="rp-porto">Porto de destino</label><input id="rp-porto" list="rp-dl-porto" autocomplete="off" placeholder="todos"><datalist id="rp-dl-porto"></datalist></div>
+          <div class="fg" style="min-width:0;"><label class="fl" for="rp-comm">Comm (tipo de produto)</label><input id="rp-comm" list="rp-dl-comm" autocomplete="off" placeholder="todos" style="text-transform:uppercase;"><datalist id="rp-dl-comm"></datalist></div>
+          <div class="fg rp-so-desc" style="min-width:0;"><label class="fl" for="rp-placa">Placa</label><input id="rp-placa" autocomplete="off" placeholder="todas" style="text-transform:uppercase;"></div>
+          <div class="fg" style="min-width:0;grid-column:1/-1;"><label class="fl">Agrupar por</label><div id="rp-grupos" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></div></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;">
+          <button class="btn bp" onclick="rpGerar()">Gerar</button>
+          <button class="btn bs" onclick="relExportar('ra')">⬇ Excel</button>
+          <button class="btn bs" onclick="rpImprimir()">🖨 Imprimir / PDF</button>
+          <button class="btn bs bsm" onclick="rpLimpar()">Limpar filtros</button>
+          <label class="rp-so-desc" style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="rp-inv" style="width:auto;margin:0;"> Incluir inventário de abertura</label>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:10px;line-height:1.5;" id="rp-desc"></div>
+      </div>
       <div class="card" style="margin-bottom:14px;" id="ra-filtros">
+
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
           <div class="fg" id="ra-de-wrap"><label class="fl" for="ra-de">De</label><input type="date" id="ra-de" style="width:auto;"></div>
           <div class="fg"><label class="fl" for="ra-ate" id="ra-ate-lbl">Até</label><input type="date" id="ra-ate" style="width:auto;"></div>
@@ -6437,9 +6479,9 @@ function azDoMov(s){ // nome canônico do armazém (como está em ARMAZENS)
 }
 
 // ── carga dos dados ──
-function estCarregar(forcar){
+function estCarregar(forcar,quieto){ // quieto = sem a tela de carregando (atualização automática)
   if(est.carregado&&!forcar)return Promise.resolve();
-  showLd(true);
+  if(!quieto)showLd(true);
   return Promise.all([
     supaAll(function(){return sb.from('wp_marcas').select('*').order('marca').order('id');}),
     supaAll(function(){return sb.from('wp_estoque_mov').select('*').order('data').order('created_at').order('id');}),
@@ -6452,6 +6494,7 @@ function estCarregar(forcar){
     sb.from('wp_booking').select('*'),
     supaAll(function(){return sb.from('wp_booking_prelista').select('*').order('booking_id').order('marca').order('id');}),
     sb.from('wp_armazem_capacidade').select('*'),
+    sb.from('wp_dash_publico').select('token,armador,navio_id,opcoes,ativo,criado_por_nome,created_at,atualizado_em').order('created_at'),
   ]).then(function(rs){
     showLd(false);
     var err=rs[0].error||rs[1].error||rs[2].error;
@@ -6468,6 +6511,8 @@ function estCarregar(forcar){
     est.semPrelistaSql=!!(rs[7]&&rs[7].error);est.prelista=rs[7]&&rs[7].data||[];
     // capacidade dos armazéns: sem o woodport_exportador_capacidade.sql o resto funciona
     est.semCapSql=!!(rs[8]&&rs[8].error);est.capacidade=rs[8]&&rs[8].data||[];
+    // links públicos do dashboard (TV): sem o woodport_dash_publico.sql o resto funciona
+    est.semPubSql=!!(rs[9]&&rs[9].error);est.dashPub=rs[9]&&rs[9].data||[];est.carregadoEm=new Date();
     est.carregado=true;est.grupos=null;
     // listas de apoio para digitação
     var prods=[...new Set(est.movs.map(function(m){return (m.produtor||'').trim();}).filter(Boolean))].sort();
@@ -6578,6 +6623,7 @@ function estRender(){
   if(est.aba==='booking')estRenderBooking();
   if(est.aba==='clientes')estRenderClientes();
   if(est.aba==='capacidade')estRenderCapacidade();
+  rdPubAgendar(); // estoque mudou: regrava os links públicos do dashboard (no máx. 1x por minuto)
 }
 function gruposFiltrados(){
   var az=document.getElementById('est-az').value;
@@ -7107,6 +7153,7 @@ function addFotoNc(input){
 // erro de coluna/tabela que só existe depois do script novo → diz o que fazer
 function erroColunaNova(e){
   var m=(e&&e.message)||String(e);
+  if(/wp_dash_publico/i.test(m))return m+' — rode o script woodport_dash_publico.sql no Supabase';
   if(/exportador|wp_armazem_capacidade/i.test(m))return m+' — rode o script woodport_exportador_capacidade.sql no Supabase';
   return /periodo|placa|nao_conforme|nc_fotos|nc_descricao|armador|wp-descargas-nc|bucket/i.test(m)?m+' — rode o script woodport_armazem_v2.sql no Supabase':m;
 }
@@ -8628,7 +8675,7 @@ function relFmt(c,v){
   if(v===null||v===undefined||v==='')return '—';
   if(c.tipo==='brl')return brl(v);
   if(c.tipo==='num')return c.dec?fNum(v,c.dec):(+v).toLocaleString('pt-BR');
-  if(c.tipo==='data')return fmtIso(v);
+  if(c.tipo==='data')return /^\d{4}-\d{2}-\d{2}/.test(String(v))?fmtIso(v):esc(v); // 'TOTAL' na coluna de data
   return esc(v);
 }
 function relRender(px,rep){
@@ -8694,7 +8741,8 @@ var RD_L={
     shDash:'Dashboard',shPorto:'Por porto',shComm:'Por Comm',shDesc:'Descargas',imgPorto:'Por porto (m³) — recebido / booking',imgCli:'Por cliente (m³) — recebido / booking',imgComm:'Por Comm (m³ recebido)',
     hData:'Data',hPer:'Período',hPlaca:'Placa',hNf:'NF',hAz:'Armazém',hProd:'Produtor',hMarca:'Marca',hComm:'Comm',hDest:'Destino',hPortoBk:'Porto do booking',hFd:'Fardos',hM3:'m³',
     arquivo:'dashboard_m3',camUn:'caminhões',camUm:'caminhão',camM3:'{v} m³ no dia',camSemPlaca:'{n} descarga(s) sem placa contadas uma a uma',camArm:'{n} no total de {a} (todos os navios)',
-    camInfo:'Caminhões descarregados em {d}: {n} ({v} m³)',rotacao:'Rotação',diaLbl:'Dia'},
+    camInfo:'Caminhões descarregados em {d}: {n} ({v} m³)',rotacao:'Rotação',diaLbl:'Dia',
+    btnAtualizar:'Atualizar',auto5:'Atualizar sozinho a cada 5 min',telaCheia:'Tela cheia (TV)',linkPub:'Link público (TV)',atualizadoAs:'Dados de {h}',proxima:' · próxima atualização às {h}'},
   en:{navio:'Vessel',idioma:'Language',btnExcel:'⬇ Excel (dashboard + unloadings)',btnPrint:'🖨 Print / PDF',portos:'Ports',clientes:'Clients',todos:'all',
     ordemRot:'— in the vessel rotation order',
     nota:'All figures in m³. Received = truck unloadings that count against the client booking on this vessel (same rule as the Booking tab). Excel and print use the ports and clients selected here, in the chosen language.',
@@ -8711,7 +8759,8 @@ var RD_L={
     shDash:'Dashboard',shPorto:'By port',shComm:'By Comm',shDesc:'Unloadings',imgPorto:'By port (m³) — received / booking',imgCli:'By client (m³) — received / booking',imgComm:'By Comm (m³ received)',
     hData:'Date',hPer:'Shift',hPlaca:'Truck plate',hNf:'Invoice (NF)',hAz:'Warehouse',hProd:'Producer',hMarca:'Mark',hComm:'Comm',hDest:'Destination',hPortoBk:'Booking port',hFd:'Bundles',hM3:'m³',
     arquivo:'dashboard_cbm',camUn:'trucks',camUm:'truck',camM3:'{v} m³ on the day',camSemPlaca:'{n} unloading(s) without plate counted one by one',camArm:'{n} in total for {a} (all vessels)',
-    camInfo:'Trucks unloaded on {d}: {n} ({v} m³)',rotacao:'Rotation',diaLbl:'Day'}
+    camInfo:'Trucks unloaded on {d}: {n} ({v} m³)',rotacao:'Rotation',diaLbl:'Day',
+    btnAtualizar:'Refresh',auto5:'Auto refresh every 5 min',telaCheia:'Full screen (TV)',linkPub:'Public link (TV)',atualizadoAs:'Data as of {h}',proxima:' · next refresh at {h}'}
 };
 function rdT(k,o){var s=RD_L[RD_LANG][k];if(s==null)s=RD_L.pt[k];if(s==null)s=k;if(o)Object.keys(o).forEach(function(x){s=s.split('{'+x+'}').join(o[x]);});return s;}
 function rdN(v,d){d=d==null?1:d;return RD_LANG==='en'?(parseFloat(v||0)).toFixed(d):fNum(v,d);}
@@ -8737,13 +8786,17 @@ function rdNavios(){
 function rdDados(){
   var nav=navioDe(document.getElementById('rd-navio').value);if(!nav)return null;
   est.bk=bkCalcular();
+  var D=rdDadosNav(nav,rdFiltro.portos,rdFiltro.clientes);
+  rdFiltro.portos=D.fp;rdFiltro.clientes=D.fc; // filtro de outro navio/armador: fica só com o que existe aqui
+  return D;
+}
+// dados do dashboard de um navio com os filtros dados (usa est.bk já calculado) — tela, Excel e link público
+function rdDadosNav(nav,fp,fc){
   var cmpP=portoCmp(nav);
   var todas=Object.values(est.bk.R).filter(function(r){return r.b.navio_id===nav.id;});
   var portos=unicosAz(todas.map(rdPortoNome)).sort(cmpP),clientes=unicosAz(todas.map(function(r){return r.cli?r.cli.nome:'(cliente excluído)';})).sort();
-  // filtro de outro navio/armador: fica só com o que existe aqui (nada sobrando = todos)
-  ['portos','clientes'].forEach(function(k){var lista=k==='portos'?portos:clientes;
-    if(rdFiltro[k]){rdFiltro[k]=rdFiltro[k].filter(function(v){return lista.indexOf(v)>=0;});if(!rdFiltro[k].length)rdFiltro[k]=null;}});
-  var fp=rdFiltro.portos,fc=rdFiltro.clientes;
+  function limpa(f,lista){if(!f)return null;f=f.filter(function(v){return lista.indexOf(v)>=0;});return f.length?f:null;} // nada sobrando = todos
+  fp=limpa(fp,portos);fc=limpa(fc,clientes);
   var lin=todas.filter(function(r){return (!fp||fp.indexOf(rdPortoNome(r))>=0)&&(!fc||fc.indexOf(r.cli?r.cli.nome:'(cliente excluído)')>=0);})
     .map(function(r){var bk=+r.b.m3||0;return {r:r,cli:r.cli?r.cli.nome:'(cliente excluído)',porto:rdPortoNome(r),book:bk,rec:r.m3,saldo:bk-r.m3,fd:r.fd,semParam:r.semParam};})
     .sort(function(a,b){return cmpP(a.porto,b.porto)||a.cli.localeCompare(b.cli);});
@@ -8752,7 +8805,7 @@ function rdDados(){
     var p=P[x.porto]||(P[x.porto]={porto:x.porto,book:0,rec:0,falta:0,exc:0,fd:0,n:0});
     [p,T].forEach(function(o){o.book+=x.book;o.rec+=x.rec;o.fd+=x.fd;if(x.saldo>0)o.falta+=x.saldo;else o.exc-=x.saldo;});p.n++;
   });
-  return {nav:nav,lin:lin,porPorto:Object.values(P).sort(function(a,b){return cmpP(a.porto,b.porto);}),tot:T,portos:portos,clientes:clientes};
+  return {nav:nav,lin:lin,porPorto:Object.values(P).sort(function(a,b){return cmpP(a.porto,b.porto);}),tot:T,portos:portos,clientes:clientes,fp:fp,fc:fc};
 }
 // caminhões descarregados no dia: placas distintas entre as descargas do dashboard (navio + filtros); sem placa = 1 cada
 function rdDia(){var el=document.getElementById('rd-dia');if(el&&!el.value)el.value=localISODate();return el?el.value:localISODate();}
@@ -8861,7 +8914,7 @@ function raDashRender(){
   function tdN(v,d,neg){return '<td class="mono" style="text-align:right;'+(neg&&v<0?'color:#B45309;':'')+'">'+rdN(v,d==null?1:d)+'</td>';}
   function pc(b,r){return '<td class="mono" style="text-align:right">'+(b?rdN(r/b*100,1)+'%':'—')+'</td>';}
   var tp=document.getElementById('rd-t-porto'),tc=document.getElementById('rd-t-cli');
-  if(!D){tp.innerHTML='';tc.innerHTML='';rdRenderComm(null);return;}
+  if(!D){tp.innerHTML='';tc.innerHTML='';rdRenderComm(null);rdMostrarHora();return;}
   tp.innerHTML='<thead><tr>'+[{t:rdT('thPorto')},{t:rdT('thClientes'),r:1},{t:rdT('thBook'),r:1},{t:rdT('thRec'),r:1},{t:rdT('thSaldo'),r:1},{t:'%',r:1}].map(th).join('')+'</tr></thead><tbody>'
     +D.porPorto.map(function(p){return '<tr><td><strong>'+esc(rdTx(p.porto))+'</strong></td><td class="mono" style="text-align:right">'+p.n+'</td>'+tdN(p.book)+tdN(p.rec)+tdN(p.book-p.rec,1,1)+pc(p.book,p.rec)+'</tr>';}).join('')
     +'<tr style="font-weight:700;background:var(--s2);"><td>'+rdT('total')+'</td><td></td>'+tdN(T.book)+tdN(T.rec)+tdN(T.book-T.rec,1,1)+pc(T.book,T.rec)+'</tr></tbody>';
@@ -8870,6 +8923,8 @@ function raDashRender(){
       ||'<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:18px;">'+rdT('nadaFiltro')+'</td></tr>')
     +'<tr style="font-weight:700;background:var(--s2);"><td colspan="2">'+rdT('total')+'</td>'+tdN(T.book)+tdN(T.rec)+tdN(T.book-T.rec,1,1)+pc(T.book,T.rec)+'</tr></tbody>';
   rdRenderComm(D);
+  rdMostrarHora();rdPubAgendar();
+  if(document.getElementById('rd-pub').style.display!=='none')rdPubRender();
 }
 // ── visão opcional por COMM (tipo de produto): m³ recebido de cada cliente por tipo ──
 function rdCommLigada(){return !!rdFiltro.comm;}
@@ -8975,11 +9030,343 @@ function raDashImprimir(){
   w.document.open();w.document.write(html);w.document.close();
 }
 
+// ── Dashboard: atualização automática (5 min), tela cheia e LINK PÚBLICO para TV ──
+var rdAuto=true;try{rdAuto=localStorage.getItem('wp_rd_auto')!=='0';}catch(e){}
+var _rdTimer=null,_rdProx=null,RD_AUTO_MS=5*60*1000;
+function rdHora(d){return d?d.toLocaleTimeString(RD_LANG==='en'?'en-GB':'pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';}
+function rdMostrarHora(){
+  var cb=document.getElementById('rd-auto');if(cb)cb.checked=rdAuto;
+  var el=document.getElementById('rd-atualizado');if(!el)return;
+  el.textContent=est.carregadoEm?rdT('atualizadoAs',{h:rdHora(est.carregadoEm)})+(rdAuto&&_rdProx?rdT('proxima',{h:rdHora(_rdProx)}):''):'';
+}
+function rdProgramar(){
+  clearTimeout(_rdTimer);_rdProx=null;
+  if(rdAuto){_rdProx=new Date(Date.now()+RD_AUTO_MS);
+    _rdTimer=setTimeout(function(){if(currentPage==='rel-armazem'&&raAtual==='dash')rdAtualizar(true);else rdProgramar();},RD_AUTO_MS);}
+  rdMostrarHora();
+}
+function rdAutoMudou(){rdAuto=document.getElementById('rd-auto').checked;try{localStorage.setItem('wp_rd_auto',rdAuto?'1':'0');}catch(e){}rdProgramar();}
+function rdAtualizar(auto){ // busca tudo de novo no banco (auto = sem tela de carregando, para a TV não piscar)
+  return estCarregar(true,!!auto).then(function(){raDashRender();rdPubAgendar(1000);rdProgramar();});
+}
+function rdTelaCheia(){
+  var el=document.getElementById('ra-dash');
+  if(document.fullscreenElement){document.exitFullscreen();return;}
+  if(!el.requestFullscreen){toast('Este navegador não abre tela cheia — use F11','error');return;}
+  el.style.background=getComputedStyle(document.body).backgroundColor||'#fff';el.style.overflow='auto';el.style.padding='18px';
+  el.requestFullscreen().catch(function(){toast('Não foi possível abrir em tela cheia — use F11','error');});
+}
+document.addEventListener('fullscreenchange',function(){
+  var el=document.getElementById('ra-dash');if(el&&!document.fullscreenElement){el.style.padding='';el.style.overflow='';}
+  setTimeout(function(){if(raAtual==='dash'&&est.carregado){var D=rdDados();rdGraficos(D);rdRenderComm(D);}},250);
+});
+
+// LINK PÚBLICO: o app grava um retrato pronto do dashboard (wp_dash_publico.dados) e a página tv.html
+// lê pelo token, sem login (função wp_dash_publico_ler). O retrato é regravado quando alguém abre/atualiza o
+// dashboard (a TV interna faz isso a cada 5 min) e quando o estoque muda (descarga lançada, importada, editada…).
+function rdPubUrl(t){return location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'')+'tv.html?t='+t;}
+function rdPubToken(){var c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789',a=new Uint8Array(32),s='';crypto.getRandomValues(a);for(var i=0;i<a.length;i++)s+=c[a[i]%c.length];return s;}
+function r3(v){return +(+v||0).toFixed(3);}
+function rdSnapshot(nav,op){
+  var salvo=armadorAtual,troca=normAz(nav.armador||'')!==normAz(armadorAtual)&&!!nav.armador;
+  try{
+    if(troca)armadorAtual=nav.armador;
+    est.bk=bkCalcular();
+    var D=rdDadosNav(nav,op.portos||null,op.clientes||null),T=D.tot,dia=localISODate(),K=rdCaminhoes(D,dia),C=op.comm?rdCommDados(D):null;
+    return {v:1,lang:op.lang||'pt',armador:nav.armador||armadorAtual,
+      navio:{nome:nav.nome,viagem:nav.viagem||'',eta:nav.eta||null,receb_inicio:nav.receb_inicio||null,receb_fim:nav.receb_fim||null,rotacao:nav.rotacao||[],finalizado:navioFinalizado(nav)},
+      filtro:{portos:D.fp,clientes:D.fc},
+      tot:{book:r3(T.book),rec:r3(T.rec),falta:r3(T.falta),exc:r3(T.exc)},
+      porPorto:D.porPorto.map(function(p){return {porto:p.porto,n:p.n,book:r3(p.book),rec:r3(p.rec)};}),
+      porCliente:rdItensCli(D).map(function(c){return {cli:c.label,book:r3(c.book),rec:r3(c.rec)};}),
+      linhas:D.lin.map(function(x){return {cli:x.cli,porto:x.porto,book:r3(x.book),rec:r3(x.rec)};}),
+      cam:{dia:dia,n:K.n,m3:r3(K.m3)},
+      comm:C?{lista:C.lista,tot:C.lista.map(function(c){return r3(C.tot.c[c]);}),total:r3(C.tot.tot),porCli:C.porCli.map(function(o){return {cli:o.cli,c:C.lista.map(function(c){return r3(o.c[c]);}),tot:r3(o.tot)};})}:null,
+      gerado_em:new Date().toISOString(),gerado_por:currentUser&&currentUser.nome||''};
+  }finally{if(troca){armadorAtual=salvo;est.bk=bkCalcular();}}
+}
+var _rdPubT=null,_rdPubUlt=0,_rdPubFeito={};
+function rdPubAgendar(ms){
+  if(!est.carregado||est.semPubSql||!(est.dashPub||[]).some(function(l){return l.ativo;}))return;
+  if(!(temModulo('estoque')||temModulo('armazenagem')))return;
+  clearTimeout(_rdPubT);
+  var espera=Math.max(ms==null?15000:ms,60000-(Date.now()-_rdPubUlt)); // no máximo 1 gravação por minuto
+  _rdPubT=setTimeout(rdPubPublicar,espera);
+}
+function rdPubPublicar(){
+  _rdPubUlt=Date.now();
+  var links=(est.dashPub||[]).filter(function(l){return l.ativo;}),p=Promise.resolve();
+  links.forEach(function(l){
+    var nav=navioDe(l.navio_id);if(!nav)return;
+    var dados;try{dados=rdSnapshot(nav,l.opcoes||{});}catch(e){console.warn('link público:',e);return;}
+    var chave=JSON.stringify(Object.assign({},dados,{gerado_em:'',gerado_por:''}));
+    // igual ao último e gravado há menos de 15 min: não grava de novo
+    if(_rdPubFeito[l.token]&&_rdPubFeito[l.token].k===chave&&Date.now()-_rdPubFeito[l.token].t<15*60*1000)return;
+    p=p.then(function(){var agora=new Date().toISOString();
+      return sb.from('wp_dash_publico').update({dados:dados,atualizado_em:agora}).eq('token',l.token).then(function(r){
+        if(r.error){console.warn('link público:',r.error.message);return;}
+        l.atualizado_em=agora;l.dados=null;_rdPubFeito[l.token]={k:chave,t:Date.now()};});});
+  });
+  p.then(function(){if(document.getElementById('rd-pub')&&document.getElementById('rd-pub').style.display!=='none')rdPubRender();});
+}
+function rdPubAbrir(){
+  var b=document.getElementById('rd-pub'),abre=b.style.display==='none';
+  b.style.display=abre?'':'none';if(abre)rdPubRender();
+}
+function rdPubRender(){
+  var box=document.getElementById('rd-pub'),nav=navioDe(document.getElementById('rd-navio').value);
+  if(est.semPubSql){box.innerHTML='<div class="imp-st err">⚠<div>Para criar o link público, rode o script <strong>woodport_dash_publico.sql</strong> no Supabase e publique o arquivo <strong>tv.html</strong> junto com o index.html.</div></div>';return;}
+  if(!nav){box.innerHTML='';return;}
+  var L=(est.dashPub||[]).filter(function(l){return l.navio_id===nav.id;});
+  function opTxt(o){o=o||{};return (o.lang==='en'?'English':'Português')+' · Portos: '+(o.portos&&o.portos.length?o.portos.map(rdTx).join(', '):'todos')+' · Clientes: '+(o.clientes&&o.clientes.length?o.clientes.join(', '):'todos')+(o.comm?' · com Comm':'');}
+  box.innerHTML='<div style="background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rsm);padding:12px;">'
+    +'<div style="font-weight:600;margin-bottom:4px;">🔗 Links públicos deste navio — abrem sem login (TV, outro painel)</div>'
+    +'<div style="font-size:12px;color:var(--ink3);margin-bottom:10px;line-height:1.5;">Quem tiver o link vê só os números do dashboard deste navio (sem login). O link guarda os portos, clientes, idioma e a visão por Comm que estiverem marcados <strong>na hora de criar</strong>. Os números são regravados quando alguém abre ou atualiza este dashboard (a TV interna faz isso a cada 5 min) e quando uma descarga é lançada, importada ou alterada; a página pública confere a cada minuto.</div>'
+    +(L.map(function(l){var u=rdPubUrl(l.token),id='rdpu-'+l.token.slice(0,8);
+      return '<div style="border-top:1px solid var(--bdr);padding:8px 0;">'
+        +'<div style="font-size:12px;margin-bottom:4px;">'+(l.ativo?'<span class="bge ok">ativo</span>':'<span class="bge ntrl">desativado</span>')+' '+esc(opTxt(l.opcoes))
+        +' <span style="color:var(--ink4);">· criado por '+esc(l.criado_por_nome||'—')+(l.atualizado_em?' · números de '+new Date(l.atualizado_em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'')+'</span></div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><input id="'+id+'" readonly value="'+esc(u)+'" style="flex:1 1 260px;min-width:0;font-family:var(--mono);font-size:12px;" onfocus="this.select()">'
+        +'<button class="btn bs bsm" onclick="rdPubCopiar(\''+id+'\')">Copiar</button>'
+        +'<a class="btn bs bsm" href="'+esc(u)+'" target="_blank" rel="noopener">Abrir</a>'
+        +'<button class="btn bs bsm" onclick="rdPubGravarJa(\''+l.token+'\')">Atualizar números</button>'
+        +'<button class="btn bs bsm" onclick="rdPubAtivo(\''+l.token+'\','+(l.ativo?'false':'true')+')">'+(l.ativo?'Desativar':'Reativar')+'</button>'
+        +'<button class="btn bd bsm" aria-label="Excluir link" onclick="rdPubExcluir(\''+l.token+'\')">✕</button></div></div>';}).join('')
+      ||'<div style="font-size:13px;color:var(--ink3);padding:4px 0 8px;">Nenhum link para este navio.</div>')
+    +'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button class="btn bp bsm" onclick="rdPubCriar()">+ Criar link com os filtros atuais</button>'
+    +'<span style="font-size:12px;color:var(--ink3);">'+esc(opTxt({lang:RD_LANG,portos:rdFiltro.portos,clientes:rdFiltro.clientes,comm:rdFiltro.comm}))+'</span></div>'
+    +'<details style="margin-top:10px;font-size:12px;color:var(--ink3);"><summary style="cursor:pointer;">Integrar com outro painel (dados em JSON)</summary><div style="line-height:1.6;margin-top:6px;">'
+    +'Página para colocar num iframe: o link acima (acrescente <code>&amp;tema=escuro</code> para fundo escuro e <code>&amp;embed=1</code> para tirar o cabeçalho).<br>'
+    +'Só os números: <code>POST '+esc(WP_SB_URL)+'/rest/v1/rpc/wp_dash_publico_ler</code> com o corpo <code>{"p_token":"&lt;token do link&gt;"}</code> e os cabeçalhos <code>apikey</code> e <code>Authorization: Bearer</code> com a chave pública (anon) do Supabase. Devolve <code>{dados, atualizado_em}</code>.</div></details>'
+    +'</div>';
+}
+function rdPubCopiar(id){var el=document.getElementById(id);el.select();
+  (navigator.clipboard?navigator.clipboard.writeText(el.value):Promise.reject()).then(function(){toast('Link copiado','success');},function(){try{document.execCommand('copy');toast('Link copiado','success');}catch(e){toast('Copie o link selecionado','error');}});}
+function rdPubCriar(){
+  var nav=navioDe(document.getElementById('rd-navio').value);if(!nav){toast('Escolha o navio','error');return;}
+  var op={portos:rdFiltro.portos||null,clientes:rdFiltro.clientes||null,comm:!!rdFiltro.comm,lang:RD_LANG};
+  var reg={token:rdPubToken(),armador:nav.armador||armadorAtual,navio_id:nav.id,opcoes:op,dados:rdSnapshot(nav,op),ativo:true,criado_por_nome:currentUser.nome,atualizado_em:new Date().toISOString()};
+  showLd(true);
+  sb.from('wp_dash_publico').insert(reg).select('token,armador,navio_id,opcoes,ativo,criado_por_nome,created_at,atualizado_em').then(function(r){
+    showLd(false);if(r.error){toast('Erro: '+erroColunaNova(r.error),'error');return;}
+    est.dashPub=(est.dashPub||[]).concat(r.data||[]);rdPubRender();
+    var el=document.getElementById('rdpu-'+reg.token.slice(0,8));if(el)rdPubCopiar(el.id);
+    toast('Link público criado','success');
+  });
+}
+function rdPubGravarJa(token){_rdPubFeito[token]=null;_rdPubUlt=0;estCarregar(true).then(function(){raDashRender();rdPubPublicar();toast('Números do link atualizados','success');});}
+function rdPubAtivo(token,on){
+  sb.from('wp_dash_publico').update({ativo:on}).eq('token',token).select('token').then(function(r){
+    if(r.error||!r.data||!r.data.length){toast('Erro: '+(r.error?r.error.message:'sem permissão'),'error');return;}
+    (est.dashPub||[]).forEach(function(l){if(l.token===token)l.ativo=on;});rdPubRender();toast(on?'Link reativado':'Link desativado — a página pública para de mostrar os números','success');
+  });
+}
+function rdPubExcluir(token){
+  if(!confirm('Excluir este link público? Quem estiver usando (TV, painel) deixa de ver o dashboard.'))return;
+  sb.from('wp_dash_publico').delete().eq('token',token).select('token').then(function(r){
+    if(r.error||!r.data||!r.data.length){toast('Erro: '+(r.error?r.error.message:'sem permissão'),'error');return;}
+    est.dashPub=(est.dashPub||[]).filter(function(l){return l.token!==token;});rdPubRender();toast('Link excluído','success');
+  });
+}
+
+
+// ── Armazém › Relatórios › RELATÓRIO PERSONALIZADO: descargas / estoque / embarques, com filtros e agrupamento ──
+var rpTipo='desc',rpAz=null; // rpAz: null = todos os armazéns
+var RP_TIPOS={desc:'Descargas (entradas)',est:'Estoque (posição e idade)',emb:'Embarques (saídas)'};
+var RP_DESC={
+  desc:'Cada descarga lançada no período. Cliente e navio = o booking que a descarga abateu (mesma regra da aba Booking); sem booking, o cliente vem da marca/produtor/exportador.',
+  est:'O que está no armazém na data escolhida (entradas − embarques validados, primeiro que entra, primeiro que sai), com a idade de cada entrada.',
+  emb:'Fardos embarcados (tickets validados) no período, com o exportador, o cliente e a marca da entrada de onde saíram (primeiro que entra, primeiro que sai). Navio = o navio do embarque.'
+};
+var RP_DIM={data:'Data',mes:'Mês',az:'Armazém',navio:'Navio',cli:'Cliente',prod:'Exportador / produtor',marca:'Marca',porto:'Porto de destino',comm:'Comm',placa:'Placa',ticket:'Ticket'};
+function rpDims(){return ['data','mes','az','navio','cli','prod','marca','porto','comm'].concat(rpTipo==='desc'?['placa']:rpTipo==='emb'?['ticket']:[]);}
+function rpAbrir(){
+  var de=document.getElementById('rp-de');
+  if(!de.value){var h=new Date();de.value=localISODate(new Date(h.getFullYear(),h.getMonth(),1));document.getElementById('rp-ate').value=localISODate(h);}
+  // navios do armador (mais recentes primeiro)
+  var sel=document.getElementById('rp-navio'),cur=sel.value;
+  var navs=(est.navios||[]).filter(function(n){return mesmoArmador(n.armador);}).sort(function(a,b){return String(b.eta||b.created_at||'').localeCompare(String(a.eta||a.created_at||''));});
+  sel.innerHTML='<option value="">Todos</option><option value="-">(sem navio / sem booking)</option>'+navs.map(function(n){return '<option value="'+n.id+'">'+esc(navioNome(n))+(navioFinalizado(n)?' (finalizado)':'')+'</option>';}).join('');
+  sel.value=cur&&[...sel.options].some(function(o){return o.value===cur;})?cur:'';
+  function dl(id,lista){document.getElementById(id).innerHTML=lista.map(function(x){return '<option value="'+esc(x)+'">';}).join('');}
+  dl('rp-dl-cli',(est.clientes||[]).map(function(c){return c.nome;}).sort());
+  dl('rp-dl-exp',bkPlExportadores());
+  dl('rp-dl-marca',unicosAz(marcasDoArmador().map(function(m){return m.marca;})).sort());
+  dl('rp-dl-porto',destinosConhecidos());
+  var cm=[];(est.marcas||[]).forEach(function(m){if(m.commodity)cm.push(String(m.commodity).toUpperCase());});(est.movs||[]).forEach(function(m){if(m.produto)cm.push(String(m.produto).toUpperCase());});
+  dl('rp-dl-comm',unicosAz(cm).sort());
+  rpRenderTipo();rpRenderAz();
+}
+function rpRenderTipo(){
+  document.getElementById('rp-tipo').innerHTML=Object.keys(RP_TIPOS).map(function(k){var on=k===rpTipo;
+    return '<button type="button" class="btn bsm '+(on?'bp':'bs')+'" aria-pressed="'+on+'" onclick="rpTipo=\''+k+'\';rpRenderTipo();rpGerar()">'+RP_TIPOS[k]+'</button>';}).join('');
+  var est_=rpTipo==='est';
+  document.getElementById('rp-de-wrap').style.display=est_?'none':'';
+  document.getElementById('rp-ate-lbl').textContent=est_?'Posição em':'Até';
+  document.querySelectorAll('.rp-so-desc').forEach(function(e){e.style.display=rpTipo==='desc'?'':'none';});
+  document.getElementById('rp-desc').textContent=RP_DESC[rpTipo]+' Vários valores num filtro: separe com ";" (ex.: Houston; Savannah).';
+  rpGrupos=rpGrupos.map(function(g){return rpDims().indexOf(g)>=0?g:'';});
+  rpRenderGrupos();
+}
+// níveis de agrupamento: começa com 2 ("Agrupar por" e "depois por"); o ＋ acrescenta mais
+var rpGrupos=['',''];
+function rpGruposUsados(){var v=[];rpGrupos.forEach(function(g){if(g&&v.indexOf(g)<0)v.push(g);});return v;}
+function rpRenderGrupos(){
+  var D=rpDims(),box=document.getElementById('rp-grupos');
+  rpGrupos=rpGrupos.map(function(g,i){return g&&rpGrupos.slice(0,i).indexOf(g)<0?g:'';}); // sem repetir nível
+  box.innerHTML=rpGrupos.map(function(g,i){
+    var antes=rpGrupos.slice(0,i).filter(Boolean); // o que já foi usado num nível anterior não aparece de novo
+    return (i?'<span style="color:var(--ink4);font-size:12px;">'+(i===1?'depois por':'e por')+'</span>':'')
+      +'<span style="display:inline-flex;gap:4px;align-items:center;"><select aria-label="Nível '+(i+1)+' do agrupamento" style="width:auto;min-width:150px;" onchange="rpGrupos['+i+']=this.value;rpRenderGrupos()">'
+      +'<option value="">'+(i?'—':'Nada (uma linha por lançamento)')+'</option>'
+      +D.filter(function(k){return antes.indexOf(k)<0;}).map(function(k){return '<option value="'+k+'"'+(k===g?' selected':'')+'>'+RP_DIM[k]+'</option>';}).join('')+'</select>'
+      +(i>=2?'<button type="button" class="btn bs bsm" aria-label="Tirar nível '+(i+1)+'" onclick="rpGrupos.splice('+i+',1);rpRenderGrupos()">✕</button>':'')+'</span>';
+  }).join('')
+  +(rpGrupos.length<D.length?'<button type="button" class="btn bs bsm" title="Acrescentar mais um nível de agrupamento" onclick="rpGrupos.push(\'\');rpRenderGrupos()">＋ nível</button>':'');
+}
+function rpRenderAz(){
+  var azs=armazensUsuario();
+  document.getElementById('rp-az').innerHTML=azs.map(function(a){var on=!rpAz||rpAz.indexOf(a)>=0;
+    return '<button type="button" class="btn bsm '+(on?'bp':'bs')+'" aria-pressed="'+on+'" onclick="rpMarcarAz(\''+esc(a).replace(/'/g,"\\'")+'\')">'+(on?'✓ ':'')+esc(a)+'</button>';}).join('');
+}
+function rpMarcarAz(a){
+  var all=armazensUsuario(),sel=rpAz?rpAz.slice():[];
+  if(!rpAz)sel=[a];else{var i=sel.indexOf(a);if(i>=0)sel.splice(i,1);else sel.push(a);}
+  rpAz=!sel.length||sel.length===all.length?null:sel;rpRenderAz();
+}
+function rpPeriodo(p){
+  var h=new Date(),de=document.getElementById('rp-de'),ate=document.getElementById('rp-ate');
+  if(p==='hoje'){de.value=ate.value=localISODate(h);}
+  if(p==='7'){var d=new Date(h);d.setDate(d.getDate()-6);de.value=localISODate(d);ate.value=localISODate(h);}
+  if(p==='mes'){de.value=localISODate(new Date(h.getFullYear(),h.getMonth(),1));ate.value=localISODate(h);}
+  if(p==='navio'){var n=navioDe(document.getElementById('rp-navio').value);
+    if(!n||!n.receb_inicio){toast('Escolha um navio com período de recebimento definido','error');return;}
+    de.value=n.receb_inicio;ate.value=n.receb_fim&&n.receb_fim<localISODate(h)?n.receb_fim:localISODate(h);}
+  rpGerar();
+}
+function rpLimpar(){['rp-cli','rp-exp','rp-marca','rp-porto','rp-comm','rp-placa'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('rp-navio').value='';rpAz=null;rpRenderAz();rpGerar();}
+// lançamentos (fatos) do tipo escolhido, já com cliente, navio, m³ …
+function rpFatos(tipo,de,ate){
+  est.bk=bkCalcular();
+  var ab={},ix=cliIndice(),movId={},tkNav={};
+  Object.values(est.bk.R).forEach(function(r){r.descargas.forEach(function(d){ab[d.m.id]={navio:r.navio,cli:r.cli,m3:d.m3,t:d.t};});});
+  (est.movs||[]).forEach(function(m){movId[m.id]=m;});
+  (est.saidas||[]).forEach(function(it){var tk=it.wp_tickets||{};if(tk.numero)tkNav[tk.numero]=tk.navio_id;});
+  function base(m,fd){ // campos comuns a partir da descarga (entrada)
+    var a=m&&ab[m.id],q=+(m&&m.quantidade)||0,mi=m?marcaInfo(m.marca):null,cbm=m?capM3Fardo(m.marca,armadorAtual):null;
+    var m3=a&&a.m3!==null&&q?a.m3/q*fd:(cbm===null?null:cbm*fd),t=a&&a.t!==null&&a.t!==undefined&&q?a.t/q*fd:(mi?mi.peso_t*fd:null);
+    var cli=a?a.cli:(m?clienteDaDescarga(m,ix):null);
+    return {az:azDoMov(m&&m.armazem),marca:String(m&&m.marca||'').toUpperCase(),prod:(m&&m.produtor||'').trim()||'(sem produtor)',
+      cli:cli?cli.nome:'(sem cliente)',navObj:a?a.navio:null,porto:(m&&m.destino||'').trim()||'(sem destino)',comm:m?commDaDescarga(m):'(SEM TIPO)',
+      placa:(m&&m.placa)||'',nf:(m&&m.nf)||'',per:(m&&m.periodo)||'',fd:fd,m3:m3,t:t};
+  }
+  var F=[],deN=diaN(de||ate),ateN=diaN(ate);
+  if(tipo==='desc'){
+    var inv=document.getElementById('rp-inv').checked;
+    (est.movs||[]).forEach(function(m){
+      if(!mesmoArmador(m.armador)||!(m.tipo==='descarga'||(inv&&m.tipo==='inventario')))return;
+      if(m.data<de||m.data>ate)return;
+      var f=base(m,+m.quantidade||0);f.data=m.data;f.tipoMov=m.tipo;F.push(f);
+    });
+  }
+  if(tipo==='est'){
+    Object.values(estCalcular(ate).G).forEach(function(g){g.ent.forEach(function(e){
+      if(e.resto<=0)return;var m=movId[e.id]||{id:e.id,marca:g.marca,armazem:g.az,produtor:e.produtor,quantidade:e.qtd};
+      var f=base(m,e.resto);f.data=e.data;f.idade=ateN-e.n;F.push(f);});});
+  }
+  if(tipo==='emb'){
+    Object.values(estCalcular(ate).G).forEach(function(g){g.aloc.forEach(function(al){
+      if(al.ref==='Ajuste de inventário'||al.saiN<deN||al.saiN>ateN)return;
+      var m=movId[al.ent.id]||{id:al.ent.id,marca:g.marca,armazem:g.az,produtor:al.ent.produtor,quantidade:al.ent.qtd};
+      var f=base(m,al.qtd);f.data=al.saiData;f.ticket=al.ref;f.navObj=navioDe(tkNav[al.ref])||null;f.entrada=al.ent.data;F.push(f);});});
+  }
+  F.forEach(function(f){f.navio=f.navObj?navioNome(f.navObj):'(sem navio)';f.navId=f.navObj?f.navObj.id:'-';f.mes=String(f.data||'').slice(0,7);});
+  return F;
+}
+function rpTokens(id){return String(document.getElementById(id).value||'').split(';').map(function(s){return s.trim();}).filter(Boolean);}
+function rpFiltros(){
+  return {az:rpAz,navio:document.getElementById('rp-navio').value,cli:rpTokens('rp-cli'),prod:rpTokens('rp-exp'),marca:rpTokens('rp-marca'),porto:rpTokens('rp-porto'),comm:rpTokens('rp-comm'),placa:rpTipo==='desc'?rpTokens('rp-placa'):[]};
+}
+function rpPassa(f,Fl){
+  if(Fl.az&&!Fl.az.some(function(a){return normAz(a)===normAz(f.az);}))return false;
+  if(Fl.navio&&f.navId!==Fl.navio)return false;
+  function tem(lista,v,norm){if(!lista.length)return true;var x=norm(v);return lista.some(function(t){return x.indexOf(norm(t))>=0;});}
+  var nTxt=function(s){return normAz(String(s||''));},nPl=function(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');};
+  return tem(Fl.cli,f.cli,nTxt)&&tem(Fl.prod,f.prod,nTxt)&&tem(Fl.marca,f.marca,nmMarca)&&tem(Fl.porto,f.porto,nTxt)&&tem(Fl.comm,f.comm,nTxt)&&tem(Fl.placa,f.placa,nPl);
+}
+function rpFiltroTxt(Fl){
+  var p=[];if(Fl.az)p.push('Armazém: '+Fl.az.join(', '));
+  if(Fl.navio)p.push('Navio: '+(Fl.navio==='-'?'(sem navio)':navioNome(navioDe(Fl.navio))));
+  [['cli','Cliente'],['prod','Exportador'],['marca','Marca'],['porto','Porto'],['comm','Comm'],['placa','Placa']].forEach(function(x){if(Fl[x[0]].length)p.push(x[1]+': '+Fl[x[0]].join('; '));});
+  return p.length?p.join(' · '):'Sem filtros';
+}
+function rpGerar(){
+  if(!est.carregado){estCarregar().then(rpGerar);return;}
+  var de=document.getElementById('rp-de').value,ate=document.getElementById('rp-ate').value;
+  if(!ate||(rpTipo!=='est'&&(!de||de>ate))){toast('Informe o período','error');return;}
+  var Fl=rpFiltros(),F=rpFatos(rpTipo,de,ate).filter(function(f){return rpPassa(f,Fl);});
+  var dimsUsados=rpGruposUsados(),g1=dimsUsados[0]||'';
+  var semM3=F.filter(function(f){return f.m3===null;}).reduce(function(a,f){return a+f.fd;},0);
+  var cols,rows,rot;
+  var cM=[{t:'Fardos',k:'fd',tipo:'num'},{t:'m³',k:'m3',tipo:'num',dec:3},{t:'t',k:'t',tipo:'num',dec:3}];
+  if(!g1){ // detalhado
+    rows=F.map(function(f){var r=Object.assign({},f);r.m3=f.m3===null?null:+f.m3.toFixed(3);r.t=f.t===null?null:+f.t.toFixed(3);return r;})
+      .sort(function(a,b){return String(a.data).localeCompare(String(b.data))||a.az.localeCompare(b.az)||a.marca.localeCompare(b.marca);});
+    if(rpTipo==='desc')cols=[{t:'Data',k:'data',tipo:'data'},{t:'Período',k:'per'},{t:'Placa',k:'placa',mono:true},{t:'NF',k:'nf'},{t:'Armazém',k:'az'},{t:'Exportador / produtor',k:'prod'},{t:'Cliente',k:'cli'},{t:'Navio',k:'navio'},{t:'Marca',k:'marca',mono:true},{t:'Comm',k:'comm'},{t:'Destino',k:'porto'}].concat(cM);
+    if(rpTipo==='est')cols=[{t:'Entrada',k:'data',tipo:'data'},{t:'Idade (dias)',k:'idade',tipo:'num',semTotal:true},{t:'Armazém',k:'az'},{t:'Exportador / produtor',k:'prod'},{t:'Cliente',k:'cli'},{t:'Navio (booking)',k:'navio'},{t:'Marca',k:'marca',mono:true},{t:'Comm',k:'comm'},{t:'Destino',k:'porto'}].concat(cM);
+    if(rpTipo==='emb')cols=[{t:'Data',k:'data',tipo:'data'},{t:'Ticket',k:'ticket',mono:true},{t:'Navio',k:'navio'},{t:'Armazém',k:'az'},{t:'Exportador / produtor',k:'prod'},{t:'Cliente',k:'cli'},{t:'Marca',k:'marca',mono:true},{t:'Comm',k:'comm'},{t:'Entrada',k:'entrada',tipo:'data'}].concat(cM);
+    rot=cols[0].k;
+  }else{
+    var dims=dimsUsados,G={};
+    F.forEach(function(f){
+      var k=dims.map(function(d){return f[d]||'—';}).join('\u0001'),r=G[k];
+      if(!r){r=G[k]={n:0,fd:0,m3:0,t:0,semM3:0,cam:{},tk:{},a30:0,a60:0,a90:0,mais:0,dp:0,_nav:{}};dims.forEach(function(d){r[d]=f[d]||'—';});}
+      r.n++;r.fd+=f.fd;if(f.m3!==null)r.m3+=f.m3;else r.semM3+=f.fd;if(f.t!==null)r.t+=f.t;
+      if(f.placa)r.cam[f.data+'|'+String(f.placa).toUpperCase().replace(/[^A-Z0-9]/g,'')]=1;else r.cam['id'+r.n]=1;
+      if(f.ticket)r.tk[f.ticket]=1;
+      if(rpTipo==='est'){r.dp+=f.idade*f.fd;if(f.idade<=30)r.a30+=f.fd;else if(f.idade<=60)r.a60+=f.fd;else if(f.idade<=90)r.a90+=f.fd;else r.mais+=f.fd;}
+      if(f.navObj)r._nav[f.navio]=f.navObj;
+    });
+    rows=Object.values(G).map(function(r){r.m3=+r.m3.toFixed(3);r.t=+r.t.toFixed(3);r.camN=Object.keys(r.cam).length;r.tkN=Object.keys(r.tk).length;r.medio=r.fd?Math.round(r.dp/r.fd):0;return r;});
+    // ordem: data/mês cronológica; navio pela data; portos pela rotação do navio filtrado; o resto por m³ (maior primeiro)
+    var nf=navioDe(Fl.navio),cmpP=portoCmp(nf);
+    rows.sort(function(a,b){for(var i=0;i<dims.length;i++){var d=dims[i],x=a[d],y=b[d],c;
+      if(d==='data'||d==='mes')c=String(x).localeCompare(String(y));
+      else if(d==='porto')c=cmpP(x,y);
+      else if(i===dims.length-1)c=b.m3-a.m3||String(x).localeCompare(String(y));
+      else c=String(x).localeCompare(String(y),'pt-BR');
+      if(c)return c;}return 0;});
+    cols=dims.map(function(d){return {t:RP_DIM[d],k:d,tipo:d==='data'?'data':undefined,mono:d==='marca'||d==='placa'||d==='ticket'};});
+    if(rpTipo==='desc')cols=cols.concat([{t:'Lançamentos',k:'n',tipo:'num'},{t:'Caminhões',k:'camN',tipo:'num'}],cM);
+    if(rpTipo==='est')cols=cols.concat(cM,[{t:'Até 30 dias',k:'a30',tipo:'num'},{t:'31–60',k:'a60',tipo:'num'},{t:'61–90',k:'a90',tipo:'num'},{t:'Mais de 90',k:'mais',tipo:'num'},{t:'Idade média (dias)',k:'medio',tipo:'num',semTotal:true}]);
+    if(rpTipo==='emb')cols=cols.concat([{t:'Tickets',k:'tkN',tipo:'num',semTotal:true}],cM);
+    if(rows.some(function(r){return r.semM3;}))cols.push({t:'Fardos sem m³',k:'semM3',tipo:'num'});
+    rot=dims[0];
+  }
+  var per=rpTipo==='est'?'em '+fmtIso(ate):fmtIso(de)+' a '+fmtIso(ate);
+  var info=rpFiltroTxt(Fl)+(g1?' · Agrupado por '+dimsUsados.map(function(d){return RP_DIM[d];}).join(' › '):'')+(semM3?' · '+semM3.toLocaleString('pt-BR')+' fds de marca sem m³':'');
+  relRender('ra',{titulo:armadorAtual+' — '+RP_TIPOS[rpTipo]+' '+per,cols:cols,rows:rows,total:rows.length?somaTotal(rows,cols,rot):null,info:info,
+    arquivo:{desc:'descargas',est:'estoque',emb:'embarques'}[rpTipo]+'_'+(rpTipo==='est'?ate:de+'_a_'+ate)+(g1?'_por_'+dimsUsados.join('_'):'')+'.xlsx'});
+  document.getElementById('ra-info').textContent=rows.length+' linha(s) · '+info;
+}
+function rpImprimir(){
+  var rep=REL.ra;if(!rep||!rep.rows.length){toast('Gere o relatório primeiro','error');return;}
+  var w=window.open('','_blank');if(!w){toast('O navegador bloqueou a janela — libere pop-ups para este site','error');return;}
+  function cel(c,v,tot){var n=c.tipo==='num';return '<td'+(n?' style="text-align:right"':'')+'>'+(v===''||v===null||v===undefined?'':relFmt(c,v))+'</td>';}
+  var html='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+esc(rep.titulo)+'</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#111;font-size:12px;background:#fff;}h1{font-size:16px;margin:0 0 4px;}.meta{color:#555;margin-bottom:12px;line-height:1.5;}'
+    +'table{width:100%;border-collapse:collapse;}th,td{border:1px solid #bbb;padding:4px 6px;}th{background:#eee;text-align:left;}tr.tot td{font-weight:bold;background:#f5f5f5;}thead{display:table-header-group;}tr{break-inside:avoid;page-break-inside:avoid;}'
+    +'.acoes{margin-bottom:12px;}@page{size:A4 landscape;margin:10mm;}@media print{.acoes{display:none;}body{margin:0;}}</style></head><body>'
+    +'<div class="acoes"><button onclick="window.print()">🖨 Imprimir / salvar PDF</button></div><h1>WoodPort · '+esc(rep.titulo)+'</h1><div class="meta">'+esc(rep.info||'')+'<br>Emitido em '+new Date().toLocaleString('pt-BR')+(currentUser&&currentUser.nome?' por '+esc(currentUser.nome):'')+'</div>'
+    +'<table><thead><tr>'+rep.cols.map(function(c){return '<th'+(c.tipo==='num'?' style="text-align:right"':'')+'>'+esc(c.t)+'</th>';}).join('')+'</tr></thead><tbody>'
+    +rep.rows.map(function(r){return '<tr>'+rep.cols.map(function(c){return cel(c,r[c.k]);}).join('')+'</tr>';}).join('')
+    +(rep.total?'<tr class="tot">'+rep.cols.map(function(c){return cel(c,rep.total[c.k]);}).join('')+'</tr>':'')+'</tbody></table></body></html>';
+  w.document.open();w.document.write(html);w.document.close();
+}
+
 // ── Armazém › Relatórios ──
-var raAtual='mov';
+var raAtual='pers';
 var RA_DESC={
-  mov:'Saldo no início do período, entradas (descargas e inventário), saídas por embarque validado, ajustes de contagem e saldo no fim — por armazém e marca.',
-  prod:'Descargas lançadas no período, por produtor e marca (inclui inventário de abertura).',
   idade:'O que está no armazém na data escolhida, por produtor e marca, separado pelo tempo desde a entrada (primeiro que entra, primeiro que sai).'
 };
 function raAbrir(){
@@ -8995,11 +9382,14 @@ function raAbrir(){
 function raAba(a){
   raAtual=a;
   document.querySelectorAll('#ra-tabs button').forEach(function(b){var on=b.getAttribute('data-rel')===a;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
-  var dash=a==='dash';
+  var dash=a==='dash',pers=a==='pers';
   document.getElementById('ra-dash').style.display=dash?'':'none';
-  document.getElementById('ra-filtros').style.display=dash?'none':'';
+  document.getElementById('ra-pers').style.display=pers?'':'none';
+  document.getElementById('ra-filtros').style.display=dash||pers?'none':'';
   document.getElementById('ra-res').style.display=dash?'none':'';
-  if(dash){estCarregar().then(raDashRender);return;}
+  if(dash){ // dados com mais de 5 min: busca de novo; depois atualiza sozinho
+    estCarregar().then(function(){if(est.carregadoEm&&Date.now()-est.carregadoEm>RD_AUTO_MS)return rdAtualizar(true);raDashRender();rdProgramar();});return;}
+  if(pers){estCarregar().then(function(){rpAbrir();rpGerar();});return;}
   document.getElementById('ra-de-wrap').style.display=a==='idade'?'none':'';
   document.getElementById('ra-ate-lbl').textContent=a==='idade'?'Posição em':'Até';
   document.getElementById('ra-desc').textContent=RA_DESC[a];
@@ -9007,42 +9397,11 @@ function raAba(a){
 }
 function raGerar(){
   if(raAtual==='dash')return raDashRender();
+  if(raAtual==='pers')return rpGerar();
   var de=document.getElementById('ra-de').value,ate=document.getElementById('ra-ate').value,az=document.getElementById('ra-az').value;
   if(!ate||(raAtual!=='idade'&&(!de||de>ate))){toast('Informe o período','error');return;}
   var okAz=function(x){return !az||normAz(x)===normAz(az);};
   var deN=diaN(de||ate),ateN=diaN(ate),rep;
-  if(raAtual==='mov'){
-    var fim=estCalcular(ate).G,ini=estCalcular(isoDeN(deN-1)).G,rows=[];
-    Object.keys(fim).forEach(function(k){
-      var g=fim[k];if(!okAz(g.az))return;
-      var ent=0,aj=0,sai=0;
-      g.ent.forEach(function(e){if(e.n>=deN&&e.n<=ateN){if(e.tipo==='ajuste')aj+=e.qtd;else ent+=e.qtd;}});
-      g.sai.forEach(function(s){if(s.n>=deN&&s.n<=ateN){if(s.ref==='Ajuste de inventário')aj-=s.qtd;else sai+=s.qtd;}});
-      var si=ini[k]?ini[k].saldo:0,mi=marcaInfo(g.marca);
-      if(!si&&!ent&&!sai&&!aj&&!g.saldo)return;
-      rows.push({az:g.az,marca:g.marca,ini:si,ent:ent,sai:sai,aj:aj,fim:g.saldo,m3:mi?g.saldo*mi.cbm:null});
-    });
-    rows.sort(function(a,b){return a.az.localeCompare(b.az)||a.marca.localeCompare(b.marca);});
-    var cols=[{t:'Armazém',k:'az'},{t:'Marca',k:'marca',mono:true},{t:'Saldo inicial',k:'ini',tipo:'num'},{t:'Entradas',k:'ent',tipo:'num'},
-      {t:'Saídas (embarque)',k:'sai',tipo:'num'},{t:'Ajustes',k:'aj',tipo:'num'},{t:'Saldo final',k:'fim',tipo:'num'},{t:'m³ final',k:'m3',tipo:'num',dec:3}];
-    rep={titulo:armadorAtual+' — Movimentação '+fmtIso(de)+' a '+fmtIso(ate),cols:cols,rows:rows,total:somaTotal(rows,cols,'az'),arquivo:'movimentacao_'+de+'_a_'+ate+'.xlsx'};
-  }
-  if(raAtual==='prod'){
-    var G={};
-    est.movs.forEach(function(m){
-      if(m.tipo==='ajuste'||!okAz(m.armazem)||!mesmoArmador(m.armador))return;
-      var n=diaN(m.data);if(n<deN||n>ateN)return;
-      var prod=(m.produtor||'').trim()||'(sem produtor)',k=prod+'|'+nmMarca(m.marca)+'|'+normAz(m.armazem);
-      var r=G[k]||(G[k]={prod:prod,marca:String(m.marca).toUpperCase(),az:azDoMov(m.armazem),desc:0,fd:0,m3:0,t:0,primeira:m.data,ultima:m.data});
-      var mi=marcaInfo(m.marca),q=+m.quantidade;
-      r.desc++;r.fd+=q;if(mi){r.m3+=q*mi.cbm;r.t+=q*mi.peso_t;}
-      if(m.data<r.primeira)r.primeira=m.data;if(m.data>r.ultima)r.ultima=m.data;
-    });
-    var rows2=Object.values(G).sort(function(a,b){return a.prod.localeCompare(b.prod)||a.marca.localeCompare(b.marca);});
-    var cols2=[{t:'Produtor',k:'prod'},{t:'Marca',k:'marca',mono:true},{t:'Armazém',k:'az'},{t:'Lançamentos',k:'desc',tipo:'num'},{t:'Fardos',k:'fd',tipo:'num'},
-      {t:'m³',k:'m3',tipo:'num',dec:3},{t:'t',k:'t',tipo:'num',dec:3},{t:'Primeira',k:'primeira',tipo:'data'},{t:'Última',k:'ultima',tipo:'data'}];
-    rep={titulo:armadorAtual+' — Entradas por produtor '+fmtIso(de)+' a '+fmtIso(ate),cols:cols2,rows:rows2,total:somaTotal(rows2,cols2,'prod'),arquivo:'entradas_por_produtor_'+de+'_a_'+ate+'.xlsx'};
-  }
   if(raAtual==='idade'){
     var G3={},res=estCalcular(ate).G;
     Object.values(res).forEach(function(g){
@@ -10230,7 +10589,7 @@ var _pedidoInstalar=null;
 function appInstalado(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
 function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
 // ── VERSÃO do app: suba APP_VERSAO (e o VERSAO do sw.js) a cada publicação ──
-var APP_VERSAO='2026-11-18.1';
+var APP_VERSAO='2026-11-18.3';
 document.querySelectorAll('.app-versao').forEach(function(el){el.textContent='versão '+APP_VERSAO;});
 var _swReg=null,_versaoAvisada='';
 if('serviceWorker' in navigator&&location.protocol!=='file:'){
