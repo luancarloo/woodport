@@ -2,7 +2,7 @@
 // Páginas: REDE PRIMEIRO. A publicação é subir um index.html novo por cima; servir
 // cópia guardada congelaria a versão antiga no aparelho. O cache só entra sem internet.
 // Supabase (dados) e CDNs nunca são guardados.
-var VERSAO = 'woodport-2026-10-28';
+var VERSAO = 'woodport-2026-11-18.1'; // suba junto com APP_VERSAO do index.html
 var BASICOS = ['./', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
@@ -20,8 +20,10 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;          // Supabase, CDNs, fontes: direto na rede
+  // página (index.html) sempre do servidor, sem o cache HTTP do navegador → versão nova aparece na hora
+  var rede = req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname) ? fetch(req.url, { cache: 'no-store', credentials: 'same-origin' }) : fetch(req);
   e.respondWith(
-    fetch(req).then(function (r) {
+    rede.then(function (r) {
       if (r && r.ok && r.type === 'basic') {
         var copia = r.clone();
         caches.open(VERSAO).then(function (c) { c.put(req, copia); });
