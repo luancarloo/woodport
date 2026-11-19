@@ -49,9 +49,27 @@ h1{margin:2px 0 0;font-size:clamp(22px,2.2vw,46px);line-height:1.1;}
 .leg{display:flex;gap:16px;flex-wrap:wrap;font-size:.8em;color:var(--ink3);margin-top:6px;}
 .leg i{display:inline-block;width:.9em;height:.9em;border-radius:3px;vertical-align:-.1em;margin-right:5px;}
 .comm{grid-column:1/-1;}
+/* booking por cliente: na TV fica à direita das barras e rola sozinho quando não cabe */
+.paineis .col{display:contents;}
+.paineis.com-book{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);min-height:0;}
+.paineis.com-book .col{display:flex;flex-direction:column;gap:clamp(8px,1vw,20px);min-width:0;min-height:0;overflow:hidden;}
+.book{display:flex;flex-direction:column;min-height:0;}
+.rolar{flex:1;min-height:0;overflow:hidden;}
+.tb{width:100%;border-collapse:collapse;font-size:.95em;}
+.tb th{position:sticky;top:0;background:var(--card);color:var(--ink3);font-weight:500;font-size:.85em;text-align:left;padding:0 .5em .45em;border-bottom:2px solid var(--bdr);white-space:nowrap;}
+.tb td{padding:.42em .5em;border-bottom:1px solid var(--bdr);white-space:nowrap;}
+.tb .r{text-align:right;}
+.tb td.cli{white-space:normal;font-weight:500;}
+.tb tr.novo td{border-top:2px solid var(--bdr);}
+.tb td.porto{color:var(--ink2);font-weight:600;}
+.tb tfoot td{position:sticky;bottom:0;background:var(--card);font-weight:700;border-top:2px solid var(--bdr);border-bottom:0;}
+.pcb{display:inline-flex;align-items:center;gap:.4em;justify-content:flex-end;}
+.pcb i{display:inline-block;width:3.2em;height:.55em;background:var(--track);border-radius:3px;overflow:hidden;position:relative;}
+.pcb i b{position:absolute;left:0;top:0;bottom:0;}
+@media (min-width:901px){body.tela{height:100vh;overflow:hidden;}}
 .msg{margin:auto;text-align:center;max-width:640px;color:var(--ink2);font-size:1.2em;line-height:1.5;}
 body.embed header .marca{display:none;}
-@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.paineis{grid-template-columns:1fr;}.barra{grid-template-columns:minmax(70px,30%) 1fr;}.barra .x{grid-column:2;text-align:left;}}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.paineis,.paineis.com-book{grid-template-columns:1fr;}.paineis.com-book .col{overflow:visible;}.rolar{overflow-x:auto;}.barra{grid-template-columns:minmax(70px,30%) 1fr;}.barra .x{grid-column:2;text-align:left;}}
 </style>
 </head>
 <body>
@@ -59,7 +77,7 @@ body.embed header .marca{display:none;}
 <script>
 var WP_SB_URL='https://jtmmgisxeqcaqayhbxob.supabase.co';
 var WP_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0bW1naXN4ZXFjYXFheWhieG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTY2NDksImV4cCI6MjA5MDUzMjY0OX0.9O-OWxCP2cj9nTbA-CXyfokfJq5js_sCneKsxulgSSo';
-var Q=new URLSearchParams(location.search),TOKEN=Q.get('t')||'',ULT=null,DADOS=null;
+var Q=new URLSearchParams(location.search),TOKEN=Q.get('t')||'',ULT=null,DADOS=null,BOOK=Q.get('booking')!=='0'; // &booking=0 tira a tabela
 if(Q.get('tema')==='escuro')document.documentElement.setAttribute('data-tema','escuro');
 if(Q.get('embed')==='1')document.body.classList.add('embed');
 var L={
@@ -67,12 +85,14 @@ var L={
     legRec:'Recebido',legSaldo:'Saldo a receber',legAcima:'Acima do booking',dados:'Dados de',velho:'Sem atualização desde',receb:'Recebimento',ate:' a ',aberto:'em aberto',rot:'Rotação',
     acima:'m³ acima do booking',qualquer:'(qualquer porto)',excl:'(cliente excluído)',semTipo:'(sem tipo)',semToken:'Link incompleto: falta o código (?t=…) no endereço.',
     invalido:'Este link não existe ou foi desativado. Peça um link novo em WoodPort › Relatórios do armazém › Dashboard.',erro:'Sem conexão com o servidor. Tentando de novo…',vazio:'Ainda sem números para este link.',
-    filtro:'Filtro',portos:'Portos',clientes:'Clientes',finalizado:'finalizado'},
+    filtro:'Filtro',portos:'Portos',clientes:'Clientes',finalizado:'finalizado',
+    tBook:'Por cliente (booking)',thCli:'Cliente',thPorto:'Porto',thBook:'Booking m³',thRec:'Recebido m³',thSaldo:'Saldo m³',total:'Total',semBook:'Nenhum booking com estes filtros.'},
   en:{titulo:'m³ Dashboard',book:'Total booking',rec:'Received',saldo:'Balance to receive',pc:'% received',cam:'Trucks today',porto:'By port (m³)',cli:'By client (m³)',comm:'By Comm — m³ received',
     legRec:'Received',legSaldo:'Balance to receive',legAcima:'Over booking',dados:'Data as of',velho:'Not updated since',receb:'Receiving window',ate:' to ',aberto:'open',rot:'Rotation',
     acima:'m³ over booking',qualquer:'(any port)',excl:'(deleted client)',semTipo:'(no type)',semToken:'Incomplete link: the code (?t=…) is missing.',
     invalido:'This link does not exist or was disabled. Ask for a new link in WoodPort.',erro:'No connection to the server. Retrying…',vazio:'No figures for this link yet.',
-    filtro:'Filter',portos:'Ports',clientes:'Clients',finalizado:'closed'}
+    filtro:'Filter',portos:'Ports',clientes:'Clients',finalizado:'closed',
+    tBook:'By client (booking)',thCli:'Client',thPorto:'Port',thBook:'Booking m³',thRec:'Received m³',thSaldo:'Balance m³',total:'Total',semBook:'No booking with these filters.'}
 };
 var LANG=Q.get('lang')||'pt';
 function t(k){return (L[LANG]||L.pt)[k]||L.pt[k]||k;}
@@ -95,6 +115,29 @@ function barras(itens,simples,total){
         :'<b>'+n1(x.rec)+'</b> <span>/ '+n1(x.book)+' · '+pc.toFixed(0)+'%</span>')+'</div></div>';
   }).join('')||'<div style="color:var(--ink3)">—</div>';
 }
+// tabela "Por cliente (booking)" igual à do dashboard: cliente, porto, booking, recebido, saldo, %
+function tabelaBooking(D){
+  var L=D.linhas||[],T=D.tot||{},ant=null;
+  function pcCel(b,r){var pc=b?r/b*100:0,cor=pc>100?'var(--over)':pc>=100?'var(--ok)':'var(--acc)';
+    return '<td class="r mono"><span class="pcb">'+(b?n1(pc):'—')+(b?'%':'')+'<i><b style="width:'+Math.min(100,pc).toFixed(1)+'%;background:'+cor+'"></b></i></span></td>';}
+  var corpo=L.map(function(x){var novo=ant!==null&&x.porto!==ant,mostra=x.porto!==ant;ant=x.porto;var s=x.book-x.rec;
+    return '<tr'+(novo?' class="novo"':'')+'><td class="cli">'+esc(tx(x.cli))+'</td><td class="porto">'+(mostra?esc(tx(x.porto)):'')+'</td>'
+      +'<td class="r mono">'+n1(x.book)+'</td><td class="r mono">'+n1(x.rec)+'</td>'
+      +'<td class="r mono"'+(s<-0.05?' style="color:var(--over)"':'')+'>'+n1(s)+'</td>'+pcCel(x.book,x.rec)+'</tr>';}).join('')
+    ||'<tr><td colspan="6" style="color:var(--ink3);text-align:center;padding:1em;">'+t('semBook')+'</td></tr>';
+  return '<div class="painel book"><h2>'+t('tBook')+'</h2><div class="rolar" id="rolar"><table class="tb"><thead><tr><th>'+t('thCli')+'</th><th>'+t('thPorto')+'</th><th class="r">'+t('thBook')+'</th><th class="r">'+t('thRec')+'</th><th class="r">'+t('thSaldo')+'</th><th class="r">%</th></tr></thead>'
+    +'<tbody>'+corpo+'</tbody>'
+    +(L.length?'<tfoot><tr><td colspan="2">'+t('total')+'</td><td class="r mono">'+n1(T.book)+'</td><td class="r mono">'+n1(T.rec)+'</td><td class="r mono">'+n1((T.book||0)-(T.rec||0))+'</td>'+pcCel(T.book,T.rec)+'</tr></tfoot>':'')
+    +'</table></div></div>';
+}
+// rolagem automática da tabela quando não cabe na tela: desce devagar, para no fim, volta ao topo
+var _rolPausa=Date.now()+6000;
+setInterval(function(){
+  var el=document.getElementById('rolar');if(!el||el.scrollHeight<=el.clientHeight+4)return;
+  if(Date.now()<_rolPausa)return;
+  if(el.scrollTop+el.clientHeight>=el.scrollHeight-2){_rolPausa=Date.now()+5000;setTimeout(function(){el.scrollTop=0;_rolPausa=Date.now()+6000;},5000);return;}
+  el.scrollTop+=1;
+},40);
 function render(){
   var D=DADOS;if(!D){msg(t('vazio'));return;}
   if(!Q.get('lang')&&D.lang)LANG=D.lang;
@@ -114,13 +157,15 @@ function render(){
     +'<div class="kpi"><div class="l">'+t('saldo')+'</div><div class="v mono">'+n1(T.falta)+'<small>m³</small></div>'+(T.exc>0.05?'<div class="s" style="color:var(--warn)">'+n1(T.exc)+' '+t('acima')+'</div>':'')+'</div>'
     +'<div class="kpi"><div class="l">'+t('pc')+'</div><div class="v mono" style="color:'+(pc>=100?'var(--ok)':'var(--ink)')+'">'+n1(pc)+'<small>%</small></div></div>'
     +'<div class="kpi"><div class="l">'+t('cam')+'</div><div class="v mono">'+((D.cam&&D.cam.n)||0)+'</div><div class="s mono">'+n1(D.cam&&D.cam.m3)+' m³</div></div>'
-    +'</section><section class="paineis">'
+    +'</section><section class="paineis'+(BOOK?' com-book':'')+'"><div class="col">'
     +'<div class="painel"><h2>'+t('porto')+'</h2>'+barras((D.porPorto||[]).map(function(p){return {label:p.porto,book:p.book,rec:p.rec};}))+'</div>'
     +'<div class="painel"><h2>'+t('cli')+'</h2>'+barras((D.porCliente||[]).map(function(c){return {label:c.cli,book:c.book,rec:c.rec};}))+'</div>'
     +(D.comm&&D.comm.lista&&D.comm.lista.length?'<div class="painel comm"><h2>'+t('comm')+'</h2>'+barras(D.comm.lista.map(function(c,i){return {label:c,rec:D.comm.tot[i],book:0};}),true,D.comm.total)+'</div>':'')
-    +'</section>'
+    +'</div>'+(BOOK?tabelaBooking(D):'')+'</section>'
     +'<div class="leg"><span><i style="background:var(--acc)"></i>'+t('legRec')+'</span><span><i style="background:var(--book)"></i>'+t('legSaldo')+'</span><span><i style="background:var(--over)"></i>'+t('legAcima')+'</span></div>';
-  document.body.innerHTML=h;
+  var rl=document.getElementById('rolar'),pos=rl?rl.scrollTop:0; // mantém a rolagem da tabela entre as atualizações
+  document.body.innerHTML=h;document.body.classList.toggle('tela',BOOK);
+  rl=document.getElementById('rolar');if(rl)rl.scrollTop=pos;
 }
 function carregar(){
   if(!TOKEN||TOKEN.length<20){msg(t('semToken'));return;}
