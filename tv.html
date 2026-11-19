@@ -120,8 +120,8 @@ function tabelaBooking(D){
   var L=D.linhas||[],T=D.tot||{},ant=null;
   function pcCel(b,r){var pc=b?r/b*100:0,cor=pc>100?'var(--over)':pc>=100?'var(--ok)':'var(--acc)';
     return '<td class="r mono"><span class="pcb">'+(b?n1(pc):'—')+(b?'%':'')+'<i><b style="width:'+Math.min(100,pc).toFixed(1)+'%;background:'+cor+'"></b></i></span></td>';}
-  var corpo=L.map(function(x){var novo=ant!==null&&x.porto!==ant,mostra=x.porto!==ant;ant=x.porto;var s=x.book-x.rec;
-    return '<tr'+(novo?' class="novo"':'')+'><td class="cli">'+esc(tx(x.cli))+'</td><td class="porto">'+(mostra?esc(tx(x.porto)):'')+'</td>'
+  var corpo=L.map(function(x){var novo=ant!==null&&x.porto!==ant;ant=x.porto;var s=x.book-x.rec;
+    return '<tr'+(novo?' class="novo"':'')+'><td class="cli">'+esc(tx(x.cli))+'</td><td class="porto">'+esc(tx(x.porto||'—'))+'</td>'
       +'<td class="r mono">'+n1(x.book)+'</td><td class="r mono">'+n1(x.rec)+'</td>'
       +'<td class="r mono"'+(s<-0.05?' style="color:var(--over)"':'')+'>'+n1(s)+'</td>'+pcCel(x.book,x.rec)+'</tr>';}).join('')
     ||'<tr><td colspan="6" style="color:var(--ink3);text-align:center;padding:1em;">'+t('semBook')+'</td></tr>';
