@@ -7301,6 +7301,8 @@ function editarMov(id){
   var m=est.movs.find(function(x){return x.id===id;});if(!m)return;
   openEdit('Editar lançamento',[
     {key:'data',label:'Data',type:'date',val:m.data},
+    {key:'armazem',label:'Armazém',type:'select',val:azDoMov(m.armazem||''),options:(m.armazem&&!armazensUsuario().some(function(a){return normAz(a)===normAz(m.armazem);})?[{v:m.armazem,l:m.armazem}]:[])
+      .concat(armazensUsuario().map(function(a){return {v:a,l:a};}))},
     {key:'nf',label:'NF / Minuta',val:m.nf},
     {key:'produtor',label:'Produtor',val:m.produtor},
     {key:'marca',label:'Marca',val:m.marca},
@@ -7316,6 +7318,7 @@ function editarMov(id){
     {key:'nao_conforme',label:'Não conformidade',type:'select',val:m.nao_conforme?'true':'false',options:[{v:'false',l:'Não'},{v:'true',l:'Sim'}]},
     {key:'nc_descricao',label:'O que foi encontrado',type:'textarea',val:m.nc_descricao},
   ]:[]),'wp_estoque_mov',id,function(){estAbrir(true);});
+  _editState.mov=m; // saveEdit usa para oferecer levar o caminhão inteiro quando o armazém muda
 }
 // Descarga lançada no armador errado (ex.: caminhão da G2 Ocean lançado na AB): muda o armador do lançamento.
 // Leva junto as outras marcas do mesmo caminhão (mesma placa e data), se o usuário quiser,
@@ -9921,8 +9924,22 @@ function saveEdit(){
   if(_editState.table==='wp_impressoras'){var eIp=erroIpImpressora(payload.ip);if(eIp){toast(eIp,'error');return;}}
   if(_editState.table==='wp_estoque_mov'&&payload.placa)payload.placa=fmtPlacaTxt(payload.placa);
   if(_editState.table==='wp_estoque_mov'&&payload.nao_conforme==='true'&&!payload.nc_descricao){toast('Descreva a não conformidade encontrada','error');return;}
+  // armazém trocado numa descarga: as outras marcas do mesmo caminhão (placa + data) podem ir junto
+  var juntos=[],m0=_editState.table==='wp_estoque_mov'?_editState.mov:null;
+  if(m0&&'armazem' in payload){
+    if(!payload.armazem){toast('Escolha o armazém','error');return;}
+    if(normAz(payload.armazem)!==normAz(m0.armazem)&&m0.placa){
+      var irmaos=est.movs.filter(function(x){return x.id!==m0.id&&x.tipo===m0.tipo&&x.data===m0.data&&nPlaca(x.placa||'')===nPlaca(m0.placa)&&normAz(x.armazem)===normAz(m0.armazem)&&normAz(marcaArm(x))===normAz(marcaArm(m0));});
+      if(irmaos.length&&confirm('O caminhão '+m0.placa+' de '+fmtIso(m0.data)+' tem mais '+irmaos.length+' descarga(s) em '+m0.armazem+':\n'
+          +irmaos.map(function(x){return '• '+x.marca+' — '+x.quantidade+' fds';}).join('\n')+'\n\nOK = mudar o caminhão inteiro para '+payload.armazem+'\nCancelar = só esta marca'))
+        juntos=irmaos.map(function(x){return x.id;});
+    }
+  }
   showLd(true);
   sb.from(_editState.table).update(payload).eq('id',_editState.id).then(function(r){
+    if(r.error||!juntos.length)return r;
+    return sb.from('wp_estoque_mov').update({armazem:payload.armazem}).in('id',juntos).then(function(r2){return r2.error?r2:r;});
+  }).then(function(r){
     showLd(false);
     if(r.error){toast('Erro: '+r.error.message,'error');return;}
     toast('Salvo com sucesso!','success');
@@ -10589,7 +10606,7 @@ var _pedidoInstalar=null;
 function appInstalado(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
 function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
 // ── VERSÃO do app: suba APP_VERSAO (e o VERSAO do sw.js) a cada publicação ──
-var APP_VERSAO='2026-11-18.3';
+var APP_VERSAO='2026-11-19.1';
 document.querySelectorAll('.app-versao').forEach(function(el){el.textContent='versão '+APP_VERSAO;});
 var _swReg=null,_versaoAvisada='';
 if('serviceWorker' in navigator&&location.protocol!=='file:'){
