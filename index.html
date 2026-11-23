@@ -7153,6 +7153,7 @@ function addFotoNc(input){
 // erro de coluna/tabela que só existe depois do script novo → diz o que fazer
 function erroColunaNova(e){
   var m=(e&&e.message)||String(e);
+  if(/navio_id/i.test(m)&&/wp_estoque_mov|column/i.test(m))return m+' — rode o script woodport_descarga_navio.sql no Supabase';
   if(/wp_dash_publico/i.test(m))return m+' — rode o script woodport_dash_publico.sql no Supabase';
   if(/exportador|wp_armazem_capacidade/i.test(m))return m+' — rode o script woodport_exportador_capacidade.sql no Supabase';
   return /periodo|placa|nao_conforme|nc_fotos|nc_descricao|armador|wp-descargas-nc|bucket/i.test(m)?m+' — rode o script woodport_armazem_v2.sql no Supabase':m;
@@ -7312,7 +7313,11 @@ function editarMov(id){
       .concat(portosBooking().map(function(p){return {v:p,l:p};}))},
     {key:'quantidade',label:'Fardos',type:'number',val:m.quantidade},
     {key:'obs',label:'Observação',val:m.obs},
-  ].concat('periodo' in m?[
+  ].concat(m.tipo==='descarga'?[
+    {key:'navio_id',label:'Navio (booking)',type:'select',val:m.navio_id||'',options:[{v:'',l:'Automático — pela data de recebimento'}]
+      .concat(m.navio_id&&!rdNavios().some(function(n){return n.id===m.navio_id;})?[{v:m.navio_id,l:navioNome(navioDe(m.navio_id))}]:[])
+      .concat(rdNavios().map(function(n){return {v:n.id,l:navioNome(n)+(navioFinalizado(n)?' (finalizado)':'')+(n.receb_inicio?' · receb. '+fmtIso(n.receb_inicio)+(n.receb_fim?' a '+fmtIso(n.receb_fim):''):'')};}))},
+  ]:[]).concat('periodo' in m?[
     {key:'periodo',label:'Período',type:'select',val:m.periodo||'',options:[{v:'',l:'—'}].concat(PERIODOS.map(function(p){return {v:p,l:p};}))},
     {key:'placa',label:'Placa do caminhão',val:m.placa},
     {key:'nao_conforme',label:'Não conformidade',type:'select',val:m.nao_conforme?'true':'false',options:[{v:'false',l:'Não'},{v:'true',l:'Sim'}]},
@@ -7757,12 +7762,15 @@ function bkCalcular(){
     .sort(function(a,b){return a.data<b.data?-1:a.data>b.data?1:String(a.created_at||'')<String(b.created_at||'')?-1:1;})
     .forEach(function(m){
       var c=clienteDaDescarga(m,ix),q=parseInt(m.quantidade)||0;
+      // navio escolhido à mão e cliente não identificado: tenta o booking desse navio que tem a marca na pré-lista
+      if(!c&&m.navio_id){var bp=Object.values(R).find(function(r){return r.navio.id===m.navio_id&&r.cli&&plDe(r.b.id,m.marca);});if(bp)c=bp.cli;}
       if(!c){
         var p=(m.produtor||'').trim()||'(sem produtor)',s=semCliente[nmCli(p)]||(semCliente[nmCli(p)]={produtor:p,fd:0,n:0,ultima:''});
         s.fd+=q;s.n++;if(m.data>s.ultima)s.ultima=m.data;motivo[m.id]={k:'sem_cliente'};return;
       }
-      var noPer=(porCli[c.id]||[]).filter(function(r){var n=r.navio;return n.receb_inicio&&m.data>=n.receb_inicio&&(!n.receb_fim||m.data<=n.receb_fim);});
-      if(!noPer.length){motivo[m.id]={k:'sem_booking',cli:c};return;}
+      // navio escolhido na edição da descarga vale no lugar do período de recebimento
+      var noPer=(porCli[c.id]||[]).filter(function(r){var n=r.navio;return m.navio_id?n.id===m.navio_id:n.receb_inicio&&m.data>=n.receb_inicio&&(!n.receb_fim||m.data<=n.receb_fim);});
+      if(!noPer.length){motivo[m.id]={k:'sem_booking',cli:c,navio_id:m.navio_id||null};return;}
       // booking do porto de destino da descarga; booking sem porto aceita qualquer destino
       var dest=normAz(m.destino);
       var cand=dest?noPer.filter(function(r){return normAz(r.b.porto)===dest;}):[];
@@ -7864,7 +7872,7 @@ var BK_CONC=[
   {k:'sem_cliente',n:'Sem cliente identificado',d:'produtor/marca não ligados a nenhum cliente — cadastre o apelido ou a marca em Clientes'},
   {k:'sem_booking',n:'Cliente sem booking neste período',d:'o cliente não tem booking em navio que recebia nesta data'},
   {k:'sem_porto',n:'Destino sem booking',d:'o cliente tem booking, mas não para o destino desta descarga'},
-  {k:'fora',n:'Fora do período de recebimento',d:'descargas antes do início / depois do fim do recebimento deste navio'}];
+  {k:'fora',n:'Fora do período de recebimento',d:'descargas antes do início / depois do fim do recebimento deste navio, ou atribuídas na edição a outro navio'}];
 function bkConcClassificar(nav){
   var ini=nav.receb_inicio,fim=nav.receb_fim||'9999-12-31',G={},mot=est.bk.motivo||{};
   BK_CONC.forEach(function(c){G[c.k]={n:0,fd:0,m3:0,semM3:0,itens:[]};});
@@ -7872,7 +7880,8 @@ function bkConcClassificar(nav){
   est.movs.filter(function(m){return m.tipo==='descarga'&&mesmoArmador(m.armador);}).forEach(function(m){
     var q=+m.quantidade||0,mi=marcaInfo(m.marca),mo=mot[m.id]||{k:'sem_cliente'};
     var m3=mi?q*mi.cbm:(mo.m3!=null?mo.m3:null);
-    var k=!ini||m.data<ini||m.data>fim?'fora':mo.k==='abateu'?(mo.navio_id===nav.id?'este':'outro'):mo.k;
+    var k=m.navio_id&&m.navio_id!==nav.id?(mo.k==='abateu'?'outro':'fora')  // atribuída à mão a outro navio
+      :!m.navio_id&&(!ini||m.data<ini||m.data>fim)?'fora':mo.k==='abateu'?(mo.navio_id===nav.id?'este':'outro'):mo.k;
     var g=G[k];g.n++;g.fd+=q;if(m3===null)g.semM3+=q;else g.m3+=m3;
     g.itens.push({m:m,m3:m3,cli:mo.cli,navio:mo.navio_id?navioDe(mo.navio_id):null,porto:mo.b?mo.b.porto:''});
     tot.n++;tot.fd+=q;if(m3===null)tot.semM3+=q;else tot.m3+=m3;
@@ -7969,7 +7978,7 @@ function salvarBooking(){
           .then(function(r){if(r.error)throw r.error;est.booking=est.booking.filter(function(x){return x.id!==b.id;}).concat([r.data]);});});});
       var nav=navioDe(b0.navio_id);
       var movs=porto?est.movs.filter(function(m){return m.tipo==='descarga'&&mesmoArmador(m.armador)&&m.destino&&normAz(m.destino)===normAz(velho)
-        &&(!nav||!nav.receb_inicio||(m.data>=nav.receb_inicio&&(!nav.receb_fim||m.data<=nav.receb_fim)));}):[];
+        &&(m.navio_id?!nav||m.navio_id===nav.id:(!nav||!nav.receb_inicio||(m.data>=nav.receb_inicio&&(!nav.receb_fim||m.data<=nav.receb_fim))));}):[];
       if(movs.length&&confirm(movs.length+' descarga(s) foram lançadas com o destino "'+velho+'"'+(nav&&nav.receb_inicio?' no período de recebimento deste navio':'')+'.\n\nTrocar o destino delas para "'+porto+'" também?'))
         extras.push(function(){
           var ids=movs.map(function(m){return m.id;}),p=Promise.resolve();
@@ -9261,7 +9270,7 @@ function rpFatos(tipo,de,ate){
     var m3=a&&a.m3!==null&&q?a.m3/q*fd:(cbm===null?null:cbm*fd),t=a&&a.t!==null&&a.t!==undefined&&q?a.t/q*fd:(mi?mi.peso_t*fd:null);
     var cli=a?a.cli:(m?clienteDaDescarga(m,ix):null);
     return {az:azDoMov(m&&m.armazem),marca:String(m&&m.marca||'').toUpperCase(),prod:(m&&m.produtor||'').trim()||'(sem produtor)',
-      cli:cli?cli.nome:'(sem cliente)',navObj:a?a.navio:null,porto:(m&&m.destino||'').trim()||'(sem destino)',comm:m?commDaDescarga(m):'(SEM TIPO)',
+      cli:cli?cli.nome:'(sem cliente)',navObj:a?a.navio:(m&&m.navio_id?navioDe(m.navio_id):null),porto:(m&&m.destino||'').trim()||'(sem destino)',comm:m?commDaDescarga(m):'(SEM TIPO)',
       placa:(m&&m.placa)||'',nf:(m&&m.nf)||'',per:(m&&m.periodo)||'',fd:fd,m3:m3,t:t};
   }
   var F=[],deN=diaN(de||ate),ateN=diaN(ate);
@@ -9926,6 +9935,7 @@ function saveEdit(){
   if(_editState.table==='wp_estoque_mov'&&payload.nao_conforme==='true'&&!payload.nc_descricao){toast('Descreva a não conformidade encontrada','error');return;}
   // armazém trocado numa descarga: as outras marcas do mesmo caminhão (placa + data) podem ir junto
   var juntos=[],m0=_editState.table==='wp_estoque_mov'?_editState.mov:null;
+  if(m0&&!('navio_id' in m0)&&!payload.navio_id)delete payload.navio_id; // coluna ainda não criada no banco: não manda o campo
   if(m0&&'armazem' in payload){
     if(!payload.armazem){toast('Escolha o armazém','error');return;}
     if(normAz(payload.armazem)!==normAz(m0.armazem)&&m0.placa){
@@ -9941,7 +9951,7 @@ function saveEdit(){
     return sb.from('wp_estoque_mov').update({armazem:payload.armazem}).in('id',juntos).then(function(r2){return r2.error?r2:r;});
   }).then(function(r){
     showLd(false);
-    if(r.error){toast('Erro: '+r.error.message,'error');return;}
+    if(r.error){toast('Erro: '+(_editState.table==='wp_estoque_mov'?erroColunaNova(r.error):r.error.message),'error');return;}
     toast('Salvo com sucesso!','success');
     closeEdit();
     if(_editState.cb)_editState.cb();
@@ -10606,7 +10616,7 @@ var _pedidoInstalar=null;
 function appInstalado(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
 function ehIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
 // ── VERSÃO do app: suba APP_VERSAO (e o VERSAO do sw.js) a cada publicação ──
-var APP_VERSAO='2026-11-19.1';
+var APP_VERSAO='2026-11-23.1';
 document.querySelectorAll('.app-versao').forEach(function(el){el.textContent='versão '+APP_VERSAO;});
 var _swReg=null,_versaoAvisada='';
 if('serviceWorker' in navigator&&location.protocol!=='file:'){
